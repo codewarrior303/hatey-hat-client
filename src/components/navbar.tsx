@@ -92,11 +92,11 @@ export function Navbar() {
   ];
 
   return (
-    <header className="sticky top-3 z-50 w-full px-3 sm:px-6 pointer-events-none transition-all duration-300">
+    <header className="sticky top-3 z-50 w-full px-4 sm:px-6 pointer-events-none transition-all duration-300">
       <div className="relative mx-auto max-w-2xl">
         <div
           className={cn(
-            "pointer-events-auto rounded-full transition-colors duration-200 px-4 sm:px-6 h-14 flex items-center justify-between w-full",
+            "pointer-events-auto rounded-full transition-colors duration-200 px-3.5 sm:px-6 h-14 flex items-center justify-between w-full",
             isScrolled ? "glass-strong shadow-md" : "glass shadow-xs"
           )}
         >

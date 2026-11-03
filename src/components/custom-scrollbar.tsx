@@ -157,7 +157,7 @@ export function CustomScrollbar() {
         triggerVisibility();
       }}
       onClick={handleTrackClick}
-      className={`fixed right-1.5 top-2 bottom-2 w-3 z-[9999] pointer-events-auto transition-opacity duration-300 select-none ${
+      className={`fixed right-0.5 sm:right-1.5 top-2 bottom-2 w-2 sm:w-3 z-[9999] pointer-events-auto transition-opacity duration-300 select-none ${
         show ? "opacity-100" : "opacity-0 pointer-events-none"
       }`}
     >
@@ -168,7 +168,7 @@ export function CustomScrollbar() {
           height: `${thumbHeight}px`,
           transform: `translateY(${thumbTop}px)`,
         }}
-        className="w-1.5 hover:w-2 mx-auto rounded-full cursor-pointer transition-all duration-150 shadow-sm
+        className="w-1 sm:w-1.5 hover:w-2 ml-auto mr-0 sm:mx-auto rounded-full cursor-pointer transition-all duration-150 shadow-sm
           bg-neutral-800/40 hover:bg-neutral-900/70 active:bg-neutral-950/90
           dark:bg-white/40 dark:hover:bg-white/70 dark:active:bg-white/90
           backdrop-blur-md"
