@@ -30,7 +30,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
 import { useSession } from "@/lib/auth-client";
 import { apiFetch, type EventItem, ClientApiError } from "@/lib/api";
-import { formatDate } from "@/lib/utils";
+import { formatDate, getHighResImageUrl } from "@/lib/utils";
 
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80";
@@ -57,7 +57,7 @@ export default function EventDetailsPage() {
       const res = await apiFetch<EventItem>(`/api/events/${eventId}`);
       setEvent(res.data);
       setIsPast(new Date(res.data.eventDate).getTime() <= Date.now());
-      setImgSrc(res.data.thumbnail || FALLBACK_IMAGE);
+      setImgSrc(getHighResImageUrl(res.data.thumbnail) || FALLBACK_IMAGE);
     } catch (err: any) {
       setError(err?.message || "Failed to load event details");
     } finally {
@@ -185,7 +185,10 @@ export default function EventDetailsPage() {
           <img
             src={imgSrc}
             alt={event.title}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover select-none [image-rendering:-webkit-optimize-contrast] contrast-[1.01]"
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
             onError={() => setImgSrc(FALLBACK_IMAGE)}
           />
           <div className="absolute top-4 left-4 flex gap-2">

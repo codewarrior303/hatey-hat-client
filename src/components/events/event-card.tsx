@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { CalendarDays, MapPin, ArrowRight, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { formatDate } from "@/lib/utils";
+import { formatDate, getHighResImageUrl } from "@/lib/utils";
 import type { EventItem } from "@/lib/api";
 
 interface EventCardProps {
@@ -14,11 +14,11 @@ interface EventCardProps {
 }
 
 const FALLBACK_IMAGE =
-  "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=800&q=80";
+  "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80";
 
 export function EventCard({ event }: EventCardProps) {
   const router = useRouter();
-  const [imgSrc, setImgSrc] = React.useState(event.thumbnail || FALLBACK_IMAGE);
+  const [imgSrc, setImgSrc] = React.useState(getHighResImageUrl(event.thumbnail) || FALLBACK_IMAGE);
 
   const handleCardClick = (e: React.MouseEvent) => {
     // Navigate on card click unless the user clicked an explicit link or action button

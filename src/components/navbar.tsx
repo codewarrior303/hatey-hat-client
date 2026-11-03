@@ -50,14 +50,16 @@ export function Navbar() {
   const { data: session, isPending } = useSession();
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
+  const [avatarHovered, setAvatarHovered] = React.useState(false);
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
 
   // Subscribe to react-hot-toast notifications
   const { toasts } = useToaster();
   const visibleToasts = toasts.filter((t) => t.visible);
 
-  // Auto-close dropdown when changing route or returning
+  // Auto-close dropdown and tooltip when changing route or returning
   React.useEffect(() => {
+    setAvatarHovered(false);
     setDropdownOpen(false);
   }, [pathname]);
 
@@ -99,11 +101,10 @@ export function Navbar() {
 
   return (
     <header className="sticky top-3 z-50 w-full px-3 sm:px-6 pointer-events-none transition-all duration-300">
-      <div className="container mx-auto max-w-6xl flex flex-col md:flex-row items-center justify-center gap-2.5">
+      <div className="container mx-auto max-w-5xl">
         <div
           className={cn(
-            "pointer-events-auto rounded-full transition-all duration-200 px-4 sm:px-6 h-14 flex items-center justify-between",
-            "w-full max-w-4xl",
+            "pointer-events-auto rounded-full transition-colors duration-200 px-4 sm:px-6 h-14 flex items-center justify-between w-full",
             isScrolled ? "glass-strong shadow-md" : "glass shadow-xs"
           )}
         >
@@ -141,32 +142,46 @@ export function Navbar() {
               <div className="h-9 w-20 animate-pulse rounded-full bg-neutral-200/50 dark:bg-white/10" />
             ) : user ? (
               <div className="flex items-center gap-2">
-                {/* Profile dropdown */}
-                <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      type="button"
-                      className="relative rounded-full focus:outline-none focus:ring-2 focus:ring-foreground focus:ring-offset-2 transition-transform hover:scale-105"
-                      aria-label={`User menu for ${user.name || user.email}`}
-                    >
-                      <Avatar className="h-9 w-9 border border-foreground/20">
-                        {user.image && (
-                          <AvatarImage
-                            src={user.image}
-                            alt={user.name || "User"}
-                          />
-                        )}
-                        <AvatarFallback className="text-xs font-semibold">
-                          {getFallbackAvatar(user.name || user.email)}
-                        </AvatarFallback>
-                      </Avatar>
-                    </button>
-                  </DropdownMenuTrigger>
+                {/* Profile dropdown with clean hover tooltip and no white circle */}
+                <TooltipProvider delayDuration={150}>
+                  <Tooltip open={avatarHovered && !dropdownOpen}>
+                    <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            onMouseEnter={() => setAvatarHovered(true)}
+                            onMouseLeave={() => setAvatarHovered(false)}
+                            onClick={() => {
+                              setAvatarHovered(false);
+                              setDropdownOpen((prev) => !prev);
+                            }}
+                            className="relative rounded-full focus:outline-none focus-visible:outline-none transition-transform hover:scale-105"
+                            aria-label={`User menu for ${user.name || user.email}`}
+                          >
+                            <Avatar className="h-9 w-9 border border-foreground/15">
+                              {user.image && (
+                                <AvatarImage
+                                  src={user.image}
+                                  alt={user.name || "User"}
+                                />
+                              )}
+                              <AvatarFallback className="text-xs font-semibold">
+                                {getFallbackAvatar(user.name || user.email)}
+                              </AvatarFallback>
+                            </Avatar>
+                          </button>
+                        </DropdownMenuTrigger>
+                      </TooltipTrigger>
 
-                  <DropdownMenuContent
-                    align="end"
-                    className="w-56 glass-menu p-2 shadow-2xl"
-                  >
+                      <TooltipContent side="bottom">
+                        <p className="font-medium">{user.name || user.email}</p>
+                      </TooltipContent>
+
+                      <DropdownMenuContent
+                        align="end"
+                        className="w-56 glass-menu p-2 shadow-2xl"
+                      >
                     <DropdownMenuLabel className="font-normal px-2 py-1.5">
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-semibold leading-none text-foreground">
@@ -208,6 +223,8 @@ export function Navbar() {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+              </Tooltip>
+            </TooltipProvider>
 
                 {/* Direct Logout Button */}
                 <Button
@@ -362,33 +379,24 @@ export function Navbar() {
           </Sheet>
         </div>
       </div>
+    </div>
 
-      {/* Live Notification Capsule - Side-by-Side ("Pasha-Pashi") */}
+    {/* Live Notification Container - Fixed on the right without moving the centered navbar */}
+      <div className="fixed top-3 right-3 sm:right-6 lg:right-10 z-50 flex flex-col items-end gap-2 pointer-events-none">
         {visibleToasts.map((t) => (
           <div
             key={t.id}
             role="alert"
             className={cn(
-              "pointer-events-auto flex items-center gap-2.5 rounded-full px-4 h-12 text-xs sm:text-sm font-medium shadow-2xl border backdrop-blur-2xl transition-all duration-200 animate-in fade-in-50 zoom-in-95",
+              "pointer-events-auto flex items-center gap-3 rounded-full pl-5 pr-3 h-12 text-xs sm:text-sm font-medium shadow-2xl border backdrop-blur-2xl transition-all duration-200 animate-in fade-in-50 slide-in-from-top-2",
               "glass-menu max-w-sm sm:max-w-md shrink-0",
               t.type === "error"
                 ? "border-red-500/40 text-foreground"
-                : "border-emerald-500/40 text-foreground"
+                : "border-foreground/20 text-foreground"
             )}
           >
-            <span className="shrink-0 flex items-center justify-center">
-              {t.type === "error" ? (
-                <span className="h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center font-bold text-[10px] shadow-xs">
-                  ✕
-                </span>
-              ) : (
-                <span className="h-5 w-5 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-[10px] shadow-xs">
-                  ✓
-                </span>
-              )}
-            </span>
-
-            <span className="truncate max-w-[200px] sm:max-w-[260px] text-foreground font-medium text-xs sm:text-sm">
+            {/* Clean message text without any green checkmark icon */}
+            <span className="truncate max-w-[240px] sm:max-w-[320px] text-foreground font-medium text-xs sm:text-sm select-none">
               {resolveValue(t.message, t)}
             </span>
 
@@ -396,7 +404,7 @@ export function Navbar() {
             <button
               type="button"
               onClick={() => toast.dismiss(t.id)}
-              className="ml-auto -mr-1 p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/10 transition-colors cursor-pointer shrink-0"
+              className="ml-auto p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/10 transition-colors cursor-pointer shrink-0"
               aria-label="Remove notification"
               title="Remove notification"
             >
