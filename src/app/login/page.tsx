@@ -54,7 +54,8 @@ export default function LoginPage() {
       });
 
       if (res.error) {
-        toast.error(res.error.message || "Invalid email or password");
+        // Enforce uniform authentication error message to prevent user enumeration
+        toast.error("Invalid email or password");
         return;
       }
 

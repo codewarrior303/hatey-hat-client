@@ -15,12 +15,11 @@ if (isProd && (!secret || secret.length < 32)) {
 }
 
 const appUrl = process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-const trustedOrigins = Array.from(
-  new Set([
-    appUrl.replace(/\/+$/, ""),
-    "http://localhost:3000",
-  ])
-);
+
+// Strict trusted origins: in production, NO wildcards and NO localhost allowed
+const trustedOrigins = isProd
+  ? [appUrl.replace(/\/+$/, "")]
+  : Array.from(new Set([appUrl.replace(/\/+$/, ""), "http://localhost:3000"]));
 
 export const auth = betterAuth({
   database: mongodbAdapter(db),
@@ -35,12 +34,17 @@ export const auth = betterAuth({
       maxAge: 60 * 60 * 24 * 7, // 7 days in client cookies
     },
   },
+  advanced: {
+    cookiePrefix: "hatey_hat",
+    useSecureCookies: isProd,
+  },
   rateLimit: {
     enabled: true,
     window: 60,
     max: 20,
+    storage: "database", // Persist rate limiting in MongoDB across serverless instances
     customRules: {
-      "/sign-in/email": { window: 60, max: 5 },
+      "/sign-in/email": { window: 60, max: 5 }, // 5 failed attempts per min triggers progressive block
       "/sign-up/email": { window: 60, max: 5 },
     },
   },
@@ -66,7 +70,7 @@ export const auth = betterAuth({
         }
         const image = (ctx.body as any)?.image;
         if (image && typeof image === "string") {
-          if (!/^https?:\/\//i.test(image) || /^(javascript|data|vbscript):/i.test(image)) {
+          if (!/^https?:\/\//i.test(image) || /^(javascript|data|vbscript|file):/i.test(image)) {
             throw new Error("Avatar image URL must start with http:// or https://");
           }
         }
@@ -76,7 +80,7 @@ export const auth = betterAuth({
       if (ctx.path === "/user/update") {
         const image = (ctx.body as any)?.image;
         if (image && typeof image === "string") {
-          if (!/^https?:\/\//i.test(image) || /^(javascript|data|vbscript):/i.test(image)) {
+          if (!/^https?:\/\//i.test(image) || /^(javascript|data|vbscript|file):/i.test(image)) {
             throw new Error("Avatar image URL must start with http:// or https://");
           }
         }
@@ -86,7 +90,8 @@ export const auth = betterAuth({
   plugins: [
     jwt({
       jwt: {
-        expirationTime: "1h",
+        // Short token lifetime (15 minutes). Client keeps in memory only.
+        expirationTime: "15m",
       },
     }),
   ],
