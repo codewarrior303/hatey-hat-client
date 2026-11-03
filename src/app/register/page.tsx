@@ -6,12 +6,22 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
-import { ArrowRight, Image as ImageIcon, Lock, Mail, User, Loader2, CheckCircle2, XCircle, Eye, EyeOff } from "lucide-react";
+import {
+  ArrowRight,
+  Image as ImageIcon,
+  Lock,
+  Mail,
+  User,
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { GoogleIcon } from "@/components/icons/google-icon";
 import { BrandLogo } from "@/components/brand-logo";
 import { signUp, signIn, useSession } from "@/lib/auth-client";
@@ -40,12 +50,9 @@ export default function RegisterPage() {
       photoURL: "",
       password: "",
     },
-    mode: "onChange",
   });
 
-  const passwordValue = watch("password", "");
-
-  // Real-time password requirement indicators
+  const passwordValue = watch("password") || "";
   const hasMinLength = passwordValue.length >= 6;
   const hasUppercase = /[A-Z]/.test(passwordValue);
   const hasLowercase = /[a-z]/.test(passwordValue);
@@ -60,6 +67,7 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterInput) => {
     try {
       setIsLoading(true);
+
       const res = await signUp.email({
         name: data.name.trim(),
         email: data.email.toLowerCase().trim(),
@@ -68,7 +76,7 @@ export default function RegisterPage() {
       });
 
       if (res.error) {
-        toast.error(res.error.message || "Failed to create account");
+        toast.error(res.error.message || "Registration failed. Please check your details.");
         return;
       }
 
@@ -96,48 +104,49 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="container mx-auto flex min-h-[calc(100vh-8rem)] items-center justify-center px-4 py-12">
-      <div className="w-full max-w-lg space-y-6 animate-in fade-in-50 duration-300">
+    <div className="container mx-auto flex min-h-[calc(100vh-10rem)] items-center justify-center px-4 py-8">
+      <div className="w-full max-w-md space-y-6 animate-in fade-in-50 duration-300">
         <div className="flex flex-col items-center text-center space-y-2">
           <BrandLogo showTagline />
-          <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground pt-3">
-            Join the Community
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground pt-3">
+            Join the community.
           </h1>
           <p className="text-sm text-muted-foreground">
-            Register to organize, join, and support community drives around Dhaka.
+            Create an account to organize drives and register for local initiatives.
           </p>
         </div>
 
-        <Card className="border-border shadow-md">
-          <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-lg">Create an Account</CardTitle>
-            <CardDescription>
-              Fill in your details to get started with Hatey Hat.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <div className="rounded-[32px] glass p-8 sm:p-10 shadow-lg space-y-6">
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold text-foreground">Create Account</h2>
+            <p className="text-xs text-muted-foreground">
+              Sign up with Google or your email to get started.
+            </p>
+          </div>
+
+          <div className="space-y-4">
             {/* Social Login: Google */}
             <Button
               type="button"
               variant="outline"
-              className="w-full gap-2.5 h-11 font-medium bg-background hover:bg-muted"
+              className="w-full gap-2.5 h-11 rounded-full font-medium glass"
               onClick={handleGoogleLogin}
               disabled={isGoogleLoading || isLoading}
             >
               {isGoogleLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <GoogleIcon className="h-5 w-5" />
+                <GoogleIcon className="h-4 w-4" />
               )}
               <span>Sign up with Google</span>
             </Button>
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border" />
+                <span className="w-full border-t border-foreground/10" />
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground font-medium">
+              <div className="relative flex justify-center text-xs uppercase tracking-wider">
+                <span className="glass px-3 py-0.5 rounded-full text-muted-foreground font-medium text-[11px]">
                   Or register with email
                 </span>
               </div>
@@ -148,12 +157,12 @@ export default function RegisterPage() {
               <div className="space-y-1.5">
                 <Label htmlFor="name">Full Name</Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <User className="absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="name"
                     type="text"
                     placeholder="Abir Rahman"
-                    className="pl-9"
+                    className="pl-10 h-11 rounded-xl glass bg-transparent border-foreground/15 text-sm"
                     autoComplete="name"
                     {...register("name")}
                     aria-invalid={Boolean(errors.name)}
@@ -170,12 +179,12 @@ export default function RegisterPage() {
               <div className="space-y-1.5">
                 <Label htmlFor="email">Email Address</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="email"
                     type="email"
                     placeholder="volunteers@hateyhat.org"
-                    className="pl-9"
+                    className="pl-10 h-11 rounded-xl glass bg-transparent border-foreground/15 text-sm"
                     autoComplete="email"
                     {...register("email")}
                     aria-invalid={Boolean(errors.email)}
@@ -191,16 +200,16 @@ export default function RegisterPage() {
               {/* Photo URL */}
               <div className="space-y-1.5">
                 <Label htmlFor="photoURL">
-                  Profile Picture URL{" "}
+                  Avatar Image URL{" "}
                   <span className="text-xs text-muted-foreground font-normal">(optional)</span>
                 </Label>
                 <div className="relative">
-                  <ImageIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <ImageIcon className="absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="photoURL"
                     type="url"
                     placeholder="https://images.unsplash.com/photo-..."
-                    className="pl-9"
+                    className="pl-10 h-11 rounded-xl glass bg-transparent border-foreground/15 text-sm"
                     {...register("photoURL")}
                     aria-invalid={Boolean(errors.photoURL)}
                   />
@@ -216,12 +225,12 @@ export default function RegisterPage() {
               <div className="space-y-1.5">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className="pl-9 pr-10"
+                    className="pl-10 pr-11 h-11 rounded-xl glass bg-transparent border-foreground/15 text-sm"
                     autoComplete="new-password"
                     {...register("password")}
                     aria-invalid={Boolean(errors.password)}
@@ -229,7 +238,7 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors focus:outline-none"
+                    className="absolute right-3.5 top-3.5 text-muted-foreground hover:text-foreground transition-colors focus:outline-none"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? (
@@ -246,44 +255,44 @@ export default function RegisterPage() {
                 )}
 
                 {/* Password Rule Checklist */}
-                <div className="rounded-lg bg-muted/60 p-3 text-xs space-y-1.5 mt-2">
-                  <p className="font-semibold text-foreground/80">Password Requirements:</p>
+                <div className="rounded-2xl glass p-3 text-xs space-y-1.5 mt-2">
+                  <p className="font-semibold text-foreground/80">Requirements:</p>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-1">
                     <span
                       className={`flex items-center gap-1.5 ${
-                        hasMinLength ? "text-primary font-medium" : "text-muted-foreground"
+                        hasMinLength ? "text-foreground font-medium" : "text-muted-foreground"
                       }`}
                     >
                       {hasMinLength ? (
                         <CheckCircle2 className="h-3.5 w-3.5" />
                       ) : (
-                        <XCircle className="h-3.5 w-3.5 opacity-60" />
+                        <XCircle className="h-3.5 w-3.5 opacity-40" />
                       )}
-                      At least 6 chars
+                      6+ chars
                     </span>
                     <span
                       className={`flex items-center gap-1.5 ${
-                        hasUppercase ? "text-primary font-medium" : "text-muted-foreground"
+                        hasUppercase ? "text-foreground font-medium" : "text-muted-foreground"
                       }`}
                     >
                       {hasUppercase ? (
                         <CheckCircle2 className="h-3.5 w-3.5" />
                       ) : (
-                        <XCircle className="h-3.5 w-3.5 opacity-60" />
+                        <XCircle className="h-3.5 w-3.5 opacity-40" />
                       )}
-                      1 uppercase (A-Z)
+                      1 uppercase
                     </span>
                     <span
                       className={`flex items-center gap-1.5 ${
-                        hasLowercase ? "text-primary font-medium" : "text-muted-foreground"
+                        hasLowercase ? "text-foreground font-medium" : "text-muted-foreground"
                       }`}
                     >
                       {hasLowercase ? (
                         <CheckCircle2 className="h-3.5 w-3.5" />
                       ) : (
-                        <XCircle className="h-3.5 w-3.5 opacity-60" />
+                        <XCircle className="h-3.5 w-3.5 opacity-40" />
                       )}
-                      1 lowercase (a-z)
+                      1 lowercase
                     </span>
                   </div>
                 </div>
@@ -291,8 +300,8 @@ export default function RegisterPage() {
 
               <Button
                 type="submit"
-                className="w-full gap-2 font-semibold h-10 mt-2"
-                disabled={isLoading || isGoogleLoading}
+                disabled={isLoading}
+                className="w-full gap-2 rounded-full font-medium h-11 mt-2 shadow-xs"
               >
                 {isLoading ? (
                   <>
@@ -301,25 +310,24 @@ export default function RegisterPage() {
                   </>
                 ) : (
                   <>
-                    <span>Register</span>
+                    <span>Create Account</span>
                     <ArrowRight className="h-4 w-4" />
                   </>
                 )}
               </Button>
             </form>
-          </CardContent>
-          <CardFooter className="flex flex-col border-t border-border/80 pt-4 text-center text-sm text-muted-foreground">
-            <p>
-              Already have an account?{" "}
-              <Link
-                href={`/login${redirectUrl !== "/" ? `?redirect=${encodeURIComponent(redirectUrl)}` : ""}`}
-                className="font-semibold text-primary underline-offset-4 hover:underline"
-              >
-                Sign In
-              </Link>
-            </p>
-          </CardFooter>
-        </Card>
+          </div>
+
+          <div className="text-center pt-2 border-t border-foreground/10 text-xs text-muted-foreground">
+            Already have an account?{" "}
+            <Link
+              href={redirectUrl !== "/" ? `/login?redirect=${encodeURIComponent(redirectUrl)}` : "/login"}
+              className="font-semibold text-foreground hover:underline"
+            >
+              Sign in here
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -5,14 +5,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import toast from "react-hot-toast";
-import { User, Mail, Image as ImageIcon, Loader2, Save, ShieldCheck } from "lucide-react";
+import { User, Mail, Image as ImageIcon, Loader2, Save } from "lucide-react";
 
 import { PrivateRoute } from "@/components/auth/private-route";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSession, updateUser } from "@/lib/auth-client";
 import { getFallbackAvatar } from "@/lib/utils";
@@ -93,137 +91,124 @@ export default function ProfilePage() {
 
   return (
     <PrivateRoute>
-      <div className="container mx-auto px-4 sm:px-6 py-10 md:py-14 max-w-3xl space-y-8 animate-in fade-in-50">
-        <div className="space-y-2 pb-6 border-b border-border">
-          <Badge variant="outline" className="border-primary/30 text-primary font-semibold">
-            <ShieldCheck className="h-3.5 w-3.5 mr-1" />
+      <div className="container mx-auto px-4 sm:px-6 py-8 md:py-12 max-w-2xl space-y-8 animate-in fade-in-50">
+        <div className="space-y-1.5 pb-6 border-b border-foreground/10">
+          <p className="text-xs uppercase tracking-widest font-semibold text-muted-foreground">
             Volunteer Identity
-          </Badge>
-          <h1 className="font-heading text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
+          </p>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-foreground">
             Volunteer Profile
           </h1>
-          <p className="text-sm sm:text-base text-muted-foreground">
-            Manage your display name and community avatar shown to organizers and fellow volunteers.
+          <p className="text-[15px] text-muted-foreground">
+            Your name and avatar appear when you create community initiatives across Dhaka.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Avatar Preview Card (1 col) */}
-          <Card className="border-border bg-card p-6 flex flex-col items-center text-center space-y-4">
-            <Avatar className="h-24 w-24 border-4 border-primary/20 shadow-md">
-              {previewPhoto ? (
-                <AvatarImage src={previewPhoto} alt={previewName || "User"} />
-              ) : user?.image ? (
-                <AvatarImage src={user.image} alt={user.name || "User"} />
-              ) : null}
-              <AvatarFallback className="text-xl">
-                {getFallbackAvatar(previewName || user?.name || user?.email || "HH")}
+        {/* Profile Card in Liquid Glass */}
+        <div className="rounded-[32px] glass p-6 sm:p-10 shadow-xs space-y-8">
+          {/* Avatar Preview */}
+          <div className="flex flex-col sm:flex-row items-center gap-5 pb-6 border-b border-foreground/10">
+            <Avatar className="h-20 w-20 border-2 border-foreground/20 shadow-xs">
+              <AvatarImage
+                src={previewPhoto || user?.image || undefined}
+                alt={previewName || user?.name || "User"}
+              />
+              <AvatarFallback className="text-xl font-semibold">
+                {getFallbackAvatar(previewName || user?.name || user?.email || "User")}
               </AvatarFallback>
             </Avatar>
 
-            <div className="space-y-1">
-              <h3 className="font-heading text-lg font-bold text-foreground">
-                {previewName || user?.name || "Community Volunteer"}
-              </h3>
-              <p className="text-xs text-muted-foreground">{user?.email}</p>
+            <div className="space-y-1 text-center sm:text-left">
+              <h2 className="text-xl font-semibold text-foreground">
+                {previewName || user?.name || "Community Member"}
+              </h2>
+              <p className="text-sm text-muted-foreground flex items-center justify-center sm:justify-start gap-1.5">
+                <Mail className="h-3.5 w-3.5" />
+                <span>{user?.email}</span>
+              </p>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            {/* Display Name */}
+            <div className="space-y-1.5">
+              <Label htmlFor="name">Display Name</Label>
+              <div className="relative">
+                <User className="absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="name"
+                  placeholder="Your full name"
+                  className="pl-10 h-11 rounded-xl glass bg-transparent border-foreground/15 text-sm"
+                  {...register("name")}
+                  aria-invalid={Boolean(errors.name)}
+                />
+              </div>
+              {errors.name && (
+                <p className="text-xs font-medium text-destructive">
+                  {errors.name.message}
+                </p>
+              )}
             </div>
 
-            <Badge variant="secondary" className="text-xs font-semibold">
-              Active Contributor
-            </Badge>
-          </Card>
+            {/* Email (Read-Only) */}
+            <div className="space-y-1.5">
+              <Label htmlFor="email">Email Address (Primary)</Label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="email"
+                  type="email"
+                  value={user?.email || ""}
+                  disabled
+                  className="pl-10 h-11 rounded-xl glass bg-foreground/5 border-foreground/10 text-muted-foreground cursor-not-allowed text-sm"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Authentication email cannot be changed directly.
+              </p>
+            </div>
 
-          {/* Edit Form Card (2 cols) */}
-          <Card className="md:col-span-2 border-border shadow-xs">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg">Edit Personal Information</CardTitle>
-              <CardDescription>
-                Updates will be reflected immediately across Hatey Hat events and registrations.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                {/* Full Name */}
-                <div className="space-y-1.5">
-                  <Label htmlFor="name">Display Name</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="name"
-                      placeholder="Your name"
-                      className="pl-9"
-                      {...register("name")}
-                      aria-invalid={Boolean(errors.name)}
-                    />
-                  </div>
-                  {errors.name && (
-                    <p className="text-xs font-medium text-destructive">
-                      {errors.name.message}
-                    </p>
-                  )}
-                </div>
+            {/* Photo URL */}
+            <div className="space-y-1.5">
+              <Label htmlFor="photoURL">Avatar Image URL (Optional)</Label>
+              <div className="relative">
+                <ImageIcon className="absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="photoURL"
+                  type="url"
+                  placeholder="https://images.unsplash.com/photo-..."
+                  className="pl-10 h-11 rounded-xl glass bg-transparent border-foreground/15 text-sm"
+                  {...register("photoURL")}
+                  aria-invalid={Boolean(errors.photoURL)}
+                />
+              </div>
+              {errors.photoURL && (
+                <p className="text-xs font-medium text-destructive">
+                  {errors.photoURL.message}
+                </p>
+              )}
+            </div>
 
-                {/* Email (Readonly) */}
-                <div className="space-y-1.5">
-                  <Label htmlFor="email">Email Address</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      value={user?.email || ""}
-                      readOnly
-                      disabled
-                      className="pl-9 bg-muted/60 cursor-not-allowed"
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Email address is tied to your account and cannot be modified directly.
-                  </p>
-                </div>
-
-                {/* Photo URL */}
-                <div className="space-y-1.5">
-                  <Label htmlFor="photoURL">Avatar Image URL</Label>
-                  <div className="relative">
-                    <ImageIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="photoURL"
-                      type="url"
-                      placeholder="https://images.unsplash.com/..."
-                      className="pl-9"
-                      {...register("photoURL")}
-                      aria-invalid={Boolean(errors.photoURL)}
-                    />
-                  </div>
-                  {errors.photoURL && (
-                    <p className="text-xs font-medium text-destructive">
-                      {errors.photoURL.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="pt-2 flex justify-end">
-                  <Button
-                    type="submit"
-                    disabled={isUpdating || !isDirty}
-                    className="gap-2 font-semibold"
-                  >
-                    {isUpdating ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Saving...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Save className="h-4 w-4" />
-                        <span>Save Profile</span>
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
+            <div className="pt-4 flex justify-end">
+              <Button
+                type="submit"
+                disabled={isUpdating || !isDirty}
+                className="rounded-full h-11 px-7 font-medium gap-2 shadow-xs"
+              >
+                {isUpdating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" />
+                    <span>Save Changes</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
         </div>
       </div>
     </PrivateRoute>

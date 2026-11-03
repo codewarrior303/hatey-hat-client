@@ -48,6 +48,15 @@ export function Navbar() {
   const router = useRouter();
   const { data: session, isPending } = useSession();
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [isScrolled, setIsScrolled] = React.useState(false);
+
+  React.useEffect(() => {
+    const onScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const user = session?.user;
 
@@ -78,13 +87,18 @@ export function Navbar() {
   ];
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/80 bg-background/85 backdrop-blur-md transition-colors">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6">
+    <header className="sticky top-3 z-50 w-full px-3 sm:px-6 pointer-events-none transition-all duration-300">
+      <div
+        className={cn(
+          "container mx-auto max-w-5xl pointer-events-auto rounded-full transition-all duration-300 px-4 sm:px-6 h-14 flex items-center justify-between",
+          isScrolled ? "glass-strong shadow-md scale-[0.99]" : "glass shadow-xs"
+        )}
+      >
         {/* Brand Logo */}
         <BrandLogo />
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-6">
+        {/* Desktop Navigation (Centered) */}
+        <nav className="hidden md:flex items-center gap-1">
           {navLinks.map((link) => {
             const Icon = link.icon;
             const isActive = pathname === link.href;
@@ -93,28 +107,28 @@ export function Navbar() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary",
+                  "flex items-center gap-2 rounded-full px-4 py-1.5 text-[14px] font-medium transition-all",
                   isActive
-                    ? "text-primary font-semibold"
-                    : "text-foreground/80"
+                    ? "bg-foreground/10 text-foreground font-semibold"
+                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
                 )}
               >
-                <Icon className="h-4 w-4" />
-                {link.label}
+                <Icon className="h-4 w-4 opacity-70" />
+                <span>{link.label}</span>
               </Link>
             );
           })}
         </nav>
 
         {/* Actions (Desktop) */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-2.5">
           <ThemeToggle />
 
           {isPending ? (
-            <div className="h-10 w-24 animate-pulse rounded-lg bg-muted" />
+            <div className="h-9 w-20 animate-pulse rounded-full bg-neutral-200/50 dark:bg-white/10" />
           ) : user ? (
-            <div className="flex items-center gap-3">
-              {/* Profile dropdown with Tooltip on hover for display name */}
+            <div className="flex items-center gap-2">
+              {/* Profile dropdown */}
               <TooltipProvider delayDuration={200}>
                 <Tooltip>
                   <DropdownMenu>
@@ -122,29 +136,32 @@ export function Navbar() {
                       <DropdownMenuTrigger asChild>
                         <button
                           type="button"
-                          className="relative rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-transform hover:scale-105"
+                          className="relative rounded-full focus:outline-none focus:ring-2 focus:ring-foreground focus:ring-offset-2 transition-transform hover:scale-105"
                           aria-label={`User menu for ${user.name || user.email}`}
                         >
-                          <Avatar className="h-10 w-10 border-2 border-primary/30">
+                          <Avatar className="h-9 w-9 border border-foreground/20">
                             {user.image && (
                               <AvatarImage
                                 src={user.image}
                                 alt={user.name || "User"}
                               />
                             )}
-                            <AvatarFallback>
+                            <AvatarFallback className="text-xs font-semibold">
                               {getFallbackAvatar(user.name || user.email)}
                             </AvatarFallback>
                           </Avatar>
                         </button>
                       </DropdownMenuTrigger>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom">
+                    <TooltipContent side="bottom" className="glass text-xs">
                       <p className="font-medium">{user.name || user.email}</p>
                     </TooltipContent>
 
-                    <DropdownMenuContent align="end" className="w-56">
-                      <DropdownMenuLabel className="font-normal">
+                    <DropdownMenuContent
+                      align="end"
+                      className="w-56 glass border-border/60 p-2 shadow-xl"
+                    >
+                      <DropdownMenuLabel className="font-normal px-2 py-1.5">
                         <div className="flex flex-col space-y-1">
                           <p className="text-sm font-semibold leading-none text-foreground">
                             {user.name || "Community Member"}
@@ -154,27 +171,31 @@ export function Navbar() {
                           </p>
                         </div>
                       </DropdownMenuLabel>
-                      <DropdownMenuSeparator />
+                      <DropdownMenuSeparator className="bg-foreground/10 my-1" />
 
                       {userMenuItems.map((item) => {
                         const Icon = item.icon;
                         return (
-                          <DropdownMenuItem key={item.href} asChild>
+                          <DropdownMenuItem
+                            key={item.href}
+                            asChild
+                            className="rounded-xl px-2.5 py-2 cursor-pointer focus:bg-foreground/10"
+                          >
                             <Link
                               href={item.href}
-                              className="flex items-center gap-2 cursor-pointer"
+                              className="flex items-center gap-2.5 text-sm"
                             >
-                              <Icon className="h-4 w-4 text-primary" />
+                              <Icon className="h-4 w-4 text-muted-foreground" />
                               <span>{item.label}</span>
                             </Link>
                           </DropdownMenuItem>
                         );
                       })}
 
-                      <DropdownMenuSeparator />
+                      <DropdownMenuSeparator className="bg-foreground/10 my-1" />
                       <DropdownMenuItem
                         onClick={handleLogout}
-                        className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
+                        className="rounded-xl px-2.5 py-2 text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer flex items-center gap-2.5 text-sm"
                       >
                         <LogOut className="h-4 w-4" />
                         <span>Log Out</span>
@@ -189,48 +210,51 @@ export function Navbar() {
                 variant="outline"
                 size="sm"
                 onClick={handleLogout}
-                className="gap-1.5"
+                className="gap-1.5 text-xs h-8 px-3"
               >
-                <LogOut className="h-4 w-4" />
+                <LogOut className="h-3.5 w-3.5" />
                 <span>Logout</span>
               </Button>
             </div>
           ) : (
-            <Button asChild size="default" className="gap-2">
+            <Button asChild size="sm" className="gap-2 h-9 px-4 font-medium">
               <Link href="/login">
                 <LogIn className="h-4 w-4" />
-                <span>Login</span>
+                <span>Sign In</span>
               </Link>
             </Button>
           )}
         </div>
 
-        {/* Mobile Hamburger & Drawer */}
+        {/* Mobile Navigation Trigger */}
         <div className="flex md:hidden items-center gap-2">
           <ThemeToggle />
-
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
+                className="h-9 w-9 rounded-full"
                 aria-label="Open mobile menu"
-                className="rounded-lg"
               >
-                <Menu className="h-6 w-6" />
+                <Menu className="h-4 w-4" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-80 flex flex-col justify-between">
-              <div>
-                <SheetHeader className="text-left pb-4 border-b border-border">
+
+            <SheetContent
+              side="right"
+              className="w-72 glass-strong border-border/40 p-6 flex flex-col justify-between"
+            >
+              <div className="space-y-6">
+                <SheetHeader className="text-left pb-4 border-b border-border/40">
                   <SheetTitle>
                     <BrandLogo />
                   </SheetTitle>
                 </SheetHeader>
 
                 {user && (
-                  <div className="flex items-center gap-3 p-3 my-4 rounded-xl bg-muted/60">
-                    <Avatar className="h-11 w-11 border-2 border-primary/40">
+                  <div className="flex items-center gap-3 p-3 rounded-2xl glass">
+                    <Avatar className="h-10 w-10 border border-foreground/20">
                       {user.image && (
                         <AvatarImage src={user.image} alt={user.name || "User"} />
                       )}
@@ -238,8 +262,8 @@ export function Navbar() {
                         {getFallbackAvatar(user.name || user.email)}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex flex-col truncate">
-                      <span className="font-semibold text-sm text-foreground truncate">
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm font-semibold truncate">
                         {user.name || "Community Member"}
                       </span>
                       <span className="text-xs text-muted-foreground truncate">
@@ -249,86 +273,85 @@ export function Navbar() {
                   </div>
                 )}
 
-                <div className="flex flex-col space-y-1.5 py-4">
-                  <Link
-                    href="/events"
-                    onClick={() => setMobileOpen(false)}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-muted",
-                      pathname === "/events"
-                        ? "bg-primary/10 text-primary font-semibold"
-                        : "text-foreground"
-                    )}
-                  >
-                    <CalendarDays className="h-4 w-4" />
-                    Upcoming Events
-                  </Link>
-
-                  {user && (
-                    <>
-                      <div className="pt-2 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3">
-                        My Activity
-                      </div>
-                      {userMenuItems.map((item) => {
-                        const Icon = item.icon;
-                        const isActive = pathname === item.href;
-                        return (
-                          <Link
-                            key={item.href}
-                            href={item.href}
-                            onClick={() => setMobileOpen(false)}
-                            className={cn(
-                              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-muted",
-                              isActive
-                                ? "bg-primary/10 text-primary font-semibold"
-                                : "text-foreground"
-                            )}
-                          >
-                            <Icon className="h-4 w-4 text-primary" />
-                            {item.label}
-                          </Link>
-                        );
-                      })}
-                    </>
-                  )}
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-2 pb-1">
+                    Explore
+                  </p>
+                  {navLinks.map((link) => {
+                    const Icon = link.icon;
+                    const isActive = pathname === link.href;
+                    return (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setMobileOpen(false)}
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2.5 rounded-full text-sm font-medium transition-colors",
+                          isActive
+                            ? "bg-foreground text-background"
+                            : "hover:bg-foreground/5 text-foreground"
+                        )}
+                      >
+                        <Icon className="h-4 w-4" />
+                        <span>{link.label}</span>
+                      </Link>
+                    );
+                  })}
                 </div>
+
+                {user && (
+                  <div className="space-y-1">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-2 pb-1">
+                      Dashboard
+                    </p>
+                    {userMenuItems.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = pathname === item.href;
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setMobileOpen(false)}
+                          className={cn(
+                            "flex items-center gap-3 px-3 py-2.5 rounded-full text-sm font-medium transition-colors",
+                            isActive
+                              ? "bg-foreground text-background"
+                              : "hover:bg-foreground/5 text-foreground"
+                          )}
+                        >
+                          <Icon className="h-4 w-4" />
+                          <span>{item.label}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
-              {/* Bottom Actions */}
-              <div className="border-t border-border pt-4">
+              <div className="pt-6 border-t border-border/40">
                 {user ? (
                   <Button
                     variant="outline"
-                    className="w-full gap-2 text-destructive hover:bg-destructive/10"
+                    className="w-full justify-center gap-2 text-destructive hover:bg-destructive/10"
                     onClick={() => {
                       setMobileOpen(false);
                       handleLogout();
                     }}
                   >
                     <LogOut className="h-4 w-4" />
-                    Logout
+                    <span>Log Out</span>
                   </Button>
                 ) : (
-                  <div className="flex flex-col gap-2">
-                    <Button
-                      asChild
-                      className="w-full gap-2"
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      <Link href="/login">
-                        <LogIn className="h-4 w-4" />
-                        Login
-                      </Link>
-                    </Button>
-                    <Button
-                      asChild
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      <Link href="/register">Register</Link>
-                    </Button>
-                  </div>
+                  <Button
+                    asChild
+                    className="w-full justify-center gap-2"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <Link href="/login">
+                      <LogIn className="h-4 w-4" />
+                      <span>Sign In</span>
+                    </Link>
+                  </Button>
                 )}
               </div>
             </SheetContent>

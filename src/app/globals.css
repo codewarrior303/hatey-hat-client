@@ -3,48 +3,68 @@
 @custom-variant dark (&:is(.dark, .dark *));
 
 :root {
-  --background: #fbf6ec;
-  --foreground: #1f2a24;
-  --card: #ffffff;
-  --card-foreground: #1f2a24;
-  --popover: #ffffff;
-  --popover-foreground: #1f2a24;
-  --primary: #1f6f54;
+  /* Apple Monochrome Light Palette */
+  --background: #ffffff;
+  --foreground: #1d1d1f;
+  --card: rgba(255, 255, 255, 0.72);
+  --card-foreground: #1d1d1f;
+  --popover: rgba(255, 255, 255, 0.88);
+  --popover-foreground: #1d1d1f;
+  
+  /* Primary buttons: solid black in light mode */
+  --primary: #000000;
   --primary-foreground: #ffffff;
-  --secondary: #f0e7d8;
-  --secondary-foreground: #1f2a24;
-  --muted: #ede4d2;
-  --muted-foreground: #5e6c64;
-  --accent: #f2a93b;
-  --accent-foreground: #2a1b02;
-  --destructive: #c53030;
+  
+  --secondary: #f5f5f7;
+  --secondary-foreground: #1d1d1f;
+  --muted: #f5f5f7;
+  --muted-foreground: #6e6e73;
+  --accent: #1d1d1f;
+  --accent-foreground: #ffffff;
+  
+  --destructive: #d70015;
   --destructive-foreground: #ffffff;
-  --border: #e2d7c3;
-  --input: #ded3bf;
-  --ring: #1f6f54;
-  --radius: 0.625rem;
+  
+  --border: rgba(0, 0, 0, 0.08);
+  --input: rgba(0, 0, 0, 0.08);
+  --ring: #000000;
+  --radius: 1.25rem;
+
+  /* Custom Slim Apple Scrollbar */
+  --scroll-thumb: rgba(0, 0, 0, 0.25);
+  --scroll-thumb-hover: rgba(0, 0, 0, 0.45);
 }
 
 .dark {
-  --background: #121714;
-  --foreground: #f5f2eb;
-  --card: #19211c;
-  --card-foreground: #f5f2eb;
-  --popover: #19211c;
-  --popover-foreground: #f5f2eb;
-  --primary: #2da37c;
-  --primary-foreground: #081710;
-  --secondary: #222c26;
-  --secondary-foreground: #f5f2eb;
-  --muted: #222b25;
-  --muted-foreground: #a1afa7;
-  --accent: #f5b85c;
-  --accent-foreground: #1f1402;
-  --destructive: #e53e3e;
+  /* Apple Monochrome Dark Palette */
+  --background: #000000;
+  --foreground: #f5f5f7;
+  --card: rgba(28, 28, 30, 0.65);
+  --card-foreground: #f5f5f7;
+  --popover: rgba(28, 28, 30, 0.88);
+  --popover-foreground: #f5f5f7;
+  
+  /* Primary buttons: solid white in dark mode */
+  --primary: #ffffff;
+  --primary-foreground: #000000;
+  
+  --secondary: #1c1c1e;
+  --secondary-foreground: #f5f5f7;
+  --muted: #1c1c1e;
+  --muted-foreground: #a1a1a6;
+  --accent: #f5f5f7;
+  --accent-foreground: #000000;
+  
+  --destructive: #ff453a;
   --destructive-foreground: #ffffff;
-  --border: #2c3831;
-  --input: #313f37;
-  --ring: #2da37c;
+  
+  --border: rgba(255, 255, 255, 0.12);
+  --input: rgba(255, 255, 255, 0.12);
+  --ring: #ffffff;
+
+  /* Custom Slim Apple Scrollbar (Dark) */
+  --scroll-thumb: rgba(255, 255, 255, 0.28);
+  --scroll-thumb-hover: rgba(255, 255, 255, 0.5);
 }
 
 @theme inline {
@@ -67,16 +87,152 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --font-heading: var(--font-fraunces), Georgia, serif;
-  --font-sans: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 1.75rem;
+  --radius-full: 9999px;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", var(--font-inter), system-ui, sans-serif;
+  --font-heading: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", var(--font-inter), system-ui, sans-serif;
 }
 
 * {
   border-color: var(--border);
+}
+
+/* =========================================================================
+   Custom Minimal Apple Scrollbar (CSS-Only, Accessible, Zero JavaScript)
+   ========================================================================= */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-thumb) transparent;
+  scroll-behavior: smooth;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--scroll-thumb);
+  border-radius: 9999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 0.2s ease-out;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scroll-thumb-hover);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+@media (forced-colors: active) {
+  html, * {
+    scrollbar-color: auto;
+  }
+}
+
+/* Apply scrollbar styling across all inner scroll areas */
+textarea, select, [role="dialog"], .overflow-y-auto, .overflow-x-auto, [data-radix-scroll-area-viewport] {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-thumb) transparent;
+}
+
+/* =========================================================================
+   Liquid Glass Utility Classes
+   ========================================================================= */
+.glass {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 8px 32px rgba(0, 0, 0, 0.06);
+  border-radius: 24px;
+}
+
+.dark .glass {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 8px 32px rgba(0, 0, 0, 0.45);
+  border-radius: 24px;
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(32px) saturate(190%);
+  -webkit-backdrop-filter: blur(32px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 12px 40px rgba(0, 0, 0, 0.08);
+  border-radius: 28px;
+}
+
+.dark .glass-strong {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(32px) saturate(190%);
+  -webkit-backdrop-filter: blur(32px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 12px 40px rgba(0, 0, 0, 0.6);
+  border-radius: 28px;
+}
+
+.glass-card {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-3px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 16px 40px rgba(0, 0, 0, 0.09);
+  border-color: rgba(0, 0, 0, 0.14);
+}
+
+.dark .glass-card:hover {
+  transform: translateY(-3px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 16px 40px rgba(0, 0, 0, 0.65);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+/* Fallback for browsers without backdrop-filter */
+@supports not (backdrop-filter: blur(1px)) {
+  .glass {
+    background: #ffffff;
+  }
+  .dark .glass {
+    background: #1c1c1e;
+  }
+  .glass-strong {
+    background: #ffffff;
+  }
+  .dark .glass-strong {
+    background: #141416;
+  }
+}
+
+/* Respect user preferences */
+@media (prefers-reduced-transparency: reduce) {
+  .glass, .glass-strong {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: var(--background);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-card, .glass-card:hover, * {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+    transform: none !important;
+  }
 }
 
 body {
@@ -86,8 +242,11 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  letter-spacing: -0.011em;
 }
 
 h1, h2, h3, h4, .font-heading {
   font-family: var(--font-heading);
+  letter-spacing: -0.025em;
+  font-weight: 600;
 }

@@ -21,7 +21,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -301,12 +300,12 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
 
         {/* Right Column: Live Thumbnail Preview & Guidelines (1 col) */}
         <div className="space-y-5">
-          <Card className="border-border bg-card p-4 space-y-3">
+          <div className="rounded-[24px] glass p-4 space-y-3">
             <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-              <Eye className="h-4 w-4 text-primary" />
+              <Eye className="h-4 w-4 text-foreground/70" />
               <span>Image Preview</span>
             </div>
-            <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl border border-border bg-muted flex items-center justify-center">
+            <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[18px] bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center">
               {previewThumbnail ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -324,16 +323,16 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
                 </div>
               )}
             </div>
-          </Card>
+          </div>
 
-          <Card className="border-border bg-muted/40 p-5 space-y-3 text-xs text-muted-foreground">
+          <div className="rounded-[24px] glass p-5 space-y-3 text-xs text-muted-foreground">
             <h4 className="font-semibold text-foreground text-sm">Community Guidelines</h4>
             <ul className="space-y-2 list-disc list-inside leading-relaxed">
               <li>Ensure the event location is safe and publicly accessible.</li>
               <li>Provide honest counts of beneficiaries and volunteers needed.</li>
               <li>Organizers are responsible for coordinating on-site relief activity.</li>
             </ul>
-          </Card>
+          </div>
         </div>
       </div>
 

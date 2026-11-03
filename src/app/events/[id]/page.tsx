@@ -20,7 +20,6 @@ import toast from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
 import { useSession } from "@/lib/auth-client";
@@ -126,15 +125,15 @@ export default function EventDetailsPage() {
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 sm:px-6 py-10 md:py-14 max-w-4xl space-y-8 animate-in fade-in-50">
-        <Skeleton className="h-6 w-32" />
-        <Skeleton className="aspect-[21/9] w-full rounded-2xl" />
+        <Skeleton className="h-6 w-32 rounded-full" />
+        <Skeleton className="aspect-[21/9] w-full rounded-[28px] bg-neutral-200/50 dark:bg-white/10" />
         <div className="space-y-4">
-          <Skeleton className="h-10 w-3/4" />
+          <Skeleton className="h-10 w-3/4 rounded-full bg-neutral-200/50 dark:bg-white/10" />
           <div className="flex gap-4">
-            <Skeleton className="h-5 w-40" />
-            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-5 w-40 rounded-full bg-neutral-200/40 dark:bg-white/5" />
+            <Skeleton className="h-5 w-40 rounded-full bg-neutral-200/40 dark:bg-white/5" />
           </div>
-          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full rounded-[24px] bg-neutral-200/30 dark:bg-white/5" />
         </div>
       </div>
     );
@@ -149,7 +148,7 @@ export default function EventDetailsPage() {
           onRetry={fetchEvent}
         />
         <div className="text-center mt-6">
-          <Button asChild variant="outline">
+          <Button asChild variant="outline" className="rounded-full glass">
             <Link href="/events" className="gap-2">
               <ArrowLeft className="h-4 w-4" />
               <span>Back to Upcoming Events</span>
@@ -161,61 +160,63 @@ export default function EventDetailsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 py-10 md:py-14 max-w-4xl space-y-8">
-      {/* Navigation */}
+    <div className="container mx-auto px-4 sm:px-6 py-8 md:py-12 max-w-4xl space-y-8">
+      {/* Back Button */}
       <div>
         <Link
           href="/events"
-          className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+          className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors glass rounded-full px-4 py-1.5"
         >
           <ArrowLeft className="h-4 w-4" />
           <span>Back to All Events</span>
         </Link>
       </div>
 
-      {/* Main Banner Image */}
-      <div className="relative aspect-[21/9] sm:aspect-[2/1] w-full overflow-hidden rounded-2xl border border-border bg-muted shadow-md">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={imgSrc}
-          alt={event.title}
-          className="h-full w-full object-cover"
-          onError={() => setImgSrc(FALLBACK_IMAGE)}
-        />
-        <div className="absolute top-4 left-4 flex gap-2">
-          <Badge variant="outline" className="bg-card/90 backdrop-blur-md font-bold shadow-xs">
-            {event.eventType}
-          </Badge>
-          {isPast && (
-            <Badge variant="destructive" className="font-semibold">
-              Event Concluded
-            </Badge>
-          )}
+      {/* Hero Banner Image in Glass Container */}
+      <div className="relative aspect-[21/9] sm:aspect-[2/1] w-full overflow-hidden rounded-[28px] glass p-2 shadow-sm">
+        <div className="w-full h-full overflow-hidden rounded-[22px] bg-neutral-100 dark:bg-neutral-900 relative">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imgSrc}
+            alt={event.title}
+            className="h-full w-full object-cover"
+            onError={() => setImgSrc(FALLBACK_IMAGE)}
+          />
+          <div className="absolute top-4 left-4 flex gap-2">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium tracking-wide text-white bg-black/45 backdrop-blur-md border border-white/20 shadow-xs">
+              {event.eventType}
+            </span>
+            {isPast && (
+              <Badge variant="destructive" className="font-semibold rounded-full">
+                Concluded
+              </Badge>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Title & Metadata */}
       <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 pb-6 border-b border-border">
-          <div className="space-y-3">
-            <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-foreground leading-tight">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 pb-6 border-b border-foreground/10">
+          <div className="space-y-2.5">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-foreground leading-tight">
               {event.title}
             </h1>
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
-              <User className="h-4 w-4 text-primary shrink-0" />
-              <span>Organized by <strong className="text-foreground">{event.creatorName}</strong></span>
+              <User className="h-4 w-4 text-foreground/70 shrink-0" />
+              <span>Organized by <strong className="text-foreground font-semibold">{event.creatorName}</strong></span>
               <span className="text-xs">({event.creatorEmail})</span>
             </p>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2.5 shrink-0">
             <Button
               type="button"
               variant="outline"
               size="icon"
               onClick={handleShare}
               title="Share event link"
-              className="rounded-xl"
+              className="rounded-full h-11 w-11 glass"
             >
               <Share2 className="h-4 w-4" />
             </Button>
@@ -224,14 +225,14 @@ export default function EventDetailsPage() {
               <Button
                 variant="secondary"
                 size="lg"
-                className="gap-2 font-semibold bg-primary/10 text-primary border border-primary/20 cursor-default"
+                className="gap-2 font-medium rounded-full h-11 px-6 glass bg-foreground/10 text-foreground cursor-default"
                 disabled
               >
-                <CheckCircle2 className="h-5 w-5 text-primary" />
+                <CheckCircle2 className="h-4 w-4 text-foreground" />
                 <span>You Have Joined</span>
               </Button>
             ) : isPast ? (
-              <Button variant="outline" size="lg" disabled className="gap-2">
+              <Button variant="outline" size="lg" disabled className="gap-2 rounded-full h-11 px-6">
                 <AlertTriangle className="h-4 w-4" />
                 <span>Past Event</span>
               </Button>
@@ -240,16 +241,16 @@ export default function EventDetailsPage() {
                 size="lg"
                 onClick={handleJoinEvent}
                 disabled={isJoining}
-                className="gap-2 font-bold px-8 shadow-md"
+                className="gap-2 font-medium rounded-full h-11 px-7 shadow-sm"
               >
                 {isJoining ? (
                   <>
-                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                     <span>Joining...</span>
                   </>
                 ) : (
                   <>
-                    <HeartHandshake className="h-5 w-5 text-accent" />
+                    <HeartHandshake className="h-4 w-4" />
                     <span>Join Event</span>
                   </>
                 )}
@@ -258,77 +259,65 @@ export default function EventDetailsPage() {
           </div>
         </div>
 
-        {/* Quick Info Grid */}
+        {/* Quick Info Grid (3 Glass Cards) */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Card className="border-border bg-card/60 p-4">
-            <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
-                <CalendarDays className="h-5 w-5" />
-              </div>
-              <div className="space-y-0.5">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Date & Time
-                </p>
-                <p className="text-sm font-semibold text-foreground">
-                  {formatDate(event.eventDate)}
-                </p>
-              </div>
+          <div className="glass p-5 rounded-[22px] space-y-1">
+            <div className="flex items-center gap-2.5 text-foreground/80 mb-1">
+              <CalendarDays className="h-4 w-4" />
+              <p className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">
+                Date & Time
+              </p>
             </div>
-          </Card>
+            <p className="text-[15px] font-semibold text-foreground">
+              {formatDate(event.eventDate)}
+            </p>
+          </div>
 
-          <Card className="border-border bg-card/60 p-4">
-            <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
-                <MapPin className="h-5 w-5" />
-              </div>
-              <div className="space-y-0.5">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Location
-                </p>
-                <p className="text-sm font-semibold text-foreground">
-                  {event.location}
-                </p>
-              </div>
+          <div className="glass p-5 rounded-[22px] space-y-1">
+            <div className="flex items-center gap-2.5 text-foreground/80 mb-1">
+              <MapPin className="h-4 w-4" />
+              <p className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">
+                Location
+              </p>
             </div>
-          </Card>
+            <p className="text-[15px] font-semibold text-foreground truncate">
+              {event.location}
+            </p>
+          </div>
 
-          <Card className="border-border bg-card/60 p-4">
-            <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-xl bg-accent/20 text-accent">
-                <Users className="h-5 w-5" />
-              </div>
-              <div className="space-y-0.5">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Volunteers
-                </p>
-                <p className="text-sm font-semibold text-foreground">
-                  {event.participants || 0} {event.participants === 1 ? "Volunteer" : "Volunteers"} Joined
-                </p>
-              </div>
+          <div className="glass p-5 rounded-[22px] space-y-1">
+            <div className="flex items-center gap-2.5 text-foreground/80 mb-1">
+              <Users className="h-4 w-4" />
+              <p className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">
+                Community
+              </p>
             </div>
-          </Card>
+            <p className="text-[15px] font-semibold text-foreground">
+              {event.participants || 0} {event.participants === 1 ? "Volunteer" : "Volunteers"} Joined
+            </p>
+          </div>
         </div>
 
         {/* Detailed Description */}
-        <div className="space-y-4 pt-4">
-          <h2 className="font-heading text-2xl font-bold text-foreground">
+        <div className="space-y-3 pt-4">
+          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
             About This Social Initiative
           </h2>
-          <div className="rounded-2xl border border-border bg-card p-6 md:p-8 space-y-4 text-foreground/90 leading-relaxed whitespace-pre-line text-sm sm:text-base">
+          <div className="rounded-[28px] glass p-6 md:p-8 space-y-4 text-foreground/90 leading-relaxed whitespace-pre-line text-[15px] sm:text-base">
             {event.description}
           </div>
         </div>
 
-        {/* Volunteer Notice */}
-        <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 sm:p-5 flex items-start gap-3.5">
-          <Clock className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-          <div className="text-xs sm:text-sm text-muted-foreground space-y-1">
+        {/* Volunteer Notice in Glass Panel */}
+        <div className="rounded-[24px] glass p-5 flex items-start gap-3.5">
+          <Clock className="h-5 w-5 text-foreground/70 shrink-0 mt-0.5" />
+          <div className="text-xs sm:text-[13px] text-muted-foreground space-y-1">
             <p className="font-semibold text-foreground">
-              Preparation & Guidelines for Volunteers
+              Preparation Guidelines for Volunteers
             </p>
             <p>
               Please arrive 15 minutes before the scheduled time. Wear comfortable clothing suitable for
-              community service, bring a refillable water bottle, and check the location coordinates ahead of time.
+              community service, bring a water bottle, and verify the landmark ahead of time.
             </p>
           </div>
         </div>

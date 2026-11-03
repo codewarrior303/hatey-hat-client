@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, Filter, X, SlidersHorizontal } from "lucide-react";
+import { Search, Filter, X, SlidersHorizontal, PlusCircle } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -96,47 +96,47 @@ export default function UpcomingEventsPage() {
   const hasActiveFilters = Boolean(currentSearch || (currentType && currentType !== "all"));
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 py-10 md:py-14 space-y-8">
+    <div className="container mx-auto max-w-6xl px-4 sm:px-6 py-8 md:py-12 space-y-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-border">
-        <div className="space-y-2">
-          <Badge variant="outline" className="border-primary/30 text-primary font-semibold">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-foreground/10">
+        <div className="space-y-1.5">
+          <p className="text-xs uppercase tracking-widest font-semibold text-muted-foreground">
             Grassroots Action
-          </Badge>
-          <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-foreground">
-            Upcoming Community Events
+          </p>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-foreground">
+            Upcoming Initiatives
           </h1>
-          <p className="text-sm sm:text-base text-muted-foreground max-w-2xl">
-            Browse and join upcoming social service initiatives organized by your neighbours in Dhaka.
-            All dates and times are in the future.
+          <p className="text-[15px] text-muted-foreground max-w-2xl">
+            Browse and join upcoming social welfare drives across Dhaka neighbourhoods.
           </p>
         </div>
 
-        <Button asChild className="gap-2 shrink-0 self-start md:self-auto font-semibold">
+        <Button asChild className="gap-2 shrink-0 self-start md:self-auto rounded-full font-medium h-11 px-6 shadow-xs">
           <Link href="/events/create">
+            <PlusCircle className="h-4 w-4" />
             <span>Organize an Event</span>
           </Link>
         </Button>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-xs space-y-4">
+      {/* Floating Glass Filter and Search Bar */}
+      <div className="rounded-[28px] glass p-4 sm:p-5 shadow-xs space-y-4">
         <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 md:grid-cols-12 gap-3">
           {/* Search by title / location */}
           <div className="md:col-span-7 relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-4 top-3.5 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
               type="text"
-              placeholder="Search by event title or location (e.g., Mirpur, Blanket, Dhanmondi)..."
+              placeholder="Search by title or landmark (Mirpur, Blanket, Dhanmondi)..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="pl-9 h-11 bg-background"
+              className="pl-11 pr-10 h-11 rounded-full glass bg-transparent border-foreground/15 text-sm"
             />
             {searchInput && (
               <button
                 type="button"
                 onClick={() => setSearchInput("")}
-                className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+                className="absolute right-3.5 top-3.5 text-muted-foreground hover:text-foreground transition-colors"
                 aria-label="Clear search text"
               >
                 <X className="h-4 w-4" />
@@ -147,16 +147,18 @@ export default function UpcomingEventsPage() {
           {/* Filter by Event Type */}
           <div className="md:col-span-3">
             <Select value={selectedType} onValueChange={handleTypeChange}>
-              <SelectTrigger className="h-11 bg-background">
+              <SelectTrigger className="h-11 rounded-full glass bg-transparent border-foreground/15 text-sm px-4">
                 <div className="flex items-center gap-2 truncate">
-                  <Filter className="h-4 w-4 text-primary shrink-0" />
+                  <Filter className="h-4 w-4 text-foreground/60 shrink-0" />
                   <SelectValue placeholder="All Categories" />
                 </div>
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
+              <SelectContent className="glass border-border/60 rounded-2xl p-1.5 shadow-xl">
+                <SelectItem value="all" className="rounded-xl cursor-pointer">
+                  All Categories
+                </SelectItem>
                 {EVENT_TYPES.map((type) => (
-                  <SelectItem key={type} value={type}>
+                  <SelectItem key={type} value={type} className="rounded-xl cursor-pointer">
                     {type}
                   </SelectItem>
                 ))}
@@ -166,7 +168,7 @@ export default function UpcomingEventsPage() {
 
           {/* Search submit button */}
           <div className="md:col-span-2 flex gap-2">
-            <Button type="submit" className="h-11 w-full gap-2 font-semibold">
+            <Button type="submit" className="h-11 w-full gap-2 rounded-full font-medium shadow-xs">
               <Search className="h-4 w-4" />
               <span>Search</span>
             </Button>
@@ -175,77 +177,73 @@ export default function UpcomingEventsPage() {
 
         {/* Active Filter Chips */}
         {hasActiveFilters && (
-          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/70 text-xs">
-            <span className="text-muted-foreground font-medium flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-foreground/10 text-xs">
+            <span className="text-muted-foreground font-medium flex items-center gap-1.5">
               <SlidersHorizontal className="h-3.5 w-3.5" />
-              Active filters:
+              Filters:
             </span>
             {currentSearch && (
-              <Badge variant="secondary" className="gap-1.5 pl-2.5">
-                Keyword: &ldquo;{currentSearch}&rdquo;
+              <Badge variant="secondary" className="glass gap-1.5 rounded-full px-3 py-1 font-normal text-foreground">
+                &ldquo;{currentSearch}&rdquo;
                 <button
                   type="button"
                   onClick={() => applyFilters("", selectedType)}
-                  className="rounded-full hover:bg-muted p-0.5"
+                  className="rounded-full hover:opacity-75 p-0.5 ml-1"
                 >
                   <X className="h-3 w-3" />
                 </button>
               </Badge>
             )}
             {currentType !== "all" && (
-              <Badge variant="secondary" className="gap-1.5 pl-2.5">
-                Type: {currentType}
+              <Badge variant="secondary" className="glass gap-1.5 rounded-full px-3 py-1 font-normal text-foreground">
+                {currentType}
                 <button
                   type="button"
                   onClick={() => applyFilters(searchInput, "all")}
-                  className="rounded-full hover:bg-muted p-0.5"
+                  className="rounded-full hover:opacity-75 p-0.5 ml-1"
                 >
                   <X className="h-3 w-3" />
                 </button>
               </Badge>
             )}
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={clearFilters}
-              className="text-primary hover:underline font-semibold ml-2"
+              className="text-xs h-7 px-3 rounded-full text-muted-foreground hover:text-foreground"
             >
               Reset all
-            </button>
+            </Button>
           </div>
         )}
       </div>
 
-      {/* Events Grid */}
-      {isLoading ? (
-        <EventGridSkeleton count={6} />
-      ) : error ? (
-        <ErrorState message={error} onRetry={fetchEvents} />
-      ) : events.length === 0 ? (
-        <EmptyState
-          title={hasActiveFilters ? "No Events Match Your Filters" : "No Upcoming Events Found"}
-          description={
-            hasActiveFilters
-              ? "Try adjusting your search keywords or choosing another category."
-              : "Check back soon, or organize a local drive yourself to support your community."
-          }
-          actionHref={hasActiveFilters ? undefined : "/events/create"}
-          actionLabel={hasActiveFilters ? undefined : "Create New Event"}
-        />
-      ) : (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
-            <span>
-              Showing <strong className="text-foreground">{events.length}</strong> upcoming {events.length === 1 ? "event" : "events"}
-            </span>
-          </div>
-
+      {/* Events Grid / State Views */}
+      <section>
+        {isLoading ? (
+          <EventGridSkeleton count={6} />
+        ) : error ? (
+          <ErrorState message={error} onRetry={fetchEvents} />
+        ) : events.length === 0 ? (
+          <EmptyState
+            title="No Matching Initiatives Found"
+            description={
+              hasActiveFilters
+                ? "Try clearing your keywords or choosing a different category."
+                : "No upcoming events scheduled right now. Check back soon or start one!"
+            }
+            actionHref={hasActiveFilters ? undefined : "/events/create"}
+            actionLabel={hasActiveFilters ? undefined : "Organize an Event"}
+            onReset={hasActiveFilters ? clearFilters : undefined}
+          />
+        ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {events.map((event) => (
               <EventCard key={event._id} event={event} />
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </section>
     </div>
   );
 }

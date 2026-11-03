@@ -16,9 +16,7 @@ import {
 import toast from "react-hot-toast";
 
 import { PrivateRoute } from "@/components/auth/private-route";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -85,23 +83,22 @@ export default function ManageEventsPage() {
 
   return (
     <PrivateRoute>
-      <div className="container mx-auto px-4 sm:px-6 py-10 md:py-14 space-y-8 animate-in fade-in-50">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-border">
-          <div className="space-y-2">
-            <Badge variant="outline" className="border-primary/30 text-primary font-semibold">
-              <FolderKanban className="h-3.5 w-3.5 mr-1" />
+      <div className="container mx-auto max-w-6xl px-4 sm:px-6 py-8 md:py-12 space-y-8 animate-in fade-in-50">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-foreground/10">
+          <div className="space-y-1.5">
+            <p className="text-xs uppercase tracking-widest font-semibold text-muted-foreground">
               Organizer Panel
-            </Badge>
-            <h1 className="font-heading text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
+            </p>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-foreground">
               Manage My Events
             </h1>
-            <p className="text-sm sm:text-base text-muted-foreground max-w-2xl">
+            <p className="text-[15px] text-muted-foreground max-w-2xl">
               View, update, or cancel events you have organized. Only you have permission to modify
               your event records.
             </p>
           </div>
 
-          <Button asChild className="gap-2 font-semibold shrink-0 self-start sm:self-auto">
+          <Button asChild className="gap-2 font-medium shrink-0 self-start sm:self-auto rounded-full h-11 px-6 shadow-xs">
             <Link href="/events/create">
               <PlusCircle className="h-4 w-4" />
               <span>Create New Event</span>
@@ -124,11 +121,11 @@ export default function ManageEventsPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {events.map((event) => (
-              <Card
+              <article
                 key={event._id}
-                className="flex flex-col h-full overflow-hidden border-border bg-card transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
+                className="glass glass-card flex flex-col h-full overflow-hidden p-3 rounded-[24px]"
               >
-                <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted">
+                <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[18px] bg-neutral-100 dark:bg-neutral-900">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={event.thumbnail || FALLBACK_IMAGE}
@@ -140,44 +137,44 @@ export default function ManageEventsPage() {
                     loading="lazy"
                   />
                   <div className="absolute top-3 left-3">
-                    <Badge variant="outline" className="bg-card/90 backdrop-blur-md font-bold shadow-xs">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-medium tracking-wide text-white bg-black/45 backdrop-blur-md border border-white/20 shadow-xs">
                       {event.eventType}
-                    </Badge>
+                    </span>
                   </div>
                 </div>
 
-                <CardContent className="flex flex-1 flex-col justify-between p-5 space-y-4">
-                  <div className="space-y-2">
-                    <h3 className="font-heading text-lg font-bold text-foreground leading-snug line-clamp-2 min-h-[3rem]">
+                <div className="flex flex-1 flex-col justify-between p-3.5 space-y-4">
+                  <div className="space-y-1.5">
+                    <h3 className="text-[17px] font-semibold text-foreground leading-snug line-clamp-2 min-h-[2.8rem]">
                       {event.title}
                     </h3>
                   </div>
 
-                  <div className="space-y-2 border-t border-border/70 pt-3 text-xs text-muted-foreground">
+                  <div className="space-y-2 border-t border-foreground/10 pt-3 text-[13px] text-muted-foreground">
                     <div className="flex items-center gap-2">
-                      <CalendarDays className="h-3.5 w-3.5 text-primary shrink-0" />
+                      <CalendarDays className="h-4 w-4 text-foreground/70 shrink-0" />
                       <span className="font-medium text-foreground/90 truncate">
                         {formatDate(event.eventDate)}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
+                      <MapPin className="h-4 w-4 text-foreground/70 shrink-0" />
                       <span className="truncate">{event.location}</span>
                     </div>
                   </div>
 
                   {/* Actions Row */}
-                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border/70">
-                    <Button asChild variant="outline" size="sm" className="gap-1.5 px-2 text-xs">
+                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-foreground/10">
+                    <Button asChild variant="outline" size="sm" className="gap-1.5 rounded-full px-2 text-xs h-9 glass">
                       <Link href={`/events/${event._id}`}>
                         <Eye className="h-3.5 w-3.5" />
                         <span>View</span>
                       </Link>
                     </Button>
-                    <Button asChild variant="outline" size="sm" className="gap-1.5 px-2 text-xs">
+                    <Button asChild variant="outline" size="sm" className="gap-1.5 rounded-full px-2 text-xs h-9 glass">
                       <Link href={`/events/${event._id}/edit`}>
-                        <Edit2 className="h-3.5 w-3.5 text-primary" />
+                        <Edit2 className="h-3.5 w-3.5" />
                         <span>Edit</span>
                       </Link>
                     </Button>
@@ -185,48 +182,56 @@ export default function ManageEventsPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => setEventToDelete(event)}
-                      className="gap-1.5 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/20"
+                      className="gap-1.5 rounded-full px-2 text-xs h-9 text-destructive hover:bg-destructive/10 border-destructive/20 glass"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                       <span>Delete</span>
                     </Button>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </article>
             ))}
           </div>
         )}
 
-        {/* Confirmation Modal: shadcn AlertDialog */}
-        <AlertDialog open={Boolean(eventToDelete)} onOpenChange={(open) => !open && setEventToDelete(null)}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-                  <AlertTriangle className="h-5 w-5" />
-                </div>
-                <AlertDialogTitle>Delete Community Event?</AlertDialogTitle>
+        {/* Confirmation Modal: shadcn AlertDialog in Liquid Glass */}
+        <AlertDialog
+          open={Boolean(eventToDelete)}
+          onOpenChange={(open) => !open && setEventToDelete(null)}
+        >
+          <AlertDialogContent className="glass-strong border-border/50 rounded-[28px] p-6 sm:p-8 max-w-md shadow-2xl">
+            <AlertDialogHeader className="space-y-2.5">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-destructive/10 text-destructive mx-auto sm:mx-0">
+                <AlertTriangle className="h-5 w-5" />
               </div>
-              <AlertDialogDescription className="pt-2 leading-relaxed">
-                Are you sure you want to delete &ldquo;
-                <strong className="text-foreground">{eventToDelete?.title}</strong>&rdquo;?
-                This action is permanent and will remove all volunteer joins associated with this event.
+              <AlertDialogTitle className="text-xl font-semibold">
+                Are you sure you want to delete this event?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-sm text-muted-foreground leading-relaxed">
+                This will permanently remove{" "}
+                <strong className="text-foreground font-semibold">&ldquo;{eventToDelete?.title}&rdquo;</strong> and all associated
+                volunteer registrations. This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter className="pt-4">
-              <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogFooter className="gap-2 sm:gap-3 pt-4 border-t border-foreground/10">
+              <AlertDialogCancel
+                disabled={isDeleting}
+                className="rounded-full glass h-11 px-5 font-medium border-border/60"
+              >
+                Keep Event
+              </AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleDeleteConfirm}
                 disabled={isDeleting}
-                className="gap-2 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                className="rounded-full bg-destructive text-destructive-foreground hover:opacity-90 h-11 px-6 font-medium shadow-xs"
               >
                 {isDeleting ? (
-                  <>
+                  <span className="flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Deleting...</span>
-                  </>
+                    Deleting...
+                  </span>
                 ) : (
-                  <span>Yes, Delete Event</span>
+                  "Delete Event"
                 )}
               </AlertDialogAction>
             </AlertDialogFooter>
