@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { GoogleIcon } from "@/components/icons/google-icon";
 import { BrandLogo } from "@/components/brand-logo";
-import { authClient, signIn, useSession } from "@/lib/auth-client";
+import { signIn, useSession } from "@/lib/auth-client";
 import { loginSchema, type LoginInput } from "@/lib/validators/auth.validator";
 
 export default function LoginPage() {

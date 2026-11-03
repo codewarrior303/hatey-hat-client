@@ -69,7 +69,7 @@ export async function apiFetch<T>(
       ...rest,
       headers: reqHeaders,
     });
-  } catch (networkError) {
+  } catch {
     throw new ClientApiError(
       0,
       `Cannot connect to Hatey Hat API at ${API_BASE}. Please ensure the server is running.`
