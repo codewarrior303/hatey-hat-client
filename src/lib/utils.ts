@@ -57,12 +57,36 @@ export function getHighResImageUrl(url: string | null | undefined): string {
       return clean.replace(/=s\d+(-c)?/i, "=s2560").replace(/=w\d+(-h\d+)?/i, "=w2560");
     }
 
-    // 3. Imgur thumbnails (e.g. abcd123m.jpg -> abcd123.jpg)
+    // 3. Pexels images: upgrade to 2K/4K (w=2560, dpr=2)
+    if (clean.includes("images.pexels.com")) {
+      const parsed = new URL(clean);
+      parsed.searchParams.set("w", "2560");
+      parsed.searchParams.set("dpr", "2");
+      parsed.searchParams.set("auto", "compress");
+      parsed.searchParams.set("cs", "tinysrgb");
+      return parsed.toString();
+    }
+
+    // 4. Cloudinary images: upgrade to w_2560,q_auto:best
+    if (clean.includes("res.cloudinary.com") && clean.includes("/upload/")) {
+      return clean.replace(/\/upload\/(?:[a-zA-Z0-9_,]+)?\//, "/upload/w_2560,q_auto:best,f_auto/");
+    }
+
+    // 5. Imgur thumbnails (e.g. abcd123m.jpg -> abcd123.jpg)
     if (clean.includes("i.imgur.com")) {
       return clean.replace(/([a-zA-Z0-9]{5,})(s|m|l|t|h)(\.(jpg|jpeg|png|webp))/i, "$1$3");
     }
 
-    // 4. WordPress downscaled sizes (e.g. photo-300x200.jpg -> photo.jpg)
+    // 6. Wikimedia thumbnails (strip /thumb/ and the scaled filename suffix)
+    if (clean.includes("upload.wikimedia.org") && clean.includes("/thumb/")) {
+      const unthumb = clean.replace("/thumb/", "/");
+      const lastSlash = unthumb.lastIndexOf("/");
+      if (lastSlash > 0) {
+        return unthumb.substring(0, lastSlash);
+      }
+    }
+
+    // 7. WordPress downscaled sizes (e.g. photo-300x200.jpg -> photo.jpg)
     if (/-\d{2,4}x\d{2,4}\.(jpe?g|png|webp)$/i.test(clean)) {
       return clean.replace(/-\d{2,4}x\d{2,4}\.(jpe?g|png|webp)$/i, ".$1");
     }

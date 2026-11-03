@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/select";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { apiFetch, EVENT_TYPES, type EventItem } from "@/lib/api";
+import { getHighResImageUrl } from "@/lib/utils";
 
 const futureDateSchema = z.string().refine((val) => {
   if (!val) return false;
@@ -78,27 +79,27 @@ interface EventFormProps {
   isEditing?: boolean;
 }
 
-// Verified high quality community initiative photo presets
+// Verified high quality community initiative photo presets (2K/4K high-res)
 const PHOTO_PRESETS = [
   {
     label: "Winter Relief",
-    url: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=800&q=80",
+    url: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=2560&q=95",
   },
   {
     label: "Blanket Drive",
-    url: "https://images.unsplash.com/photo-1607962837359-5e7e89f86776?auto=format&fit=crop&w=800&q=80",
+    url: "https://images.unsplash.com/photo-1607962837359-5e7e89f86776?auto=format&fit=crop&w=2560&q=95",
   },
   {
     label: "Cleanup Drive",
-    url: "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=800&q=80",
+    url: "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=2560&q=95",
   },
   {
     label: "Tree Plantation",
-    url: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=800&q=80",
+    url: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=2560&q=95",
   },
   {
     label: "Community Meals",
-    url: "https://images.unsplash.com/photo-1593113630400-ea4288922497?auto=format&fit=crop&w=800&q=80",
+    url: "https://images.unsplash.com/photo-1593113630400-ea4288922497?auto=format&fit=crop&w=2560&q=95",
   },
 ];
 
