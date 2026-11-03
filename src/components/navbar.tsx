@@ -370,15 +370,15 @@ export function Navbar() {
 
       {/* Live Notification Container - Sits side-by-side with navbar on desktop (left: 100% + 12px), centered below on smaller screens */}
       {visibleToasts.length > 0 && (
-        <div className="pointer-events-none z-50 flex flex-col items-center xl:items-start gap-2 absolute top-full mt-2.5 left-1/2 -translate-x-1/2 xl:top-0 xl:mt-0 xl:left-full xl:ml-3 xl:translate-x-0 max-w-[calc(100vw-2rem)]">
+        <div className="pointer-events-none z-50 flex flex-col items-center xl:items-start gap-2 absolute top-full mt-2.5 left-1/2 -translate-x-1/2 xl:top-0 xl:mt-0 xl:left-full xl:ml-3 xl:translate-x-0 max-w-[calc(100vw-2rem)] xl:max-w-[calc(50vw-21rem-3rem)] 2xl:max-w-[320px]">
           {visibleToasts.map((t) => (
             <div
               key={t.id}
               role="alert"
               className={cn(
-                "pointer-events-auto flex items-center justify-between gap-2.5 rounded-full pl-4 pr-2.5 min-h-14 py-1.5 text-xs sm:text-sm font-medium border transition-all duration-200 animate-in fade-in-50",
+                "pointer-events-auto flex items-center justify-between gap-2.5 rounded-full pl-4 pr-2.5 h-14 min-h-14 max-h-14 py-1.5 text-xs sm:text-sm font-medium border transition-all duration-200 animate-in fade-in-50",
                 isScrolled ? "glass-strong shadow-md" : "glass shadow-xs",
-                "max-w-[calc(100vw-3rem)] xl:max-w-[260px] 2xl:max-w-[320px]",
+                "max-w-[calc(100vw-3rem)] xl:max-w-full overflow-hidden",
                 t.type === "error"
                   ? "border-red-500/50 text-foreground"
                   : "border-foreground/15 text-foreground"

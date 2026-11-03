@@ -209,11 +209,11 @@ export default function UpcomingEventsPage() {
             <Search className="absolute left-4 top-3.5 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
               type="text"
-              maxLength={80}
+              maxLength={50}
               placeholder="Search by title or landmark (Mirpur, Blanket, Dhanmondi)..."
               value={searchInput}
               onChange={(e) => {
-                const val = e.target.value.slice(0, 80);
+                const val = e.target.value.slice(0, 50);
                 setSearchInput(val);
                 setHighlightedIndex(-1);
                 setIsSuggestionsOpen(val.trim().length > 0);
@@ -301,8 +301,8 @@ export default function UpcomingEventsPage() {
                 ) : (
                   <div className="px-4 py-5 text-center text-sm text-muted-foreground overflow-hidden">
                     <p className="font-medium text-foreground">No matching initiatives</p>
-                    <p className="text-xs text-muted-foreground/80 mt-1 max-w-full px-2 break-all line-clamp-2">
-                      Press Search or Enter to query all records for &ldquo;{searchInput.slice(0, 50)}&rdquo;
+                    <p className="text-xs text-muted-foreground/80 mt-1 max-w-full px-2 break-all line-clamp-1">
+                      Press Search or Enter to query all records for &ldquo;{searchInput.slice(0, 30)}{searchInput.length > 30 ? "..." : ""}&rdquo;
                     </p>
                   </div>
                 )}
