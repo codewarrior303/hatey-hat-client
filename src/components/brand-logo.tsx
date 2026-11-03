@@ -12,12 +12,12 @@ export function BrandLogo({ className, showTagline = false }: BrandLogoProps) {
     <Link
       href="/"
       className={cn(
-        "group inline-flex items-center gap-2.5 transition-transform hover:opacity-90 active:scale-[0.98]",
+        "inline-flex items-center gap-2.5 select-none",
         className
       )}
       aria-label="Hatey Hat Home"
     >
-      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-foreground text-background shadow-xs transition-transform group-hover:scale-105">
+      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-foreground text-background shadow-xs shrink-0">
         <HeartHandshake className="h-5 w-5" />
       </div>
       <div className="flex flex-col">
