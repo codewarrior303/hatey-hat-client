@@ -143,8 +143,10 @@ html, body {
 }
 
 /* Ensure no element displays default browser scroll arrows */
-*, *::-webkit-scrollbar-button {
-  display: none;
+*::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 *::-webkit-scrollbar {
   width: 7px;
