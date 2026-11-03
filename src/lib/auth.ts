@@ -62,6 +62,37 @@ export const auth = betterAuth({
   },
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
+      // Per-email throttling to prevent brute-force credential stuffing across multiple IPs
+      if (ctx.path === "/sign-in/email") {
+        const email = (ctx.body as any)?.email;
+        if (email && typeof email === "string") {
+          const normalizedEmail = email.toLowerCase().trim();
+          const attemptsKey = `email_login:${normalizedEmail}`;
+          const now = Date.now();
+          const windowMs = 60 * 1000;
+          const limit = 5;
+
+          try {
+            const rateLimitsCol = db.collection("rate_limits");
+            const record = await rateLimitsCol.findOneAndUpdate(
+              { key: attemptsKey },
+              {
+                $inc: { count: 1 },
+                $setOnInsert: { expiresAt: new Date(now + windowMs) },
+              },
+              { upsert: true, returnDocument: "after" }
+            );
+
+            if (record && record.count > limit) {
+              throw new Error("Too many sign-in attempts for this account. Please wait a minute and try again.");
+            }
+          } catch (err: any) {
+            if (err?.message?.includes("Too many")) throw err;
+            // Fail open on database connection errors to prevent locking out legitimate users
+          }
+        }
+      }
+
       // Server-side password validation: >= 6 chars, uppercase, lowercase
       if (ctx.path === "/sign-up/email") {
         const password = (ctx.body as any)?.password;

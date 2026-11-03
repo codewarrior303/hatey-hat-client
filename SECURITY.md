@@ -2,9 +2,9 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in the Hatey Hat web application, please report it privately:
+If you discover a security vulnerability in the Hatey Hat web application, please report it privately through GitHub:
 
-- **Security Contact**: `security@hateyhat.org`
+- **Security Advisory URL**: [Report a Vulnerability](https://github.com/codewarrior303/hatey-hat-client/security/advisories/new)
 - **Response Window**: Initial acknowledgment within 24 hours. Remediation within 72 hours for critical findings.
 - **Scope**:
   - Next.js web application and App Router endpoints

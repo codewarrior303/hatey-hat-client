@@ -1,4 +1,4 @@
-Contact: mailto:security@hateyhat.org
+Contact: https://github.com/codewarrior303/hatey-hat-client/security/advisories/new
 Expires: 2027-11-03T00:00:00.000Z
 Preferred-Languages: en, bn
 Canonical: https://hatey-hat.vercel.app/.well-known/security.txt

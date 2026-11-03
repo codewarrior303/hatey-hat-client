@@ -76,6 +76,22 @@ export async function apiFetch<T>(
     );
   }
 
+  // Automatic retry on 401 with refreshed token (handles 15m JWT expiry)
+  if (res.status === 401 && auth) {
+    try {
+      const freshToken = await getAuthToken();
+      if (freshToken && freshToken !== reqHeaders.Authorization?.replace("Bearer ", "")) {
+        reqHeaders.Authorization = `Bearer ${freshToken}`;
+        res = await fetch(url, {
+          ...rest,
+          headers: reqHeaders,
+        });
+      }
+    } catch {
+      // Fall through to error handling below
+    }
+  }
+
   let body: any;
   try {
     body = await res.json();

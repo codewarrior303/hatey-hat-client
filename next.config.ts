@@ -1,12 +1,29 @@
 import type { NextConfig } from "next";
 
+const isProd = process.env.NODE_ENV === "production";
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://hatey-hat-api.vercel.app";
+
+const scriptSources = [
+  "'self'",
+  "'unsafe-inline'",
+  !isProd ? "'unsafe-eval'" : "",
+  "https://accounts.google.com",
+].filter(Boolean).join(" ");
+
+const connectSources = [
+  "'self'",
+  apiUrl.replace(/\/+$/, ""),
+  "https://accounts.google.com",
+  !isProd ? "http://localhost:5000 http://127.0.0.1:5000" : "",
+].filter(Boolean).join(" ");
+
 const cspHeader = `
   default-src 'self';
-  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com;
+  script-src ${scriptSources};
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src 'self' https://fonts.gstatic.com data:;
-  img-src 'self' blob: data: https: http:;
-  connect-src 'self' https: http://localhost:5000 http://127.0.0.1:5000 https://accounts.google.com;
+  img-src 'self' https: blob: data:;
+  connect-src ${connectSources};
   frame-src 'self' https://accounts.google.com;
   frame-ancestors 'none';
   object-src 'none';
