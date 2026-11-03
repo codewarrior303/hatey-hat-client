@@ -139,11 +139,11 @@ export function Footer() {
             <button
               type="button"
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-              className="flex items-center gap-1.5 font-medium text-foreground/80 hover:text-foreground cursor-pointer transition-colors group select-none"
+              className="flex items-center gap-1.5 font-medium text-foreground/80 cursor-pointer select-none"
               aria-label="Scroll back to top"
             >
-              <span className="group-hover:underline">Hate hat, ekshathe poth chola</span>
-              <Heart className="h-3.5 w-3.5 text-foreground fill-foreground group-hover:scale-110 transition-transform" />
+              <span>Hate hat, ekshathe poth chola</span>
+              <Heart className="h-3.5 w-3.5 text-foreground fill-foreground" />
             </button>
             <button
               type="button"

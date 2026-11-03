@@ -52,12 +52,12 @@ export function BrandLogo({
       href="/"
       onClick={handleClick}
       className={cn(
-        "inline-flex items-center gap-2.5 select-none group cursor-pointer transition-opacity hover:opacity-90",
+        "inline-flex items-center gap-2.5 select-none cursor-pointer",
         className
       )}
       aria-label="Hatey Hat Home"
     >
-      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-foreground text-background shadow-xs shrink-0 transition-transform duration-200 group-hover:scale-105 active:scale-95">
+      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-foreground text-background shadow-xs shrink-0">
         <HeartHandshake className="h-5 w-5" />
       </div>
       <div className="flex flex-col">
@@ -65,7 +65,7 @@ export function BrandLogo({
           Hatey<span className="text-muted-foreground font-normal ml-0.5">Hat</span>
         </span>
         {showTagline && (
-          <span className="text-[11px] text-muted-foreground font-normal tracking-normal -mt-0.5 group-hover:text-foreground transition-colors">
+          <span className="text-[11px] text-muted-foreground font-normal tracking-normal -mt-0.5">
             Hate hat, ekshathe poth chola
           </span>
         )}
