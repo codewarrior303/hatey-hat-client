@@ -96,15 +96,17 @@ export function Navbar() {
       <div className="relative mx-auto max-w-2xl">
         <div
           className={cn(
-            "pointer-events-auto rounded-full transition-colors duration-200 px-3.5 sm:px-6 h-14 flex items-center justify-between w-full",
+            "relative pointer-events-auto rounded-full transition-colors duration-200 px-3.5 sm:px-6 h-14 flex items-center justify-between w-full",
             isScrolled ? "glass-strong shadow-md" : "glass shadow-xs"
           )}
         >
-          {/* Brand Logo */}
-          <BrandLogo />
+          {/* Brand Logo with fixed minimum width for symmetry */}
+          <div className="flex items-center shrink-0 min-w-[130px]">
+            <BrandLogo />
+          </div>
 
-          {/* Desktop Navigation (Centered) */}
-          <nav className="hidden md:flex items-center gap-1">
+          {/* Desktop Navigation (Pinned to exact dead center of navbar pill - never shifts on refresh) */}
+          <nav className="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
             {navLinks.map((link) => {
               const Icon = link.icon;
               const isActive = pathname === link.href;
@@ -126,12 +128,12 @@ export function Navbar() {
             })}
           </nav>
 
-          {/* Actions (Desktop) */}
-          <div className="hidden md:flex items-center gap-2.5">
+          {/* Actions (Desktop) with fixed minimum width to eliminate layout shift */}
+          <div className="hidden md:flex items-center justify-end gap-2.5 min-w-[130px] shrink-0">
             <ThemeToggle />
 
             {isPending ? (
-              <div className="h-9 w-20 animate-pulse rounded-full bg-neutral-200/50 dark:bg-white/10" />
+              <div className="h-8 w-20 rounded-full bg-foreground/5 animate-pulse shrink-0" />
             ) : user ? (
               <div className="flex items-center gap-2">
                 {/* Profile dropdown */}
@@ -370,22 +372,22 @@ export function Navbar() {
 
       {/* Live Notification Container - Sits side-by-side with navbar on desktop (left: 100% + 12px), centered below on smaller screens */}
       {visibleToasts.length > 0 && (
-        <div className="pointer-events-none z-50 flex flex-col items-center xl:items-start gap-2 absolute top-full mt-2.5 left-1/2 -translate-x-1/2 xl:top-0 xl:mt-0 xl:left-full xl:ml-3 xl:translate-x-0 max-w-[calc(100vw-2rem)] xl:max-w-[calc(50vw-21rem-3rem)] 2xl:max-w-[320px]">
+        <div className="pointer-events-none z-50 flex flex-col items-center xl:items-start gap-2 absolute top-full mt-2.5 left-1/2 -translate-x-1/2 xl:top-0 xl:mt-0 xl:left-full xl:ml-3 xl:translate-x-0 max-w-[calc(100vw-2rem)]">
           {visibleToasts.map((t) => (
             <div
               key={t.id}
               role="alert"
               className={cn(
-                "pointer-events-auto flex items-center justify-between gap-2.5 rounded-full pl-4 pr-2.5 h-14 min-h-14 max-h-14 py-1.5 text-xs sm:text-sm font-medium border transition-all duration-200 animate-in fade-in-50",
+                "pointer-events-auto flex items-center justify-between gap-3 rounded-full pl-4 pr-3 h-14 min-h-14 max-h-14 py-1.5 text-xs sm:text-sm font-medium border transition-all duration-200 animate-in fade-in-50",
                 isScrolled ? "glass-strong shadow-md" : "glass shadow-xs",
-                "max-w-[calc(100vw-3rem)] xl:max-w-full overflow-hidden",
+                "max-w-[calc(100vw-3rem)] xl:max-w-none whitespace-nowrap",
                 t.type === "error"
                   ? "border-red-500/50 text-foreground"
                   : "border-foreground/15 text-foreground"
               )}
             >
-              {/* Clean notification message text with graceful wrapping so it never exceeds screen frame / scrollbar */}
-              <span className="text-foreground font-medium text-xs sm:text-sm select-none break-words line-clamp-2 leading-snug">
+              {/* Clean notification message text - single line, never awkwardly wrapping on desktop or mobile */}
+              <span className="text-foreground font-medium text-xs sm:text-sm select-none whitespace-nowrap truncate max-w-[280px] sm:max-w-xs xl:max-w-sm">
                 {resolveValue(t.message, t)}
               </span>
 
