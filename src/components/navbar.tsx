@@ -50,16 +50,14 @@ export function Navbar() {
   const { data: session, isPending } = useSession();
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
-  const [avatarHovered, setAvatarHovered] = React.useState(false);
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
 
   // Subscribe to react-hot-toast notifications
   const { toasts } = useToaster();
   const visibleToasts = toasts.filter((t) => t.visible);
 
-  // Auto-close dropdown and tooltip when changing route or returning
+  // Auto-close dropdown when changing route or returning
   React.useEffect(() => {
-    setAvatarHovered(false);
     setDropdownOpen(false);
   }, [pathname]);
 
@@ -142,89 +140,85 @@ export function Navbar() {
               <div className="h-9 w-20 animate-pulse rounded-full bg-neutral-200/50 dark:bg-white/10" />
             ) : user ? (
               <div className="flex items-center gap-2">
-                {/* Profile dropdown with clean hover tooltip and no white circle */}
-                <TooltipProvider delayDuration={150}>
-                  <Tooltip open={avatarHovered && !dropdownOpen}>
-                    <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-                      <TooltipTrigger asChild>
-                        <DropdownMenuTrigger asChild>
-                          <button
-                            type="button"
-                            onMouseEnter={() => setAvatarHovered(true)}
-                            onMouseLeave={() => setAvatarHovered(false)}
-                            onClick={() => {
-                              setAvatarHovered(false);
-                              setDropdownOpen((prev) => !prev);
-                            }}
-                            className="relative rounded-full focus:outline-none focus-visible:outline-none transition-transform hover:scale-105"
-                            aria-label={`User menu for ${user.name || user.email}`}
-                          >
-                            <Avatar className="h-9 w-9 border border-foreground/15">
-                              {user.image && (
-                                <AvatarImage
-                                  src={user.image}
-                                  alt={user.name || "User"}
-                                />
-                              )}
-                              <AvatarFallback className="text-xs font-semibold">
-                                {getFallbackAvatar(user.name || user.email)}
-                              </AvatarFallback>
-                            </Avatar>
-                          </button>
-                        </DropdownMenuTrigger>
-                      </TooltipTrigger>
-
-                      <TooltipContent side="bottom">
-                        <p className="font-medium">{user.name || user.email}</p>
-                      </TooltipContent>
-
-                      <DropdownMenuContent
-                        align="end"
-                        className="w-56 glass-menu p-2 shadow-2xl"
+                {/* Profile dropdown */}
+                <div className="relative group">
+                  <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        className="relative rounded-full focus:outline-none focus-visible:outline-none transition-transform hover:scale-105"
+                        aria-label={`User menu for ${user.name || user.email}`}
                       >
-                    <DropdownMenuLabel className="font-normal px-2 py-1.5">
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-semibold leading-none text-foreground">
-                          {user.name || "Community Member"}
-                        </p>
-                        <p className="text-xs leading-none text-muted-foreground truncate">
-                          {user.email}
-                        </p>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator className="bg-foreground/10 my-1" />
+                        <Avatar className="h-9 w-9 border border-foreground/15">
+                          {user.image && (
+                            <AvatarImage
+                              src={user.image}
+                              alt={user.name || "User"}
+                            />
+                          )}
+                          <AvatarFallback className="text-xs font-semibold">
+                            {getFallbackAvatar(user.name || user.email)}
+                          </AvatarFallback>
+                        </Avatar>
+                      </button>
+                    </DropdownMenuTrigger>
 
-                    {userMenuItems.map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <DropdownMenuItem
-                          key={item.href}
-                          asChild
-                          className="rounded-xl px-2.5 py-2 cursor-pointer focus:bg-foreground/10"
-                        >
-                          <Link
-                            href={item.href}
-                            className="flex items-center gap-2.5 text-sm"
-                          >
-                            <Icon className="h-4 w-4 text-muted-foreground" />
-                            <span>{item.label}</span>
-                          </Link>
-                        </DropdownMenuItem>
-                      );
-                    })}
-
-                    <DropdownMenuSeparator className="bg-foreground/10 my-1" />
-                    <DropdownMenuItem
-                      onClick={handleLogout}
-                      className="rounded-xl px-2.5 py-2 text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer flex items-center gap-2.5 text-sm"
+                    <DropdownMenuContent
+                      align="end"
+                      className="w-56 glass-menu p-2 shadow-2xl"
                     >
-                      <LogOut className="h-4 w-4" />
-                      <span>Log Out</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </Tooltip>
-            </TooltipProvider>
+                      <DropdownMenuLabel className="font-normal px-2 py-1.5">
+                        <div className="flex flex-col space-y-1">
+                          <p className="text-sm font-semibold leading-none text-foreground">
+                            {user.name || "Community Member"}
+                          </p>
+                          <p className="text-xs leading-none text-muted-foreground truncate">
+                            {user.email}
+                          </p>
+                        </div>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator className="bg-foreground/10 my-1" />
+
+                      {userMenuItems.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <DropdownMenuItem
+                            key={item.href}
+                            asChild
+                            className="rounded-xl px-2.5 py-2 cursor-pointer focus:bg-foreground/10"
+                          >
+                            <Link
+                              href={item.href}
+                              className="flex items-center gap-2.5 text-sm"
+                            >
+                              <Icon className="h-4 w-4 text-muted-foreground" />
+                              <span>{item.label}</span>
+                            </Link>
+                          </DropdownMenuItem>
+                        );
+                      })}
+
+                      <DropdownMenuSeparator className="bg-foreground/10 my-1" />
+                      <DropdownMenuItem
+                        onClick={handleLogout}
+                        className="rounded-xl px-2.5 py-2 text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer flex items-center gap-2.5 text-sm"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        <span>Log Out</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  {/* Clean Hover Tooltip: Only on mouse hover, zero interference with dropdown */}
+                  {!dropdownOpen && (
+                    <div
+                      role="tooltip"
+                      className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-2 z-50 opacity-0 group-hover:opacity-100 transition-all duration-150 transform scale-95 group-hover:scale-100 whitespace-nowrap rounded-xl px-3.5 py-1.5 text-xs font-medium shadow-xl backdrop-blur-md bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 border border-white/10 dark:border-black/10 select-none"
+                    >
+                      {user.name || user.email}
+                    </div>
+                  )}
+                </div>
 
                 {/* Direct Logout Button */}
                 <Button
