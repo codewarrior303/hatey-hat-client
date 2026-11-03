@@ -5,7 +5,7 @@ import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { ScrollbarManager } from "@/components/scrollbar-manager";
+import { CustomScrollbar } from "@/components/custom-scrollbar";
 import "./globals.css";
 
 const jost = Jost({
@@ -77,7 +77,7 @@ export default function RootLayout({
           enableSystem={true}
           disableTransitionOnChange
         >
-          <ScrollbarManager />
+          <CustomScrollbar />
           <div className="relative z-10 flex min-h-screen flex-col">
             <Navbar />
             <main className="flex-1 pt-6">{children}</main>

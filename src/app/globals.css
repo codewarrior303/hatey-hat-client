@@ -102,56 +102,30 @@
 }
 
 /* =========================================================================
-   Custom Auto-Hiding Floating Capsule Scrollbar (Inspired by modern macOS / Style 3)
-   - Completely disables browser default scrollbars and buttons
-   - Hidden by default when idle (no scrollbar clutter)
-   - Smoothly appears when user scrolls or hovers right edge (.is-scrolling)
-   - Automatically adapts between light and dark themes seamlessly
+   Completely Disable Browser Default Scrollbars (Linux, Chrome, Brave, Firefox, Edge)
    ========================================================================= */
-html {
-  scrollbar-width: thin;
-  scrollbar-color: transparent transparent;
-  scrollbar-gutter: stable;
+html,
+body {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
 }
 
-html.is-scrolling {
-  scrollbar-color: var(--scroll-thumb) transparent;
-}
-
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent !important;
-}
-
-::-webkit-scrollbar-thumb {
-  background-color: transparent;
-  border-radius: 9999px;
-  border: 1px solid transparent;
-  background-clip: padding-box;
-  transition: background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* When actively scrolling, smoothly reveal the floating capsule thumb */
-html.is-scrolling ::-webkit-scrollbar-thumb {
-  background-color: var(--scroll-thumb);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background-color: var(--scroll-thumb-hover) !important;
-}
-
-::-webkit-scrollbar-button {
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
   display: none !important;
   width: 0 !important;
   height: 0 !important;
   background: transparent !important;
 }
 
-::-webkit-scrollbar-corner {
+*::-webkit-scrollbar-button,
+*::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-corner {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
   background: transparent !important;
 }
 
