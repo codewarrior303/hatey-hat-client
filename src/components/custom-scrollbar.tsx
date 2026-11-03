@@ -15,7 +15,7 @@ export function CustomScrollbar() {
   const [thumbTop, setThumbTop] = React.useState(0);
   const [isVisible, setIsVisible] = React.useState(false);
   const [isHovered, setIsHovered] = React.useState(false);
-  const isDraggingRef = React.useRef(false);
+  const [isDragging, setIsDragging] = React.useState(false);
   const startDragYRef = React.useRef(0);
   const startScrollTopRef = React.useRef(0);
   const hideTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -48,11 +48,11 @@ export function CustomScrollbar() {
     setIsVisible(true);
     if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
     hideTimerRef.current = setTimeout(() => {
-      if (!isDraggingRef.current && !isHovered) {
+      if (!isDragging && !isHovered) {
         setIsVisible(false);
       }
     }, 1200);
-  }, [isHovered]);
+  }, [isDragging, isHovered]);
 
   React.useEffect(() => {
     updateScrollbar();
@@ -93,13 +93,12 @@ export function CustomScrollbar() {
   const handleThumbMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    isDraggingRef.current = true;
+    setIsDragging(true);
     startDragYRef.current = e.clientY;
     startScrollTopRef.current = window.scrollY || document.documentElement.scrollTop;
     setIsVisible(true);
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
-      if (!isDraggingRef.current) return;
       const deltaY = moveEvent.clientY - startDragYRef.current;
       const winHeight = window.innerHeight;
       const docHeight = document.documentElement.scrollHeight;
@@ -117,7 +116,7 @@ export function CustomScrollbar() {
     };
 
     const handleMouseUp = () => {
-      isDraggingRef.current = false;
+      setIsDragging(false);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
       triggerVisibility();
@@ -145,7 +144,7 @@ export function CustomScrollbar() {
 
   if (thumbHeight === 0) return null;
 
-  const show = isVisible || isHovered || isDraggingRef.current;
+  const show = isVisible || isHovered || isDragging;
 
   return (
     <div

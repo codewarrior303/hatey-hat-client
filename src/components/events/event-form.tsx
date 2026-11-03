@@ -7,7 +7,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import toast from "react-hot-toast";
 import {
-  CalendarDays,
   MapPin,
   Image as ImageIcon,
   Type,
@@ -31,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { apiFetch, EVENT_TYPES, type EventItem } from "@/lib/api";
 
 const futureDateSchema = z.string().refine((val) => {
@@ -78,18 +78,6 @@ interface EventFormProps {
   isEditing?: boolean;
 }
 
-/** Formats a Date object or ISO string to `YYYY-MM-DDTHH:mm` format for datetime-local input */
-function toDateTimeLocalString(date: Date | string) {
-  const d = typeof date === "string" ? new Date(date) : date;
-  if (Number.isNaN(d.getTime())) return "";
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  const hours = String(d.getHours()).padStart(2, "0");
-  const minutes = String(d.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
-}
-
 // Verified high quality community initiative photo presets
 const PHOTO_PRESETS = [
   {
@@ -119,11 +107,6 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [hasImgError, setHasImgError] = React.useState(false);
 
-  // Minimum allowed date-time is current minute
-  const minDateTime = React.useMemo(() => {
-    return toDateTimeLocalString(new Date());
-  }, []);
-
   const defaultValues: Partial<EventFormData> = {
     title: initialData?.title || "",
     description: initialData?.description || "",
@@ -131,7 +114,7 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
     thumbnail: initialData?.thumbnail || "",
     location: initialData?.location || "",
     eventDate: initialData?.eventDate
-      ? toDateTimeLocalString(initialData.eventDate)
+      ? new Date(initialData.eventDate).toISOString()
       : "",
   };
 
@@ -161,7 +144,7 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
     const target = new Date();
     target.setDate(target.getDate() + daysAhead);
     target.setHours(hour, minute, 0, 0);
-    const dateStr = toDateTimeLocalString(target);
+    const dateStr = target.toISOString();
     setValue("eventDate", dateStr, { shouldValidate: true, shouldDirty: true });
     clearErrors("eventDate");
     toast.success(`Date set to ${target.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} at ${target.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`);
@@ -324,17 +307,21 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
               </button>
             </div>
 
-            <div className="relative">
-              <CalendarDays className="absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground pointer-events-none" />
-              <Input
-                id="eventDate"
-                type="datetime-local"
-                min={minDateTime}
-                className="pl-10 h-11 rounded-xl glass bg-transparent border-foreground/15 text-sm [color-scheme:light] dark:[color-scheme:dark]"
-                {...register("eventDate")}
-                aria-invalid={Boolean(errors.eventDate)}
-              />
-            </div>
+            <Controller
+              control={control}
+              name="eventDate"
+              render={({ field }) => (
+                <DateTimePicker
+                  id="eventDate"
+                  value={field.value}
+                  onChange={(val) => {
+                    field.onChange(val);
+                    if (val) clearErrors("eventDate");
+                  }}
+                  aria-invalid={Boolean(errors.eventDate)}
+                />
+              )}
+            />
             {errors.eventDate ? (
               <p className="text-xs font-medium text-destructive">
                 {errors.eventDate.message}
