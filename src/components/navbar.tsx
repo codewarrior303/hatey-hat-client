@@ -370,13 +370,13 @@ export function Navbar() {
 
       {/* Live Notification Container - Sits side-by-side with navbar on desktop (left: 100% + 12px), centered below on smaller screens */}
       {visibleToasts.length > 0 && (
-        <div className="pointer-events-none z-50 flex flex-col items-center xl:items-start gap-2 absolute top-full mt-2.5 left-1/2 -translate-x-1/2 xl:top-0 xl:left-full xl:ml-3 xl:translate-x-0">
+        <div className="pointer-events-none z-50 flex flex-col items-center xl:items-start gap-2 absolute top-full mt-2.5 left-1/2 -translate-x-1/2 xl:top-0 xl:mt-0 xl:left-full xl:ml-3 xl:translate-x-0">
           {visibleToasts.map((t) => (
             <div
               key={t.id}
               role="alert"
               className={cn(
-                "pointer-events-auto flex items-center gap-3 rounded-full pl-5 pr-3 h-14 text-xs sm:text-sm font-medium border transition-all duration-200 animate-in fade-in-50 zoom-in-95",
+                "pointer-events-auto flex items-center gap-3 rounded-full pl-5 pr-3 h-14 text-xs sm:text-sm font-medium border transition-all duration-200 animate-in fade-in-50",
                 isScrolled ? "glass-strong shadow-md" : "glass shadow-xs",
                 "whitespace-nowrap shrink-0",
                 t.type === "error"
