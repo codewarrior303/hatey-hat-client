@@ -56,7 +56,10 @@ export const eventFormSchema = z.object({
     .string({ error: "Thumbnail URL is required" })
     .trim()
     .url("Must be a valid URL starting with http:// or https://")
-    .refine((val) => /^https?:\/\//i.test(val), "URL must start with http:// or https://"),
+    .refine(
+      (val) => /^https?:\/\//i.test(val) && !/^(javascript|data|vbscript):/i.test(val),
+      "URL must start with http:// or https://"
+    ),
   location: z
     .string({ error: "Location is required" })
     .trim()

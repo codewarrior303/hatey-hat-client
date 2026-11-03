@@ -27,6 +27,10 @@ const profileSchema = z.object({
     .string()
     .trim()
     .url("Must be a valid URL starting with http:// or https://")
+    .refine(
+      (val) => /^https?:\/\//i.test(val) && !/^(javascript|data|vbscript):/i.test(val),
+      "Photo URL must start with http:// or https://"
+    )
     .or(z.literal(""))
     .optional(),
 });
