@@ -16,9 +16,17 @@ if (isProd && (!secret || secret.length < 32)) {
 
 const appUrl = process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-// Strict trusted origins: in production, NO wildcards and NO localhost allowed
+// Strict trusted origins: in production, include appUrl and any vercel preview deployments
 const trustedOrigins = isProd
-  ? [appUrl.replace(/\/+$/, "")]
+  ? Array.from(
+      new Set(
+        [
+          appUrl.replace(/\/+$/, ""),
+          process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "",
+          "https://hatey-hat.vercel.app",
+        ].filter(Boolean)
+      )
+    )
   : Array.from(new Set([appUrl.replace(/\/+$/, ""), "http://localhost:3000"]));
 
 export const auth = betterAuth({
@@ -34,9 +42,18 @@ export const auth = betterAuth({
       maxAge: 60 * 60 * 24 * 7, // 7 days in client cookies
     },
   },
+  account: {
+    storeStateStrategy: "cookie", // Store OAuth state in encrypted cookie for reliable Vercel serverless operation
+  },
+  onAPIError: {
+    errorURL: "/login",
+  },
   advanced: {
-    cookiePrefix: "hatey_hat",
     useSecureCookies: isProd,
+    defaultCookieAttributes: {
+      sameSite: "lax",
+      secure: isProd,
+    },
   },
   rateLimit: {
     enabled: true,

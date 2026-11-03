@@ -15,10 +15,12 @@ export function proxy(request: NextRequest) {
     /^\/events\/[^/]+\/edit$/.test(pathname);
 
   if (isProtected) {
-    // Optimistic check for Better Auth session token cookie
+    // Optimistic check for Better Auth session token cookie (supports standard and prefixed)
     const sessionToken =
       request.cookies.get("better-auth.session_token") ||
-      request.cookies.get("__Secure-better-auth.session_token");
+      request.cookies.get("__Secure-better-auth.session_token") ||
+      request.cookies.get("hatey_hat.session_token") ||
+      request.cookies.get("__Secure-hatey_hat.session_token");
 
     if (!sessionToken?.value) {
       const fullPath = search ? `${pathname}${search}` : pathname;

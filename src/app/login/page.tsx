@@ -45,6 +45,20 @@ export default function LoginPage() {
     }
   }, [session, sessionPending, redirectUrl, router]);
 
+  // Surface authentication errors (e.g. from OAuth callbacks or state failures)
+  React.useEffect(() => {
+    const authError = searchParams.get("error");
+    if (authError) {
+      if (authError === "state_not_found" || authError === "state_mismatch") {
+        toast.error("Sign-in session expired or was interrupted. Please try again.");
+      } else if (authError === "oauth_failed" || authError === "access_denied") {
+        toast.error("Google sign-in was cancelled or could not be completed.");
+      } else {
+        toast.error("Authentication could not be completed. Please try again.");
+      }
+    }
+  }, [searchParams]);
+
   const onSubmit = async (data: LoginInput) => {
     try {
       setIsLoading(true);
