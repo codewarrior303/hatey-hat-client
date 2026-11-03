@@ -3,7 +3,9 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, Filter, X, SlidersHorizontal, PlusCircle } from "lucide-react";
+import { Search, Filter, X, SlidersHorizontal, PlusCircle, MapPin, ArrowRight } from "lucide-react";
+
+import { cn } from "@/lib/utils";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -32,14 +34,94 @@ export default function UpcomingEventsPage() {
   const [selectedType, setSelectedType] = React.useState(currentType);
 
   const [events, setEvents] = React.useState<EventItem[]>([]);
+  const [allEvents, setAllEvents] = React.useState<EventItem[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+
+  // Suggestions state
+  const [isSuggestionsOpen, setIsSuggestionsOpen] = React.useState(false);
+  const [highlightedIndex, setHighlightedIndex] = React.useState(-1);
+  const searchContainerRef = React.useRef<HTMLDivElement>(null);
 
   // Sync state if URL changes externally (e.g. back/forward navigation)
   React.useEffect(() => {
     setSearchInput(currentSearch);
     setSelectedType(currentType);
   }, [currentSearch, currentType]);
+
+  // Load full events catalog once for real-time autocomplete indexing
+  React.useEffect(() => {
+    apiFetch<EventItem[]>("/api/events")
+      .then((res) => {
+        if (res.data) setAllEvents(res.data);
+      })
+      .catch(() => {});
+  }, []);
+
+  // Filter suggestions in real-time as user types or backspaces
+  const trimmedQuery = searchInput.trim().toLowerCase();
+
+  const matchingSuggestions = React.useMemo(() => {
+    if (!trimmedQuery) return [];
+
+    return allEvents
+      .filter((evt) => {
+        const titleMatch = evt.title?.toLowerCase().includes(trimmedQuery);
+        const locMatch = evt.location?.toLowerCase().includes(trimmedQuery);
+        const typeMatch = evt.eventType?.toLowerCase().includes(trimmedQuery);
+        return titleMatch || locMatch || typeMatch;
+      })
+      .slice(0, 6);
+  }, [allEvents, trimmedQuery]);
+
+  // Click outside listener for suggestions dropdown
+  React.useEffect(() => {
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setIsSuggestionsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, []);
+
+  const selectSuggestion = (event: EventItem) => {
+    setSearchInput(event.title);
+    setIsSuggestionsOpen(false);
+    setHighlightedIndex(-1);
+    applyFilters(event.title, selectedType);
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!isSuggestionsOpen || matchingSuggestions.length === 0) {
+      if (e.key === "ArrowDown" && trimmedQuery && matchingSuggestions.length > 0) {
+        setIsSuggestionsOpen(true);
+        setHighlightedIndex(0);
+        e.preventDefault();
+      }
+      return;
+    }
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlightedIndex((prev) => (prev + 1) % matchingSuggestions.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlightedIndex((prev) => (prev - 1 + matchingSuggestions.length) % matchingSuggestions.length);
+    } else if (e.key === "Enter") {
+      if (highlightedIndex >= 0 && highlightedIndex < matchingSuggestions.length) {
+        e.preventDefault();
+        selectSuggestion(matchingSuggestions[highlightedIndex]);
+      }
+    } else if (e.key === "Escape") {
+      setIsSuggestionsOpen(false);
+      setHighlightedIndex(-1);
+    }
+  };
 
   // Fetch events from server whenever query parameters change
   const fetchEvents = React.useCallback(async () => {
@@ -122,25 +204,108 @@ export default function UpcomingEventsPage() {
       {/* Floating Glass Filter and Search Bar */}
       <div className="rounded-[28px] glass p-4 sm:p-5 shadow-xs space-y-4">
         <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 md:grid-cols-12 gap-3">
-          {/* Search by title / location */}
-          <div className="md:col-span-7 relative">
+          {/* Search by title / location with Real-Time Suggestions */}
+          <div ref={searchContainerRef} className="md:col-span-7 relative">
             <Search className="absolute left-4 top-3.5 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
               type="text"
               placeholder="Search by title or landmark (Mirpur, Blanket, Dhanmondi)..."
               value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSearchInput(val);
+                setHighlightedIndex(-1);
+                setIsSuggestionsOpen(val.trim().length > 0);
+              }}
+              onFocus={() => {
+                if (trimmedQuery.length > 0) setIsSuggestionsOpen(true);
+              }}
+              onKeyDown={handleSearchKeyDown}
               className="pl-11 pr-10 h-11 rounded-full glass bg-transparent border-foreground/15 text-sm"
+              autoComplete="off"
             />
             {searchInput && (
               <button
                 type="button"
-                onClick={() => setSearchInput("")}
+                onClick={() => {
+                  setSearchInput("");
+                  setIsSuggestionsOpen(false);
+                  applyFilters("", selectedType);
+                }}
                 className="absolute right-3.5 top-3.5 text-muted-foreground hover:text-foreground transition-colors"
                 aria-label="Clear search text"
               >
                 <X className="h-4 w-4" />
               </button>
+            )}
+
+            {/* Live Autocomplete Suggestions Card (Frosted Apple Liquid Glass) */}
+            {isSuggestionsOpen && (
+              <div
+                role="listbox"
+                aria-label="Search suggestions"
+                className="absolute left-0 right-0 top-full mt-2 z-40 rounded-2xl glass-menu p-2 shadow-2xl animate-in fade-in-50 zoom-in-95 duration-150"
+              >
+                {matchingSuggestions.length > 0 ? (
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-foreground/10">
+                      <span>Initiative Suggestions</span>
+                      <span>{matchingSuggestions.length} found</span>
+                    </div>
+                    {matchingSuggestions.map((item, index) => {
+                      const isHighlighted = index === highlightedIndex;
+                      return (
+                        <button
+                          key={item._id}
+                          type="button"
+                          role="option"
+                          aria-selected={isHighlighted}
+                          onClick={() => selectSuggestion(item)}
+                          onMouseEnter={() => setHighlightedIndex(index)}
+                          className={cn(
+                            "w-full flex items-center justify-between gap-3 p-2.5 rounded-xl text-left transition-all select-none",
+                            isHighlighted
+                              ? "bg-foreground/10 text-foreground"
+                              : "hover:bg-foreground/5 text-foreground/90"
+                          )}
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="h-8 w-8 rounded-lg bg-foreground/5 flex items-center justify-center shrink-0 border border-foreground/10">
+                              <Search className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-foreground truncate">
+                                {item.title}
+                              </p>
+                              <p className="text-xs text-muted-foreground truncate flex items-center gap-1.5 mt-0.5">
+                                <MapPin className="h-3 w-3 shrink-0 text-muted-foreground/70" />
+                                <span className="truncate">{item.location}</span>
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Badge
+                              variant="secondary"
+                              className="rounded-full text-[10px] px-2 py-0.5 font-normal glass"
+                            >
+                              {item.eventType}
+                            </Badge>
+                            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/60" />
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="px-4 py-5 text-center text-sm text-muted-foreground">
+                    <p className="font-medium text-foreground">No matching initiatives</p>
+                    <p className="text-xs text-muted-foreground/80 mt-1">
+                      Press Search or Enter to query all records for &ldquo;{searchInput}&rdquo;
+                    </p>
+                  </div>
+                )}
+              </div>
             )}
           </div>
 

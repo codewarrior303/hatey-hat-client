@@ -69,18 +69,45 @@ function TimeDropdown({
   disabled?: boolean;
 }) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [thumbHeight, setThumbHeight] = React.useState(32);
+  const [thumbTop, setThumbTop] = React.useState(4);
   const [isScrolling, setIsScrolling] = React.useState(false);
   const scrollTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const listRef = React.useRef<HTMLDivElement>(null);
 
+  const updateScrollMetrics = React.useCallback(() => {
+    const el = listRef.current;
+    if (!el) return;
+    const { scrollTop, scrollHeight, clientHeight } = el;
+    if (scrollHeight <= clientHeight) {
+      setThumbHeight(0);
+      return;
+    }
+    const trackHeight = clientHeight - 8;
+    const calculatedHeight = Math.max(22, (clientHeight / scrollHeight) * trackHeight);
+    setThumbHeight(calculatedHeight);
+    const maxScroll = scrollHeight - clientHeight;
+    const scrollRatio = maxScroll > 0 ? scrollTop / maxScroll : 0;
+    const maxTop = trackHeight - calculatedHeight;
+    setThumbTop(4 + scrollRatio * maxTop);
+  }, []);
+
   const handleListScroll = React.useCallback(() => {
+    updateScrollMetrics();
     setIsScrolling(true);
     if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
     scrollTimerRef.current = setTimeout(() => {
       setIsScrolling(false);
-    }, 700);
-  }, []);
+    }, 900);
+  }, [updateScrollMetrics]);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      const t = setTimeout(updateScrollMetrics, 30);
+      return () => clearTimeout(t);
+    }
+  }, [isOpen, updateScrollMetrics]);
 
   React.useEffect(() => {
     return () => {
@@ -156,42 +183,58 @@ function TimeDropdown({
       </button>
 
       {isOpen && (
-        <div
-          ref={listRef}
-          role="listbox"
-          aria-label={label}
-          data-scrolling={isScrolling ? "true" : undefined}
-          onScroll={handleListScroll}
-          className={cn(
-            "absolute bottom-full mb-1.5 left-0 w-full z-30",
-            "max-h-48 overflow-y-auto",
-            "rounded-2xl glass-menu p-1 shadow-2xl",
-            "animate-in fade-in-50 zoom-in-95 duration-150"
-          )}
-        >
-          {options.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              role="option"
-              aria-selected={opt.value === value}
-              data-selected={opt.value === value ? "true" : undefined}
-              disabled={opt.disabled}
-              onClick={() => {
-                if (opt.disabled) return;
-                onChange(opt.value);
-                setIsOpen(false);
-              }}
-              className={cn(
-                "w-full h-8 rounded-xl text-xs font-medium transition-all flex items-center justify-center select-none my-0.5",
-                opt.disabled && "text-muted-foreground/30 cursor-not-allowed pointer-events-none",
-                !opt.disabled && opt.value !== value && "text-foreground hover:bg-foreground/10 active:scale-95",
-                opt.value === value && "bg-foreground text-background font-semibold shadow-xs"
-              )}
+        <div className="absolute bottom-full mb-1.5 left-0 w-full z-30">
+          <div className="relative rounded-2xl glass-menu p-1 shadow-2xl animate-in fade-in-50 zoom-in-95 duration-150">
+            <div
+              ref={listRef}
+              role="listbox"
+              aria-label={label}
+              onScroll={handleListScroll}
+              className="max-h-48 overflow-y-auto pr-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             >
-              {opt.label}
-            </button>
-          ))}
+              {options.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  role="option"
+                  aria-selected={opt.value === value}
+                  data-selected={opt.value === value ? "true" : undefined}
+                  disabled={opt.disabled}
+                  onClick={() => {
+                    if (opt.disabled) return;
+                    onChange(opt.value);
+                    setIsOpen(false);
+                  }}
+                  className={cn(
+                    "w-full h-8 rounded-xl text-xs font-medium transition-all flex items-center justify-center select-none my-0.5",
+                    opt.disabled && "text-muted-foreground/30 cursor-not-allowed pointer-events-none",
+                    !opt.disabled && opt.value !== value && "text-foreground hover:bg-foreground/10 active:scale-95",
+                    opt.value === value && "bg-foreground text-background font-semibold shadow-xs"
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Custom Website Floating Capsule Scrollbar */}
+            {thumbHeight > 0 && (
+              <div
+                className={cn(
+                  "absolute right-1 top-1 bottom-1 w-1.5 pointer-events-none transition-opacity duration-300",
+                  isScrolling ? "opacity-100" : "opacity-0"
+                )}
+              >
+                <div
+                  style={{
+                    height: `${thumbHeight}px`,
+                    transform: `translateY(${thumbTop}px)`,
+                  }}
+                  className="w-1 mx-auto rounded-full bg-foreground/60 shadow-xs transition-transform duration-75"
+                />
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
