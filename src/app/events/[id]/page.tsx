@@ -19,6 +19,12 @@ import {
 import toast from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
@@ -210,16 +216,25 @@ export default function EventDetailsPage() {
           </div>
 
           <div className="flex items-center gap-2.5 shrink-0">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={handleShare}
-              title="Share event link"
-              className="rounded-full h-11 w-11 glass"
-            >
-              <Share2 className="h-4 w-4" />
-            </Button>
+            <TooltipProvider delayDuration={150}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={handleShare}
+                    aria-label="Share event link"
+                    className="rounded-full h-11 w-11 glass hover:scale-105 transition-transform"
+                  >
+                    <Share2 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>Share event link</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
 
             {hasJoined ? (
               <Button

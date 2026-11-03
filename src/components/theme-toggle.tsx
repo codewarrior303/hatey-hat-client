@@ -4,6 +4,12 @@ import * as React from "react";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function ThemeToggle() {
   const { setTheme, resolvedTheme } = useTheme();
@@ -27,21 +33,30 @@ export function ThemeToggle() {
   }
 
   const isDark = resolvedTheme === "dark";
+  const tooltipLabel = isDark ? "Switch to light theme" : "Switch to dark theme";
 
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="rounded-full h-9 w-9 text-foreground/80 hover:text-foreground hover:bg-foreground/10 transition-colors"
-      aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
-      title={isDark ? "Switch to light theme" : "Switch to dark theme"}
-    >
-      {isDark ? (
-        <Sun className="h-4 w-4 transition-transform hover:rotate-45" />
-      ) : (
-        <Moon className="h-4 w-4 transition-transform hover:-rotate-12" />
-      )}
-    </Button>
+    <TooltipProvider delayDuration={150}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setTheme(isDark ? "light" : "dark")}
+            className="rounded-full h-9 w-9 text-foreground/80 hover:text-foreground hover:bg-foreground/10 transition-colors"
+            aria-label={tooltipLabel}
+          >
+            {isDark ? (
+              <Sun className="h-4 w-4 transition-transform hover:rotate-45" />
+            ) : (
+              <Moon className="h-4 w-4 transition-transform hover:-rotate-12" />
+            )}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">
+          <p>{tooltipLabel}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }

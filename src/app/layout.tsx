@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Jost } from "next/font/google";
-import { Toaster } from "react-hot-toast";
 
 import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/navbar";
@@ -83,31 +82,6 @@ export default function RootLayout({
             <main className="flex-1 pt-6">{children}</main>
             <Footer />
           </div>
-
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              className: "glass !text-foreground !rounded-full !px-5 !py-3 !shadow-lg text-sm font-medium",
-              style: {
-                background: "var(--card)",
-                color: "var(--card-foreground)",
-                border: "1px solid var(--border)",
-              },
-              success: {
-                iconTheme: {
-                  primary: "var(--foreground)",
-                  secondary: "var(--background)",
-                },
-              },
-              error: {
-                iconTheme: {
-                  primary: "var(--destructive)",
-                  secondary: "#ffffff",
-                },
-              },
-            }}
-          />
         </ThemeProvider>
       </body>
     </html>

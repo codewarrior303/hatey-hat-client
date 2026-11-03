@@ -12,8 +12,9 @@ import {
   LogOut,
   LogIn,
   Menu,
+  X,
 } from "lucide-react";
-import toast from "react-hot-toast";
+import toast, { useToaster, resolveValue } from "react-hot-toast";
 
 import { BrandLogo } from "@/components/brand-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -49,6 +50,18 @@ export function Navbar() {
   const { data: session, isPending } = useSession();
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
+  const [avatarHovered, setAvatarHovered] = React.useState(false);
+  const [dropdownOpen, setDropdownOpen] = React.useState(false);
+
+  // Subscribe to react-hot-toast notifications
+  const { toasts } = useToaster();
+  const visibleToasts = toasts.filter((t) => t.visible);
+
+  // Auto-hide avatar tooltip and dropdown when changing route or returning
+  React.useEffect(() => {
+    setAvatarHovered(false);
+    setDropdownOpen(false);
+  }, [pathname]);
 
   React.useEffect(() => {
     const onScroll = () => {
@@ -88,79 +101,84 @@ export function Navbar() {
 
   return (
     <header className="sticky top-3 z-50 w-full px-3 sm:px-6 pointer-events-none transition-all duration-300">
-      <div
-        className={cn(
-          "container mx-auto max-w-5xl pointer-events-auto rounded-full transition-colors duration-200 px-4 sm:px-6 h-14 flex items-center justify-between",
-          isScrolled ? "glass-strong shadow-md" : "glass shadow-xs"
-        )}
-      >
-        {/* Brand Logo */}
-        <BrandLogo />
+      <div className="container mx-auto max-w-6xl flex flex-col md:flex-row items-center justify-center gap-2.5">
+        <div
+          className={cn(
+            "pointer-events-auto rounded-full transition-all duration-200 px-4 sm:px-6 h-14 flex items-center justify-between",
+            "w-full max-w-4xl",
+            isScrolled ? "glass-strong shadow-md" : "glass shadow-xs"
+          )}
+        >
+          {/* Brand Logo */}
+          <BrandLogo />
 
-        {/* Desktop Navigation (Centered) */}
-        <nav className="hidden md:flex items-center gap-1">
-          {navLinks.map((link) => {
-            const Icon = link.icon;
-            const isActive = pathname === link.href;
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  "flex items-center gap-2 rounded-full px-4 py-1.5 text-[14px] font-medium transition-all",
-                  isActive
-                    ? "bg-foreground/10 text-foreground font-semibold"
-                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
-                )}
-              >
-                <Icon className="h-4 w-4 opacity-70" />
-                <span>{link.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
+          {/* Desktop Navigation (Centered) */}
+          <nav className="hidden md:flex items-center gap-1">
+            {navLinks.map((link) => {
+              const Icon = link.icon;
+              const isActive = pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    "flex items-center gap-2 rounded-full px-4 py-1.5 text-[14px] font-medium transition-all",
+                    isActive
+                      ? "bg-foreground/10 text-foreground font-semibold"
+                      : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+                  )}
+                >
+                  <Icon className="h-4 w-4 opacity-70" />
+                  <span>{link.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
 
-        {/* Actions (Desktop) */}
-        <div className="hidden md:flex items-center gap-2.5">
-          <ThemeToggle />
+          {/* Actions (Desktop) */}
+          <div className="hidden md:flex items-center gap-2.5">
+            <ThemeToggle />
 
-          {isPending ? (
-            <div className="h-9 w-20 animate-pulse rounded-full bg-neutral-200/50 dark:bg-white/10" />
-          ) : user ? (
-            <div className="flex items-center gap-2">
-              {/* Profile dropdown */}
-              <TooltipProvider delayDuration={200}>
-                <Tooltip>
-                  <DropdownMenu>
-                    <TooltipTrigger asChild>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          type="button"
-                          className="relative rounded-full focus:outline-none focus:ring-2 focus:ring-foreground focus:ring-offset-2 transition-transform hover:scale-105"
-                          aria-label={`User menu for ${user.name || user.email}`}
-                        >
-                          <Avatar className="h-9 w-9 border border-foreground/20">
-                            {user.image && (
-                              <AvatarImage
-                                src={user.image}
-                                alt={user.name || "User"}
-                              />
-                            )}
-                            <AvatarFallback className="text-xs font-semibold">
-                              {getFallbackAvatar(user.name || user.email)}
-                            </AvatarFallback>
-                          </Avatar>
-                        </button>
-                      </DropdownMenuTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      <p className="font-medium">{user.name || user.email}</p>
-                    </TooltipContent>
+            {isPending ? (
+              <div className="h-9 w-20 animate-pulse rounded-full bg-neutral-200/50 dark:bg-white/10" />
+            ) : user ? (
+              <div className="flex items-center gap-2">
+                {/* Profile dropdown with auto-hiding hover tooltip (never sticks on focus/back navigation) */}
+                <TooltipProvider delayDuration={200}>
+                  <Tooltip open={avatarHovered && !dropdownOpen} onOpenChange={setAvatarHovered}>
+                    <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            onMouseEnter={() => setAvatarHovered(true)}
+                            onMouseLeave={() => setAvatarHovered(false)}
+                            onClick={() => setAvatarHovered(false)}
+                            className="relative rounded-full focus:outline-none focus:ring-2 focus:ring-foreground focus:ring-offset-2 transition-transform hover:scale-105"
+                            aria-label={`User menu for ${user.name || user.email}`}
+                          >
+                            <Avatar className="h-9 w-9 border border-foreground/20">
+                              {user.image && (
+                                <AvatarImage
+                                  src={user.image}
+                                  alt={user.name || "User"}
+                                />
+                              )}
+                              <AvatarFallback className="text-xs font-semibold">
+                                {getFallbackAvatar(user.name || user.email)}
+                              </AvatarFallback>
+                            </Avatar>
+                          </button>
+                        </DropdownMenuTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p className="font-medium">{user.name || user.email}</p>
+                      </TooltipContent>
 
-                    <DropdownMenuContent
-                      align="end"
-                      className="w-56 glass-menu p-2 shadow-2xl"
-                    >
+                      <DropdownMenuContent
+                        align="end"
+                        className="w-56 glass-menu p-2 shadow-2xl"
+                      >
                       <DropdownMenuLabel className="font-normal px-2 py-1.5">
                         <div className="flex flex-col space-y-1">
                           <p className="text-sm font-semibold leading-none text-foreground">
@@ -357,6 +375,49 @@ export function Navbar() {
             </SheetContent>
           </Sheet>
         </div>
+      </div>
+
+      {/* Live Notification Capsule - Side-by-Side ("Pasha-Pashi") */}
+        {visibleToasts.map((t) => (
+          <div
+            key={t.id}
+            role="alert"
+            className={cn(
+              "pointer-events-auto flex items-center gap-2.5 rounded-full px-4 h-12 text-xs sm:text-sm font-medium shadow-2xl border backdrop-blur-2xl transition-all duration-200 animate-in fade-in-50 zoom-in-95",
+              "glass-menu max-w-sm sm:max-w-md shrink-0",
+              t.type === "error"
+                ? "border-red-500/40 text-foreground"
+                : "border-emerald-500/40 text-foreground"
+            )}
+          >
+            <span className="shrink-0 flex items-center justify-center">
+              {t.type === "error" ? (
+                <span className="h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center font-bold text-[10px] shadow-xs">
+                  ✕
+                </span>
+              ) : (
+                <span className="h-5 w-5 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-[10px] shadow-xs">
+                  ✓
+                </span>
+              )}
+            </span>
+
+            <span className="truncate max-w-[200px] sm:max-w-[260px] text-foreground font-medium text-xs sm:text-sm">
+              {resolveValue(t.message, t)}
+            </span>
+
+            {/* Cross Button to instantly remove notification */}
+            <button
+              type="button"
+              onClick={() => toast.dismiss(t.id)}
+              className="ml-auto -mr-1 p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/10 transition-colors cursor-pointer shrink-0"
+              aria-label="Remove notification"
+              title="Remove notification"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ))}
       </div>
     </header>
   );
