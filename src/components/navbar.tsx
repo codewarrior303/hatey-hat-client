@@ -259,7 +259,7 @@ export function Navbar() {
               <div className="space-y-6">
                 <SheetHeader className="text-left pb-4 border-b border-border/40">
                   <SheetTitle>
-                    <BrandLogo />
+                    <BrandLogo onClick={() => setMobileOpen(false)} />
                   </SheetTitle>
                 </SheetHeader>
 

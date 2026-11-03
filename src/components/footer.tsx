@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Heart, MapPin } from "lucide-react";
+import { ArrowUp, Heart, MapPin } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
 import { FacebookIcon, InstagramIcon, XIcon } from "@/components/icons/social-icons";
 import {
@@ -21,7 +21,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand & Mission (2 cols) */}
           <div className="lg:col-span-2 space-y-4">
-            <BrandLogo showTagline />
+            <BrandLogo showTagline scrollToTop />
             <p className="text-[14px] text-muted-foreground leading-relaxed max-w-sm pt-1">
               Hatey Hat is an open community platform connecting neighbours across Dhaka to organize,
               discover, and join local grassroots relief, cleanup, and educational initiatives.
@@ -135,10 +135,26 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="mt-10 pt-6 border-t border-foreground/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
           <p>© {currentYear} Hatey Hat. Built for the communities of Dhaka.</p>
-          <p className="flex items-center gap-1.5 font-medium text-foreground/80">
-            <span>Hate hat, ekshathe poth chola</span>
-            <Heart className="h-3.5 w-3.5 text-foreground fill-foreground" />
-          </p>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              className="flex items-center gap-1.5 font-medium text-foreground/80 hover:text-foreground cursor-pointer transition-colors group select-none"
+              aria-label="Scroll back to top"
+            >
+              <span className="group-hover:underline">Hate hat, ekshathe poth chola</span>
+              <Heart className="h-3.5 w-3.5 text-foreground fill-foreground group-hover:scale-110 transition-transform" />
+            </button>
+            <button
+              type="button"
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium glass border border-border/60 hover:bg-foreground/10 text-foreground/80 hover:text-foreground transition-all shadow-xs cursor-pointer active:scale-95 select-none"
+              aria-label="Back to top"
+            >
+              <ArrowUp className="h-3 w-3" />
+              <span>Top</span>
+            </button>
+          </div>
         </div>
       </div>
     </footer>
