@@ -35,7 +35,7 @@ export function getFallbackAvatar(name: string): string {
  */
 export function getHighResImageUrl(url: string | null | undefined): string {
   if (!url || typeof url !== "string") return "";
-  let clean = url.trim();
+  const clean = url.trim();
 
   try {
     // 1. Unsplash images: upgrade to 2K (w=2560, q=95, high-DPI)
