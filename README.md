@@ -3,7 +3,8 @@
 > **"Hate hat, ekshathe poth chola."**  
 > A community-driven social service and grassroots event management platform empowering neighbours to organize, join, and track local relief initiatives in Dhaka.
 
-**Live Site URL:** [https://hatey-hat.vercel.app](https://hatey-hat.vercel.app) *(Production deployment placeholder)*
+**Live Site URL:** [https://hatey-hat.vercel.app](https://hatey-hat.vercel.app)  
+**Backend API URL:** [https://hatey-hat-api.vercel.app](https://hatey-hat-api.vercel.app)
 
 ---
 
