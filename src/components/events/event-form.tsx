@@ -235,7 +235,7 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
                       <SelectValue placeholder="Select an event category" />
                     </div>
                   </SelectTrigger>
-                  <SelectContent className="glass border-border/60">
+                  <SelectContent className="glass-menu border-border/40">
                     {EVENT_TYPES.map((type) => (
                       <SelectItem key={type} value={type}>
                         {type}

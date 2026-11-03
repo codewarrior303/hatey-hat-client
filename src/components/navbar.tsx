@@ -159,7 +159,7 @@ export function Navbar() {
 
                     <DropdownMenuContent
                       align="end"
-                      className="w-56 glass border-border/60 p-2 shadow-xl"
+                      className="w-56 glass-menu p-2 shadow-2xl"
                     >
                       <DropdownMenuLabel className="font-normal px-2 py-1.5">
                         <div className="flex flex-col space-y-1">

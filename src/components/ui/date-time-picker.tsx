@@ -69,8 +69,24 @@ function TimeDropdown({
   disabled?: boolean;
 }) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isScrolling, setIsScrolling] = React.useState(false);
+  const scrollTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const listRef = React.useRef<HTMLDivElement>(null);
+
+  const handleListScroll = React.useCallback(() => {
+    setIsScrolling(true);
+    if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+    scrollTimerRef.current = setTimeout(() => {
+      setIsScrolling(false);
+    }, 700);
+  }, []);
+
+  React.useEffect(() => {
+    return () => {
+      if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+    };
+  }, []);
 
   React.useEffect(() => {
     if (!isOpen) return;
@@ -144,11 +160,12 @@ function TimeDropdown({
           ref={listRef}
           role="listbox"
           aria-label={label}
+          data-scrolling={isScrolling ? "true" : undefined}
+          onScroll={handleListScroll}
           className={cn(
             "absolute bottom-full mb-1.5 left-0 w-full z-30",
-            "max-h-48 overflow-y-auto no-scrollbar",
-            "rounded-2xl glass p-1 shadow-2xl border border-foreground/15",
-            "bg-background/95 dark:bg-black/95 backdrop-blur-2xl",
+            "max-h-48 overflow-y-auto",
+            "rounded-2xl glass-menu p-1 shadow-2xl",
             "animate-in fade-in-50 zoom-in-95 duration-150"
           )}
         >
@@ -467,7 +484,7 @@ export function DateTimePicker({
 
       <PopoverContent
         align="start"
-        className="w-[330px] sm:w-[350px] p-4 glass rounded-3xl border border-foreground/15 shadow-2xl backdrop-blur-2xl"
+        className="w-[330px] sm:w-[350px] p-4 glass-menu rounded-3xl shadow-2xl"
       >
         {/* Calendar Header */}
         <div className="flex items-center justify-between pb-2 px-1">

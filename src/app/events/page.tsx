@@ -153,7 +153,7 @@ export default function UpcomingEventsPage() {
                   <SelectValue placeholder="All Categories" />
                 </div>
               </SelectTrigger>
-              <SelectContent className="glass border-border/60 rounded-2xl p-1.5 shadow-xl">
+              <SelectContent className="glass-menu rounded-2xl p-1.5 shadow-2xl">
                 <SelectItem value="all" className="rounded-xl cursor-pointer">
                   All Categories
                 </SelectItem>
