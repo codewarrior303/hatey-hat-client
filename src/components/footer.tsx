@@ -2,6 +2,12 @@ import Link from "next/link";
 import { Heart, MapPin } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
 import { FacebookIcon, InstagramIcon, XIcon } from "@/components/icons/social-icons";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -17,39 +23,62 @@ export function Footer() {
               Hatey Hat is an open community platform connecting neighbours across Dhaka to organize,
               discover, and join local grassroots relief, cleanup, and educational initiatives.
             </p>
-            {/* Social Links: Facebook, Instagram, X (Twitter) */}
-            <div className="flex items-center gap-3 pt-2">
-              <a
-                href="https://facebook.com"
-                target="_blank"
-                rel="noreferrer"
-                className="flex h-9 w-9 items-center justify-center rounded-full glass border-border hover:bg-foreground hover:text-background transition-all"
-                aria-label="Follow Hatey Hat on Facebook"
-                title="Facebook"
-              >
-                <FacebookIcon className="h-4 w-4" />
-              </a>
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noreferrer"
-                className="flex h-9 w-9 items-center justify-center rounded-full glass border-border hover:bg-foreground hover:text-background transition-all"
-                aria-label="Follow Hatey Hat on Instagram"
-                title="Instagram"
-              >
-                <InstagramIcon className="h-4 w-4" />
-              </a>
-              <a
-                href="https://x.com"
-                target="_blank"
-                rel="noreferrer"
-                className="flex h-9 w-9 items-center justify-center rounded-full glass border-border hover:bg-foreground hover:text-background transition-all"
-                aria-label="Follow Hatey Hat on X (Twitter)"
-                title="X (Twitter)"
-              >
-                <XIcon className="h-3.5 w-3.5" />
-              </a>
-            </div>
+
+            {/* Social Links with Custom Tooltips and Non-Inverting Hover */}
+            <TooltipProvider delayDuration={100}>
+              <div className="flex items-center gap-3 pt-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <a
+                      href="https://facebook.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex h-9 w-9 items-center justify-center rounded-full glass border border-border/60 text-foreground/80 hover:text-foreground hover:bg-foreground/10 hover:border-foreground/30 hover:scale-110 active:scale-95 transition-all shadow-xs"
+                      aria-label="Follow Hatey Hat on Facebook"
+                    >
+                      <FacebookIcon className="h-4 w-4" />
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <span>Facebook</span>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <a
+                      href="https://instagram.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex h-9 w-9 items-center justify-center rounded-full glass border border-border/60 text-foreground/80 hover:text-foreground hover:bg-foreground/10 hover:border-foreground/30 hover:scale-110 active:scale-95 transition-all shadow-xs"
+                      aria-label="Follow Hatey Hat on Instagram"
+                    >
+                      <InstagramIcon className="h-4 w-4" />
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <span>Instagram</span>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <a
+                      href="https://x.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex h-9 w-9 items-center justify-center rounded-full glass border border-border/60 text-foreground/80 hover:text-foreground hover:bg-foreground/10 hover:border-foreground/30 hover:scale-110 active:scale-95 transition-all shadow-xs"
+                      aria-label="Follow Hatey Hat on X (Twitter)"
+                    >
+                      <XIcon className="h-3.5 w-3.5" />
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <span>X (Twitter)</span>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </TooltipProvider>
           </div>
 
           {/* Quick Links */}

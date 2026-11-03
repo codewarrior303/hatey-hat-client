@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CalendarDays, MapPin, ArrowRight, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -16,10 +17,30 @@ const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=800&q=80";
 
 export function EventCard({ event }: EventCardProps) {
+  const router = useRouter();
   const [imgSrc, setImgSrc] = React.useState(event.thumbnail || FALLBACK_IMAGE);
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Navigate on card click unless the user clicked an explicit link or action button
+    const target = e.target as HTMLElement;
+    if (target.closest("a") || target.closest("button")) return;
+    router.push(`/events/${event._id}`);
+  };
+
   return (
-    <article className="glass glass-card group flex flex-col h-full overflow-hidden p-3 rounded-[24px]">
+    <article
+      onClick={handleCardClick}
+      className="glass glass-card group flex flex-col h-full overflow-hidden p-3 rounded-[24px] cursor-pointer transition-all duration-300 hover:shadow-lg active:scale-[0.99]"
+      role="link"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          router.push(`/events/${event._id}`);
+        }
+      }}
+      aria-label={`View details for ${event.title}`}
+    >
       {/* Thumbnail with rounded corners inside the card and fixed 16:10 aspect ratio */}
       <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[18px] bg-neutral-100 dark:bg-neutral-900">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -41,7 +62,7 @@ export function EventCard({ event }: EventCardProps) {
       {/* Card Content & Details */}
       <div className="flex flex-1 flex-col justify-between p-3.5 space-y-4">
         <div className="space-y-1.5">
-          <h3 className="text-[17px] font-semibold text-foreground leading-snug line-clamp-2 min-h-[2.8rem]">
+          <h3 className="text-[17px] font-semibold text-foreground leading-snug line-clamp-2 min-h-[2.8rem] group-hover:text-foreground/90 transition-colors">
             {event.title}
           </h3>
           <p className="text-[13px] text-muted-foreground line-clamp-2 leading-relaxed">
@@ -77,7 +98,7 @@ export function EventCard({ event }: EventCardProps) {
           <Button asChild className="w-full rounded-full gap-2 font-medium h-10 shadow-xs">
             <Link href={`/events/${event._id}`}>
               <span>View Event</span>
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </Button>
         </div>

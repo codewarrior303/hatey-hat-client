@@ -15,6 +15,9 @@ import {
   Loader2,
   ArrowRight,
   Eye,
+  AlertCircle,
+  Sparkles,
+  Clock,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -31,6 +34,7 @@ import {
 import { apiFetch, EVENT_TYPES, type EventItem } from "@/lib/api";
 
 const futureDateSchema = z.string().refine((val) => {
+  if (!val) return false;
   const d = new Date(val);
   return !Number.isNaN(d.getTime()) && d.getTime() > Date.now();
 }, {
@@ -86,9 +90,34 @@ function toDateTimeLocalString(date: Date | string) {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
+// Verified high quality community initiative photo presets
+const PHOTO_PRESETS = [
+  {
+    label: "Winter Relief",
+    url: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    label: "Blanket Drive",
+    url: "https://images.unsplash.com/photo-1607962837359-5e7e89f86776?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    label: "Cleanup Drive",
+    url: "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    label: "Tree Plantation",
+    url: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    label: "Community Meals",
+    url: "https://images.unsplash.com/photo-1593113630400-ea4288922497?auto=format&fit=crop&w=800&q=80",
+  },
+];
+
 export function EventForm({ initialData, isEditing = false }: EventFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [hasImgError, setHasImgError] = React.useState(false);
 
   // Minimum allowed date-time is current minute
   const minDateTime = React.useMemo(() => {
@@ -111,14 +140,32 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
     handleSubmit,
     control,
     watch,
+    setValue,
+    clearErrors,
     formState: { errors },
   } = useForm<EventFormData>({
     resolver: zodResolver(eventFormSchema),
     defaultValues,
-    mode: "onBlur",
+    mode: "onChange",
   });
 
   const previewThumbnail = watch("thumbnail");
+
+  // Reset img error state when thumbnail changes
+  React.useEffect(() => {
+    setHasImgError(false);
+  }, [previewThumbnail]);
+
+  // Quick Date/Time helper
+  const setQuickDate = (daysAhead: number, hour: number, minute: number = 0) => {
+    const target = new Date();
+    target.setDate(target.getDate() + daysAhead);
+    target.setHours(hour, minute, 0, 0);
+    const dateStr = toDateTimeLocalString(target);
+    setValue("eventDate", dateStr, { shouldValidate: true, shouldDirty: true });
+    clearErrors("eventDate");
+    toast.success(`Date set to ${target.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} at ${target.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`);
+  };
 
   const onSubmit = async (data: EventFormData) => {
     try {
@@ -156,8 +203,14 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
     }
   };
 
+  const onInvalid = (fieldErrors: any) => {
+    const firstKey = Object.keys(fieldErrors)[0];
+    const message = fieldErrors[firstKey]?.message || "Please complete all required fields";
+    toast.error(message);
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Form Fields (2 cols) */}
         <div className="lg:col-span-2 space-y-5">
@@ -165,11 +218,11 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
           <div className="space-y-1.5">
             <Label htmlFor="title">Event Title</Label>
             <div className="relative">
-              <Type className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Type className="absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground" />
               <Input
                 id="title"
                 placeholder="e.g., Winter Clothes Distribution – Mirpur 10"
-                className="pl-9"
+                className="pl-10 h-11 rounded-xl glass bg-transparent border-foreground/15 text-sm"
                 {...register("title")}
                 aria-invalid={Boolean(errors.title)}
               />
@@ -181,21 +234,25 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
             )}
           </div>
 
-          {/* Event Category Dropdown */}
+          {/* Event Category */}
           <div className="space-y-1.5">
             <Label htmlFor="eventType">Event Category</Label>
             <Controller
-              control={control}
               name="eventType"
+              control={control}
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger id="eventType" className="w-full">
+                  <SelectTrigger
+                    id="eventType"
+                    className="w-full h-11 rounded-xl glass bg-transparent border-foreground/15 text-sm"
+                    aria-invalid={Boolean(errors.eventType)}
+                  >
                     <div className="flex items-center gap-2">
-                      <Tag className="h-4 w-4 text-primary" />
-                      <SelectValue placeholder="Select event category" />
+                      <Tag className="h-4 w-4 text-muted-foreground" />
+                      <SelectValue placeholder="Select an event category" />
                     </div>
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="glass border-border/60">
                     {EVENT_TYPES.map((type) => (
                       <SelectItem key={type} value={type}>
                         {type}
@@ -212,15 +269,15 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
             )}
           </div>
 
-          {/* Location */}
+          {/* Location & Landmark */}
           <div className="space-y-1.5">
             <Label htmlFor="location">Location & Landmark</Label>
             <div className="relative">
-              <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <MapPin className="absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground" />
               <Input
                 id="location"
                 placeholder="e.g., Mirpur 10 Circle, Dhaka"
-                className="pl-9"
+                className="pl-10 h-11 rounded-xl glass bg-transparent border-foreground/15 text-sm"
                 {...register("location")}
                 aria-invalid={Boolean(errors.location)}
               />
@@ -232,16 +289,48 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
             )}
           </div>
 
-          {/* Date & Time */}
-          <div className="space-y-1.5">
-            <Label htmlFor="eventDate">Event Date & Time (Future Only)</Label>
+          {/* Date & Time with Quick-Set Presets */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="eventDate">Event Date & Time (Future Only)</Label>
+              <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                <span>Quick set:</span>
+              </span>
+            </div>
+
+            {/* Quick date chips */}
+            <div className="flex flex-wrap items-center gap-2 pb-1">
+              <button
+                type="button"
+                onClick={() => setQuickDate(1, 10, 0)}
+                className="text-xs px-3 py-1 rounded-full glass border border-foreground/10 hover:bg-foreground/10 text-foreground transition-all"
+              >
+                Tomorrow 10 AM
+              </button>
+              <button
+                type="button"
+                onClick={() => setQuickDate(3, 15, 0)}
+                className="text-xs px-3 py-1 rounded-full glass border border-foreground/10 hover:bg-foreground/10 text-foreground transition-all"
+              >
+                In 3 Days 3 PM
+              </button>
+              <button
+                type="button"
+                onClick={() => setQuickDate(7, 9, 30)}
+                className="text-xs px-3 py-1 rounded-full glass border border-foreground/10 hover:bg-foreground/10 text-foreground transition-all"
+              >
+                Next Week 9:30 AM
+              </button>
+            </div>
+
             <div className="relative">
-              <CalendarDays className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <CalendarDays className="absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground pointer-events-none" />
               <Input
                 id="eventDate"
                 type="datetime-local"
                 min={minDateTime}
-                className="pl-9"
+                className="pl-10 h-11 rounded-xl glass bg-transparent border-foreground/15 text-sm [color-scheme:light] dark:[color-scheme:dark]"
                 {...register("eventDate")}
                 aria-invalid={Boolean(errors.eventDate)}
               />
@@ -257,20 +346,46 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
             )}
           </div>
 
-          {/* Thumbnail Image URL */}
-          <div className="space-y-1.5">
-            <Label htmlFor="thumbnail">Thumbnail Image URL</Label>
+          {/* Thumbnail Image URL & One-Click Presets */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="thumbnail">Thumbnail Image URL</Label>
+              <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                <Sparkles className="h-3 w-3" />
+                <span>Verified presets:</span>
+              </span>
+            </div>
+
             <div className="relative">
-              <ImageIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <ImageIcon className="absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground" />
               <Input
                 id="thumbnail"
                 type="url"
                 placeholder="https://images.unsplash.com/photo-..."
-                className="pl-9"
+                className="pl-10 h-11 rounded-xl glass bg-transparent border-foreground/15 text-sm"
                 {...register("thumbnail")}
                 aria-invalid={Boolean(errors.thumbnail)}
               />
             </div>
+
+            {/* Suggested one-click preset photo pills */}
+            <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+              {PHOTO_PRESETS.map((preset) => (
+                <button
+                  key={preset.label}
+                  type="button"
+                  onClick={() => {
+                    setValue("thumbnail", preset.url, { shouldValidate: true, shouldDirty: true });
+                    clearErrors("thumbnail");
+                    setHasImgError(false);
+                  }}
+                  className="text-xs px-2.5 py-1 rounded-full glass border border-foreground/10 hover:bg-foreground/10 text-foreground transition-all"
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+
             {errors.thumbnail && (
               <p className="text-xs font-medium text-destructive">
                 {errors.thumbnail.message}
@@ -286,6 +401,7 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
                 id="description"
                 rows={6}
                 placeholder="Explain the background, beneficiary group, meeting point, schedule, and volunteer requirements..."
+                className="rounded-2xl glass bg-transparent border-foreground/15 text-sm p-4"
                 {...register("description")}
                 aria-invalid={Boolean(errors.description)}
               />
@@ -306,20 +422,27 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
               <span>Image Preview</span>
             </div>
             <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[18px] bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center">
-              {previewThumbnail ? (
+              {previewThumbnail && !hasImgError ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={previewThumbnail}
                   alt="Thumbnail preview"
-                  className="h-full w-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLElement).style.display = "none";
-                  }}
+                  className="h-full w-full object-cover transition-opacity duration-300"
+                  onError={() => setHasImgError(true)}
+                  loading="lazy"
                 />
+              ) : hasImgError ? (
+                <div className="flex flex-col items-center gap-2 text-destructive text-xs p-4 text-center">
+                  <AlertCircle className="h-7 w-7 text-destructive" />
+                  <span className="font-semibold text-foreground">Could not load this image URL</span>
+                  <span className="text-muted-foreground text-[11px] max-w-[220px]">
+                    Make sure the URL links directly to an image (.jpg, .png, .webp) or click one of the verified presets on the left.
+                  </span>
+                </div>
               ) : (
                 <div className="flex flex-col items-center gap-2 text-muted-foreground text-xs p-4 text-center">
                   <ImageIcon className="h-8 w-8 opacity-40" />
-                  <span>Enter an image URL on the left to see the live card thumbnail.</span>
+                  <span>Enter an image URL or click a preset on the left to see the live thumbnail.</span>
                 </div>
               )}
             </div>
@@ -341,6 +464,7 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
         <Button
           type="button"
           variant="outline"
+          className="rounded-full px-6 glass"
           onClick={() => router.back()}
           disabled={isSubmitting}
         >
@@ -349,16 +473,16 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="gap-2 font-bold px-8 shadow-sm"
+          className="rounded-full px-7 font-medium gap-2 shadow-xs"
         >
           {isSubmitting ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span>{isEditing ? "Saving changes..." : "Publishing event..."}</span>
+              <span>{isEditing ? "Updating..." : "Creating Event..."}</span>
             </>
           ) : (
             <>
-              <span>{isEditing ? "Save Event Changes" : "Create Community Event"}</span>
+              <span>{isEditing ? "Update Event" : "Create Event"}</span>
               <ArrowRight className="h-4 w-4" />
             </>
           )}

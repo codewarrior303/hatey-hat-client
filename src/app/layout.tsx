@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Jost } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 
 import { ThemeProvider } from "@/components/theme-provider";
@@ -7,10 +7,11 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import "./globals.css";
 
-const inter = Inter({
+const jost = Jost({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-jost",
   display: "swap",
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -34,6 +35,9 @@ export const metadata: Metadata = {
       { url: "/favicon.svg", type: "image/svg+xml" },
       { url: "/favicon.ico", sizes: "any" },
     ],
+    apple: [
+      { url: "/apple-icon", type: "image/png" },
+    ],
   },
 };
 
@@ -46,9 +50,9 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={inter.variable}
+      className={jost.variable}
     >
-      <body className="min-h-screen flex flex-col bg-background text-foreground antialiased relative selection:bg-foreground selection:text-background">
+      <body className="min-h-screen flex flex-col bg-background text-foreground antialiased relative font-sans selection:bg-foreground selection:text-background">
         {/* Fixed Ambient Background (Subtle Grayscale Blobs for Liquid Glass Depth) */}
         <div
           aria-hidden="true"
@@ -65,10 +69,11 @@ export default function RootLayout({
           <div className="absolute bottom-[-5%] left-[25%] w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-white/[0.03] to-transparent blur-[150px] opacity-0 dark:opacity-100 transition-opacity duration-500" />
         </div>
 
+        {/* ThemeProvider initialized to match user's OS/device theme */}
         <ThemeProvider
           attribute="class"
-          defaultTheme="light"
-          enableSystem
+          defaultTheme="system"
+          enableSystem={true}
           disableTransitionOnChange
         >
           <div className="relative z-10 flex min-h-screen flex-col">
