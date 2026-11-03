@@ -90,7 +90,7 @@ function TimeDropdown({
     const maxScroll = scrollHeight - clientHeight;
     const scrollRatio = maxScroll > 0 ? scrollTop / maxScroll : 0;
     const maxTop = trackHeight - calculatedHeight;
-    setThumbTop(4 + scrollRatio * maxTop);
+    setThumbTop(scrollRatio * maxTop);
   }, []);
 
   const handleListScroll = React.useCallback(() => {
@@ -190,7 +190,11 @@ function TimeDropdown({
               role="listbox"
               aria-label={label}
               onScroll={handleListScroll}
-              className="max-h-48 overflow-y-auto pr-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+              style={{
+                scrollbarWidth: "none",
+                msOverflowStyle: "none",
+              }}
+              className="max-h-48 overflow-y-auto px-1 no-native-scrollbar select-none"
             >
               {options.map((opt) => (
                 <button
