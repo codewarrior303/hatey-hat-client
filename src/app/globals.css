@@ -99,6 +99,15 @@
 
 * {
   border-color: var(--border);
+  -webkit-user-drag: none;
+}
+
+/* Image copy & drag protection */
+img {
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 /* =========================================================================

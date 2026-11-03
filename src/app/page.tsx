@@ -11,6 +11,7 @@ import {
   MapPin,
   Sparkles,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -40,6 +41,7 @@ export default function HomePage() {
   // Newsletter state with custom validation tooltip
   const [newsletterEmail, setNewsletterEmail] = React.useState("");
   const [newsletterError, setNewsletterError] = React.useState<string | null>(null);
+  const [isSubscribing, setIsSubscribing] = React.useState(false);
 
   const fetchRecentEvents = React.useCallback(async () => {
     try {
@@ -70,7 +72,7 @@ export default function HomePage() {
     fetchRecentEvents();
   }, [fetchRecentEvents]);
 
-  const handleNewsletterSubmit = (e: React.FormEvent) => {
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = newsletterEmail.trim();
 
@@ -79,15 +81,29 @@ export default function HomePage() {
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(trimmed)) {
-      setNewsletterError("Please enter a valid email address.");
+      setNewsletterError("Please enter a valid email address (e.g. name@example.com).");
       return;
     }
 
     setNewsletterError(null);
-    toast.success("Thank you for subscribing to community updates!");
-    setNewsletterEmail("");
+    setIsSubscribing(true);
+
+    try {
+      const res = await apiFetch<{ success: boolean; message: string }>("/api/subscribers", {
+        method: "POST",
+        body: JSON.stringify({ email: trimmed }),
+      });
+      toast.success(res.message || "Thank you for subscribing to community updates!");
+      setNewsletterEmail("");
+    } catch (err: any) {
+      const msg = err?.message || "Could not subscribe at this time. Please try again.";
+      setNewsletterError(msg);
+      toast.error(msg);
+    } finally {
+      setIsSubscribing(false);
+    }
   };
 
   // Neutral "Community in Action" photographs with activity-only captions
@@ -384,6 +400,9 @@ export default function HomePage() {
               <div className="relative w-full sm:w-auto flex-1">
                 <Input
                   type="email"
+                  maxLength={100}
+                  autoComplete="email"
+                  disabled={isSubscribing}
                   value={newsletterEmail}
                   onChange={(e) => {
                     setNewsletterEmail(e.target.value);
@@ -414,10 +433,20 @@ export default function HomePage() {
               <Button
                 type="submit"
                 size="lg"
+                disabled={isSubscribing}
                 className="w-full sm:w-auto h-12 px-7 rounded-full font-medium shrink-0 shadow-xs"
               >
-                <span>Subscribe</span>
-                <ArrowRight className="h-4 w-4" />
+                {isSubscribing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Subscribing...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Subscribe</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
               </Button>
             </form>
 
