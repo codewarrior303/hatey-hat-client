@@ -5,10 +5,10 @@ import {
   Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Clock,
   RotateCcw,
   Check,
-  Sparkles,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -46,6 +46,140 @@ const MONTH_NAMES = [
 ];
 
 const WEEKDAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+interface TimeOption {
+  value: number;
+  label: string;
+  disabled: boolean;
+}
+
+function TimeDropdown({
+  label,
+  value,
+  displayValue,
+  options,
+  onChange,
+  disabled,
+}: {
+  label: string;
+  value: number;
+  displayValue?: string;
+  options: TimeOption[];
+  onChange: (val: number) => void;
+  disabled?: boolean;
+}) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const listRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen]);
+
+  // Auto-scroll selected value into view when opened
+  React.useEffect(() => {
+    if (isOpen && listRef.current) {
+      const activeEl = listRef.current.querySelector<HTMLElement>('[data-selected="true"]');
+      if (activeEl) {
+        activeEl.scrollIntoView({ block: "nearest" });
+      }
+    }
+  }, [isOpen]);
+
+  return (
+    <div ref={containerRef} className="relative space-y-1">
+      <label className="text-[10px] uppercase tracking-wider text-muted-foreground block text-center select-none font-medium">
+        {label}
+      </label>
+
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setIsOpen((prev) => !prev)}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        aria-label={`Select ${label}`}
+        className={cn(
+          "w-full h-9 rounded-xl glass bg-transparent border border-foreground/15 text-xs text-center font-semibold text-foreground",
+          "flex items-center justify-between px-2.5 transition-all select-none hover:bg-foreground/5",
+          "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground",
+          isOpen && "ring-1 ring-foreground bg-foreground/5"
+        )}
+      >
+        <span className="flex-1 text-center font-semibold">
+          {displayValue ?? value}
+        </span>
+        <ChevronDown
+          className={cn(
+            "h-3 w-3 text-muted-foreground transition-transform duration-200 shrink-0",
+            isOpen && "rotate-180"
+          )}
+        />
+      </button>
+
+      {isOpen && (
+        <div
+          ref={listRef}
+          role="listbox"
+          aria-label={label}
+          className={cn(
+            "absolute bottom-full mb-1.5 left-0 w-full z-30",
+            "max-h-48 overflow-y-auto no-scrollbar",
+            "rounded-2xl glass p-1 shadow-2xl border border-foreground/15",
+            "bg-background/95 dark:bg-black/95 backdrop-blur-2xl",
+            "animate-in fade-in-50 zoom-in-95 duration-150"
+          )}
+        >
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              role="option"
+              aria-selected={opt.value === value}
+              data-selected={opt.value === value ? "true" : undefined}
+              disabled={opt.disabled}
+              onClick={() => {
+                if (opt.disabled) return;
+                onChange(opt.value);
+                setIsOpen(false);
+              }}
+              className={cn(
+                "w-full h-8 rounded-xl text-xs font-medium transition-all flex items-center justify-center select-none my-0.5",
+                opt.disabled && "text-muted-foreground/30 cursor-not-allowed pointer-events-none",
+                !opt.disabled && opt.value !== value && "text-foreground hover:bg-foreground/10 active:scale-95",
+                opt.value === value && "bg-foreground text-background font-semibold shadow-xs"
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /**
  * Custom Theme-Reactive DateTimePicker
@@ -277,22 +411,22 @@ export function DateTimePicker({
     });
   }, [selectedDate]);
 
-  // Presets handler
-  const handlePreset = (daysAhead: number, hour24: number, min: number) => {
-    const target = new Date();
-    target.setDate(target.getDate() + daysAhead);
-    target.setHours(hour24, min, 0, 0);
+  // Options for Hour and Minute dropdowns
+  const hourOptions = React.useMemo(() => {
+    return Array.from({ length: 12 }, (_, i) => i + 1).map((h) => ({
+      value: h,
+      label: String(h),
+      disabled: isTimeInPast(h, selectedMinute, selectedPeriod),
+    }));
+  }, [isTimeInPast, selectedMinute, selectedPeriod]);
 
-    const h12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
-    const period: "AM" | "PM" = hour24 >= 12 ? "PM" : "AM";
-
-    setSelectedHour(h12);
-    setSelectedMinute(min);
-    setSelectedPeriod(period);
-    setCurrentMonth(new Date(target.getFullYear(), target.getMonth(), 1));
-
-    onChange?.(target.toISOString());
-  };
+  const minuteOptions = React.useMemo(() => {
+    return [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map((m) => ({
+      value: m,
+      label: String(m).padStart(2, "0"),
+      disabled: isTimeInPast(selectedHour, m, selectedPeriod),
+    }));
+  }, [isTimeInPast, selectedHour, selectedPeriod]);
 
   const handleClear = () => {
     onChange?.("");
@@ -335,37 +469,8 @@ export function DateTimePicker({
         align="start"
         className="w-[330px] sm:w-[350px] p-4 glass rounded-3xl border border-foreground/15 shadow-2xl backdrop-blur-2xl"
       >
-        {/* Quick Presets Bar */}
-        <div className="flex items-center gap-1.5 pb-3 border-b border-foreground/10 overflow-x-auto no-scrollbar">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground shrink-0 flex items-center gap-1 mr-1">
-            <Sparkles className="h-3 w-3" />
-            Quick:
-          </span>
-          <button
-            type="button"
-            onClick={() => handlePreset(1, 10, 0)}
-            className="text-xs px-2.5 py-1 rounded-full bg-foreground/5 hover:bg-foreground/10 text-foreground shrink-0 transition-colors"
-          >
-            Tomorrow 10 AM
-          </button>
-          <button
-            type="button"
-            onClick={() => handlePreset(3, 15, 0)}
-            className="text-xs px-2.5 py-1 rounded-full bg-foreground/5 hover:bg-foreground/10 text-foreground shrink-0 transition-colors"
-          >
-            In 3 Days 3 PM
-          </button>
-          <button
-            type="button"
-            onClick={() => handlePreset(7, 9, 30)}
-            className="text-xs px-2.5 py-1 rounded-full bg-foreground/5 hover:bg-foreground/10 text-foreground shrink-0 transition-colors"
-          >
-            Next Week
-          </button>
-        </div>
-
         {/* Calendar Header */}
-        <div className="flex items-center justify-between pt-3 pb-2 px-1">
+        <div className="flex items-center justify-between pb-2 px-1">
           <h4 className="text-sm font-semibold tracking-tight text-foreground">
             {MONTH_NAMES[currentMonth.getMonth()]} {currentMonth.getFullYear()}
           </h4>
@@ -442,57 +547,28 @@ export function DateTimePicker({
           </div>
 
           <div className="grid grid-cols-3 gap-2">
-            {/* Hour Selector */}
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground block text-center">
-                Hour
-              </label>
-              <select
-                aria-label="Select hour"
-                value={selectedHour}
-                onChange={(e) => {
-                  const h = Number(e.target.value);
-                  setSelectedHour(h);
-                  if (selectedDate) handleCommitDateTime(selectedDate, h, selectedMinute, selectedPeriod);
-                }}
-                className="w-full h-9 rounded-xl glass bg-transparent border border-foreground/15 text-xs text-center font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
-              >
-                {Array.from({ length: 12 }, (_, i) => i + 1).map((h) => {
-                  const past = isTimeInPast(h, selectedMinute, selectedPeriod);
-                  return (
-                    <option key={h} value={h} disabled={past} className="bg-background text-foreground">
-                      {h}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
+            {/* Custom Theme-Reactive Hour Dropdown */}
+            <TimeDropdown
+              label="Hour"
+              value={selectedHour}
+              options={hourOptions}
+              onChange={(h) => {
+                setSelectedHour(h);
+                if (selectedDate) handleCommitDateTime(selectedDate, h, selectedMinute, selectedPeriod);
+              }}
+            />
 
-            {/* Minute Selector (5-minute steps) */}
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground block text-center">
-                Minute
-              </label>
-              <select
-                aria-label="Select minute"
-                value={selectedMinute}
-                onChange={(e) => {
-                  const m = Number(e.target.value);
-                  setSelectedMinute(m);
-                  if (selectedDate) handleCommitDateTime(selectedDate, selectedHour, m, selectedPeriod);
-                }}
-                className="w-full h-9 rounded-xl glass bg-transparent border border-foreground/15 text-xs text-center font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
-              >
-                {[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map((m) => {
-                  const past = isTimeInPast(selectedHour, m, selectedPeriod);
-                  return (
-                    <option key={m} value={m} disabled={past} className="bg-background text-foreground">
-                      {String(m).padStart(2, "0")}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
+            {/* Custom Theme-Reactive Minute Dropdown */}
+            <TimeDropdown
+              label="Minute"
+              value={selectedMinute}
+              displayValue={String(selectedMinute).padStart(2, "0")}
+              options={minuteOptions}
+              onChange={(m) => {
+                setSelectedMinute(m);
+                if (selectedDate) handleCommitDateTime(selectedDate, selectedHour, m, selectedPeriod);
+              }}
+            />
 
             {/* AM / PM Segmented Control */}
             <div className="space-y-1">

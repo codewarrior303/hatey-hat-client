@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { AlertCircle, ArrowLeft, LogIn, Home } from "lucide-react";
+import { AlertCircle, LogIn, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 function ErrorContent() {
