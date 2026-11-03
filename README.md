@@ -4,7 +4,6 @@
 > A community-driven social service and grassroots event management platform empowering neighbours to organize, join, and track local relief initiatives in Dhaka.
 
 **Live Site URL:** [https://hatey-hat.vercel.app](https://hatey-hat.vercel.app)  
-**Backend API URL:** [https://hatey-hat-api.vercel.app](https://hatey-hat-api.vercel.app)
 
 ---
 
@@ -74,49 +73,3 @@ client/
 
 ---
 
-## Environment Variables Setup
-
-Create a `.env.local` file inside the `client/` directory based on `.env.example`:
-
-```bash
-# Base URL of this Next.js app
-BETTER_AUTH_URL=http://localhost:3000
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-
-# Better Auth Secret (generate with `openssl rand -base64 32`)
-BETTER_AUTH_SECRET=your_32_character_minimum_random_secret
-
-# MongoDB Database URI (shares the same database as the Express server)
-MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/?retryWrites=true&w=majority
-MONGODB_DB=hatey-hat
-
-# Google OAuth Credentials (Google Cloud Console -> APIs & Services -> Credentials)
-GOOGLE_CLIENT_ID=your_client_id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=your_client_secret
-
-# Express REST API Base URL (no trailing slash)
-NEXT_PUBLIC_API_URL=http://localhost:5000
-```
-
----
-
-## Local Development
-
-```bash
-# Install dependencies
-npm install
-
-# Run development server
-npm run dev
-
-# Run type checking
-npm run typecheck # or npx tsc --noEmit
-
-# Run production build
-npm run build
-
-# Run linting
-npm run lint
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
