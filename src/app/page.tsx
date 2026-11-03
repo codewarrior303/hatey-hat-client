@@ -153,62 +153,53 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col space-y-24 md:space-y-32 pb-24">
-      {/* 1. HERO / BANNER SECTION (APPLE AESTHETIC) */}
+      {/* 1. HERO / BANNER SECTION (APPLE AESTHETIC - INSTANTLY VISIBLE) */}
       <section className="relative pt-12 md:pt-20 px-4 sm:px-6">
-        <div className="container relative mx-auto text-center max-w-4xl space-y-8">
-          <ScrollReveal direction="fade" delay={0}>
-            {/* Subtle Tagline Pill */}
-            <div className="inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-xs sm:text-[13px] font-medium text-foreground/80 shadow-xs">
-              <Sparkles className="h-3.5 w-3.5 opacity-60" />
-              <span>Hate hat, ekshathe poth chola</span>
-            </div>
-          </ScrollReveal>
+        <div className="container relative mx-auto text-center max-w-4xl space-y-8 animate-in fade-in-50 duration-500">
+          {/* Subtle Tagline Pill */}
+          <div className="inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-xs sm:text-[13px] font-medium text-foreground/80 shadow-xs">
+            <Sparkles className="h-3.5 w-3.5 opacity-60" />
+            <span>Hate hat, ekshathe poth chola</span>
+          </div>
 
-          <ScrollReveal direction="up" delay={80}>
-            {/* Hero Headline (56-76px on desktop, weight 600, tight tracking) */}
-            <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-[76px] font-semibold tracking-[-0.035em] text-foreground leading-[1.08] max-w-4xl mx-auto">
-              Unite with neighbours to build a kinder Dhaka.
-            </h1>
-          </ScrollReveal>
+          {/* Hero Headline (56-76px on desktop, weight 600, tight tracking) */}
+          <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-[76px] font-semibold tracking-[-0.035em] text-foreground leading-[1.08] max-w-4xl mx-auto">
+            Unite with neighbours to build a kinder Dhaka.
+          </h1>
 
-          <ScrollReveal direction="up" delay={140}>
-            <p className="text-[17px] sm:text-[19px] text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-              A community-driven platform to organize, discover, and join grassroots social service
-              events — from winter clothes distributions to neighbourhood cleanups.
-            </p>
-          </ScrollReveal>
+          <p className="text-[17px] sm:text-[19px] text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+            A community-driven platform to organize, discover, and join grassroots social service
+            events — from winter clothes distributions to neighbourhood cleanups.
+          </p>
 
           {/* Pill Action Buttons */}
-          <ScrollReveal direction="up" delay={180}>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2">
-              <Button
-                asChild
-                size="lg"
-                className="w-full sm:w-auto h-12 px-7 rounded-full font-medium shadow-sm"
-              >
-                <Link href="/events">
-                  <span>Explore Events</span>
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2">
+            <Button
+              asChild
+              size="lg"
+              className="w-full sm:w-auto h-12 px-7 rounded-full font-medium shadow-sm"
+            >
+              <Link href="/events">
+                <span>Explore Events</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
 
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="w-full sm:w-auto h-12 px-7 rounded-full font-medium glass"
-              >
-                <Link href="/events/create">
-                  <PlusCircle className="h-4 w-4" />
-                  <span>Organize an Initiative</span>
-                </Link>
-              </Button>
-            </div>
-          </ScrollReveal>
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="w-full sm:w-auto h-12 px-7 rounded-full font-medium glass"
+            >
+              <Link href="/events/create">
+                <PlusCircle className="h-4 w-4" />
+                <span>Organize an Initiative</span>
+              </Link>
+            </Button>
+          </div>
 
           {/* Real Database Impact Snapshot (Honest Numbers) */}
-          <ScrollReveal direction="up" delay={240}>
-            <div className="glass max-w-3xl mx-auto p-6 sm:p-8 rounded-[28px] mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 text-center shadow-xs">
+          <div className="glass max-w-3xl mx-auto p-6 sm:p-8 rounded-[28px] mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 text-center shadow-xs">
               <div className="space-y-1">
                 <p className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
                   {stats ? `${stats.upcomingEvents}` : "10+"}
@@ -234,7 +225,6 @@ export default function HomePage() {
                 <p className="text-xs text-muted-foreground font-medium">Grassroots & Local</p>
               </div>
             </div>
-          </ScrollReveal>
         </div>
       </section>
 

@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 interface ScrollRevealProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
-  delay?: number; // in milliseconds (e.g. 0, 100, 200)
+  delay?: number;
   direction?: "up" | "down" | "left" | "right" | "fade";
   threshold?: number;
   className?: string;
@@ -15,22 +15,32 @@ export function ScrollReveal({
   children,
   delay = 0,
   direction = "up",
-  threshold = 0.12,
+  threshold = 0.05,
   className,
   ...props
 }: ScrollRevealProps) {
-  const [isVisible, setIsVisible] = React.useState(false);
+  const [isVisible, setIsVisible] = React.useState(true);
   const elementRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    const el = elementRef.current;
-    if (!el) return;
-
-    // If IntersectionObserver is not supported, reveal immediately
+    // If IntersectionObserver is not supported, stay visible
     if (typeof window === "undefined" || !("IntersectionObserver" in window)) {
       setIsVisible(true);
       return;
     }
+
+    const el = elementRef.current;
+    if (!el) return;
+
+    // Check if element is already inside the viewport on initial render
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight && rect.bottom > 0) {
+      setIsVisible(true);
+      return;
+    }
+
+    // Otherwise, temporarily hide to trigger entrance animation
+    setIsVisible(false);
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -42,7 +52,7 @@ export function ScrollReveal({
       },
       {
         threshold,
-        rootMargin: "0px 0px -40px 0px",
+        rootMargin: "0px 0px 50px 0px",
       }
     );
 
@@ -53,16 +63,16 @@ export function ScrollReveal({
   const getInitialStyle = () => {
     switch (direction) {
       case "up":
-        return "opacity-0 translate-y-8 blur-[2px]";
+        return "opacity-0 translate-y-6";
       case "down":
-        return "opacity-0 -translate-y-8 blur-[2px]";
+        return "opacity-0 -translate-y-6";
       case "left":
-        return "opacity-0 translate-x-8 blur-[2px]";
+        return "opacity-0 translate-x-6";
       case "right":
-        return "opacity-0 -translate-x-8 blur-[2px]";
+        return "opacity-0 -translate-x-6";
       case "fade":
       default:
-        return "opacity-0 blur-[2px]";
+        return "opacity-0";
     }
   };
 
@@ -73,8 +83,8 @@ export function ScrollReveal({
         transitionDelay: `${delay}ms`,
       }}
       className={cn(
-        "transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-[transform,opacity,filter]",
-        isVisible ? "opacity-100 translate-x-0 translate-y-0 blur-0" : getInitialStyle(),
+        "transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]",
+        isVisible ? "opacity-100 translate-x-0 translate-y-0" : getInitialStyle(),
         className
       )}
       {...props}

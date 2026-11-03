@@ -1,3 +1,6 @@
+"use client";
+
+import * as React from "react";
 import Link from "next/link";
 import { Heart, MapPin } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
