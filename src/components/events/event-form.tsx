@@ -144,9 +144,13 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
     try {
       setIsSubmitting(true);
 
+      // Automatically upgrade image to 2K/4K high resolution before saving
+      const highResThumb = getHighResImageUrl(data.thumbnail) || data.thumbnail;
+
       // Convert local date string to full ISO Date
       const payload = {
         ...data,
+        thumbnail: highResThumb,
         eventDate: new Date(data.eventDate).toISOString(),
       };
 
@@ -165,7 +169,7 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
           auth: true,
           body: JSON.stringify(payload),
         });
-        toast.success("Event created successfully! Redirecting to Upcoming Events...");
+        toast.success("Event created successfully!");
         router.push("/events");
         router.refresh();
       }
