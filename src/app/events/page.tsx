@@ -245,7 +245,7 @@ export default function UpcomingEventsPage() {
               <div
                 role="listbox"
                 aria-label="Search suggestions"
-                className="absolute left-0 right-0 top-full mt-2 z-40 rounded-2xl glass-menu p-2 shadow-2xl animate-in fade-in-50 zoom-in-95 duration-150"
+                className="absolute left-0 right-0 top-full mt-2 z-40 rounded-2xl glass-menu p-2 shadow-2xl animate-in fade-in-50 zoom-in-95 duration-150 overflow-hidden"
               >
                 {matchingSuggestions.length > 0 ? (
                   <div className="space-y-1">

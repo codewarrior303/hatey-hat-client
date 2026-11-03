@@ -114,7 +114,8 @@ img {
    Completely Disable Browser Default Scrollbars (Linux, Chrome, Brave, Firefox, Edge)
    ========================================================================= */
 html,
-body {
+body,
+* {
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
 }
@@ -289,27 +290,27 @@ textarea::-webkit-scrollbar-thumb:hover,
    High legibility, zero bleed-through, rich specular highlights & deep blur */
 .glass-menu,
 .glass-dropdown {
-  background: rgba(255, 255, 255, 0.90) !important;
-  backdrop-filter: blur(32px) saturate(200%) !important;
-  -webkit-backdrop-filter: blur(32px) saturate(200%) !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  backdrop-filter: blur(40px) saturate(210%) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(210%) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
   box-shadow: 
-    0 20px 48px -8px rgba(0, 0, 0, 0.16),
-    0 4px 12px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0.5px rgba(255, 255, 255, 0.95) !important;
+    0 24px 50px -10px rgba(0, 0, 0, 0.18),
+    0 8px 24px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0.5px rgba(255, 255, 255, 0.98) !important;
   border-radius: 20px;
 }
 
 .dark .glass-menu,
 .dark .glass-dropdown {
-  background: rgba(18, 18, 22, 0.90) !important;
-  backdrop-filter: blur(32px) saturate(200%) !important;
-  -webkit-backdrop-filter: blur(32px) saturate(200%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  background: rgba(18, 18, 22, 0.95) !important;
+  backdrop-filter: blur(40px) saturate(210%) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(210%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
   box-shadow: 
-    0 24px 54px -8px rgba(0, 0, 0, 0.75),
-    0 6px 16px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0.5px rgba(255, 255, 255, 0.18) !important;
+    0 28px 60px -8px rgba(0, 0, 0, 0.8),
+    0 8px 24px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0.5px rgba(255, 255, 255, 0.2) !important;
   border-radius: 20px;
 }
 

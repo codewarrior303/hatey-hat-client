@@ -16,7 +16,7 @@ import {
   Eye,
   AlertCircle,
   Sparkles,
-  Clock,
+  X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -138,17 +138,6 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
   React.useEffect(() => {
     setHasImgError(false);
   }, [previewThumbnail]);
-
-  // Quick Date/Time helper
-  const setQuickDate = (daysAhead: number, hour: number, minute: number = 0) => {
-    const target = new Date();
-    target.setDate(target.getDate() + daysAhead);
-    target.setHours(hour, minute, 0, 0);
-    const dateStr = target.toISOString();
-    setValue("eventDate", dateStr, { shouldValidate: true, shouldDirty: true });
-    clearErrors("eventDate");
-    toast.success(`Date set to ${target.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} at ${target.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`);
-  };
 
   const onSubmit = async (data: EventFormData) => {
     try {
@@ -272,40 +261,9 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
             )}
           </div>
 
-          {/* Date & Time with Quick-Set Presets */}
+          {/* Date & Time */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="eventDate">Event Date & Time (Future Only)</Label>
-              <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                <span>Quick set:</span>
-              </span>
-            </div>
-
-            {/* Quick date chips */}
-            <div className="flex flex-wrap items-center gap-2 pb-1">
-              <button
-                type="button"
-                onClick={() => setQuickDate(1, 10, 0)}
-                className="text-xs px-3 py-1 rounded-full glass border border-foreground/10 hover:bg-foreground/10 text-foreground transition-all"
-              >
-                Tomorrow 10 AM
-              </button>
-              <button
-                type="button"
-                onClick={() => setQuickDate(3, 15, 0)}
-                className="text-xs px-3 py-1 rounded-full glass border border-foreground/10 hover:bg-foreground/10 text-foreground transition-all"
-              >
-                In 3 Days 3 PM
-              </button>
-              <button
-                type="button"
-                onClick={() => setQuickDate(7, 9, 30)}
-                className="text-xs px-3 py-1 rounded-full glass border border-foreground/10 hover:bg-foreground/10 text-foreground transition-all"
-              >
-                Next Week 9:30 AM
-              </button>
-            </div>
+            <Label htmlFor="eventDate">Event Date & Time (Future Only)</Label>
 
             <Controller
               control={control}
@@ -349,10 +307,25 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
                 id="thumbnail"
                 type="url"
                 placeholder="https://images.unsplash.com/photo-..."
-                className="pl-10 h-11 rounded-xl glass bg-transparent border-foreground/15 text-sm"
+                className="pl-10 pr-10 h-11 rounded-xl glass bg-transparent border-foreground/15 text-sm"
                 {...register("thumbnail")}
                 aria-invalid={Boolean(errors.thumbnail)}
               />
+              {previewThumbnail && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setValue("thumbnail", "", { shouldValidate: true, shouldDirty: true });
+                    clearErrors("thumbnail");
+                    setHasImgError(false);
+                  }}
+                  className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded-full hover:bg-foreground/10"
+                  aria-label="Clear thumbnail URL"
+                  title="Clear thumbnail URL"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
 
             {/* Suggested one-click preset photo pills */}
