@@ -20,6 +20,10 @@ export function EventCard({ event }: EventCardProps) {
   const router = useRouter();
   const [imgSrc, setImgSrc] = React.useState(getHighResImageUrl(event.thumbnail) || FALLBACK_IMAGE);
 
+  React.useEffect(() => {
+    setImgSrc(getHighResImageUrl(event.thumbnail) || FALLBACK_IMAGE);
+  }, [event.thumbnail]);
+
   const handleCardClick = (e: React.MouseEvent) => {
     // Navigate on card click unless the user clicked an explicit link or action button
     const target = e.target as HTMLElement;

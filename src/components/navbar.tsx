@@ -370,22 +370,22 @@ export function Navbar() {
 
       {/* Live Notification Container - Sits side-by-side with navbar on desktop (left: 100% + 12px), centered below on smaller screens */}
       {visibleToasts.length > 0 && (
-        <div className="pointer-events-none z-50 flex flex-col items-center xl:items-start gap-2 absolute top-full mt-2.5 left-1/2 -translate-x-1/2 xl:top-0 xl:mt-0 xl:left-full xl:ml-3 xl:translate-x-0">
+        <div className="pointer-events-none z-50 flex flex-col items-center xl:items-start gap-2 absolute top-full mt-2.5 left-1/2 -translate-x-1/2 xl:top-0 xl:mt-0 xl:left-full xl:ml-3 xl:translate-x-0 max-w-[calc(100vw-2rem)]">
           {visibleToasts.map((t) => (
             <div
               key={t.id}
               role="alert"
               className={cn(
-                "pointer-events-auto flex items-center gap-3 rounded-full pl-5 pr-3 h-14 text-xs sm:text-sm font-medium border transition-all duration-200 animate-in fade-in-50",
+                "pointer-events-auto flex items-center justify-between gap-2.5 rounded-full pl-4 pr-2.5 min-h-14 py-1.5 text-xs sm:text-sm font-medium border transition-all duration-200 animate-in fade-in-50",
                 isScrolled ? "glass-strong shadow-md" : "glass shadow-xs",
-                "whitespace-nowrap shrink-0",
+                "max-w-[calc(100vw-3rem)] xl:max-w-[260px] 2xl:max-w-[320px]",
                 t.type === "error"
                   ? "border-red-500/50 text-foreground"
                   : "border-foreground/15 text-foreground"
               )}
             >
-              {/* Clean notification message text without any green checkmark icon */}
-              <span className="text-foreground font-medium text-xs sm:text-sm select-none">
+              {/* Clean notification message text with graceful wrapping so it never exceeds screen frame / scrollbar */}
+              <span className="text-foreground font-medium text-xs sm:text-sm select-none break-words line-clamp-2 leading-snug">
                 {resolveValue(t.message, t)}
               </span>
 
@@ -393,7 +393,7 @@ export function Navbar() {
               <button
                 type="button"
                 onClick={() => toast.dismiss(t.id)}
-                className="p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/10 transition-colors cursor-pointer shrink-0"
+                className="p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/10 transition-colors cursor-pointer shrink-0 ml-1"
                 aria-label="Remove notification"
                 title="Remove notification"
               >

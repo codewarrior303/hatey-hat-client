@@ -179,13 +179,13 @@ export default function EventDetailsPage() {
       </div>
 
       {/* Hero Banner Image in Glass Container */}
-      <div className="relative aspect-[21/9] sm:aspect-[2/1] w-full overflow-hidden rounded-[28px] glass p-2 shadow-sm">
+      <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full max-h-[480px] md:max-h-[540px] overflow-hidden rounded-[28px] glass p-2 shadow-sm">
         <div className="w-full h-full overflow-hidden rounded-[22px] bg-neutral-100 dark:bg-neutral-900 relative">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imgSrc}
             alt={event.title}
-            className="h-full w-full object-cover select-none [image-rendering:-webkit-optimize-contrast] contrast-[1.01]"
+            className="h-full w-full object-cover object-top sm:object-[center_18%] select-none [image-rendering:-webkit-optimize-contrast] contrast-[1.01]"
             loading="eager"
             decoding="async"
             fetchPriority="high"

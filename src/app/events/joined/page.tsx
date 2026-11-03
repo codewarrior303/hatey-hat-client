@@ -10,7 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
 import { EventGridSkeleton } from "@/components/events/event-skeleton";
 import { apiFetch, type JoinItem } from "@/lib/api";
-import { formatDate } from "@/lib/utils";
+import { formatDate, getHighResImageUrl } from "@/lib/utils";
 
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=800&q=80";
@@ -77,7 +77,7 @@ export default function JoinedEventsPage() {
                   <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[18px] bg-neutral-100 dark:bg-neutral-900">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={join.eventThumbnail || FALLBACK_IMAGE}
+                      src={getHighResImageUrl(join.eventThumbnail) || FALLBACK_IMAGE}
                       alt={join.eventTitle}
                       className="h-full w-full object-cover"
                       onError={(e) => {
