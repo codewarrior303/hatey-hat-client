@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, Filter, X, SlidersHorizontal, PlusCircle, MapPin, ArrowRight } from "lucide-react";
+import { Search, Filter, X, SlidersHorizontal, PlusCircle, MapPin, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -23,6 +23,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
 import { apiFetch, EVENT_TYPES, type EventItem } from "@/lib/api";
 
+const EVENTS_PER_PAGE = 9;
+
 export default function UpcomingEventsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -37,6 +39,15 @@ export default function UpcomingEventsPage() {
   const [allEvents, setAllEvents] = React.useState<EventItem[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const eventsSectionRef = React.useRef<HTMLElement>(null);
+
+  // Reset to first page whenever search or category filter changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [currentSearch, currentType]);
 
   // Suggestions state
   const [isSuggestionsOpen, setIsSuggestionsOpen] = React.useState(false);
@@ -176,6 +187,33 @@ export default function UpcomingEventsPage() {
   };
 
   const hasActiveFilters = Boolean(currentSearch || (currentType && currentType !== "all"));
+
+  // Pagination calculations (9 initiatives per page)
+  const totalPages = Math.ceil(events.length / EVENTS_PER_PAGE);
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), Math.max(1, totalPages));
+
+  const paginatedEvents = React.useMemo(() => {
+    const startIndex = (safeCurrentPage - 1) * EVENTS_PER_PAGE;
+    return events.slice(startIndex, startIndex + EVENTS_PER_PAGE);
+  }, [events, safeCurrentPage]);
+
+  const getVisiblePages = (current: number, total: number) => {
+    const maxVisible = 5;
+    if (total <= maxVisible) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    let start = Math.max(1, current - 2);
+    let end = start + maxVisible - 1;
+    if (end > total) {
+      end = total;
+      start = Math.max(1, end - maxVisible + 1);
+    }
+    const pages: number[] = [];
+    for (let p = start; p <= end; p++) {
+      pages.push(p);
+    }
+    return pages;
+  };
 
   return (
     <div className="container mx-auto max-w-6xl px-4 sm:px-6 py-8 md:py-12 space-y-8">
@@ -385,7 +423,7 @@ export default function UpcomingEventsPage() {
       </div>
 
       {/* Events Grid / State Views */}
-      <section>
+      <section ref={eventsSectionRef} className="scroll-mt-24">
         {isLoading ? (
           <EventGridSkeleton count={6} />
         ) : error ? (
@@ -403,11 +441,77 @@ export default function UpcomingEventsPage() {
             onReset={hasActiveFilters ? clearFilters : undefined}
           />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {events.map((event) => (
-              <EventCard key={event._id} event={event} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {paginatedEvents.map((event) => (
+                <EventCard key={event._id} event={event} />
+              ))}
+            </div>
+
+            {/* Pagination Controls - Displayed only when total events exceed 9 */}
+            {totalPages > 1 && (
+              <nav
+                role="navigation"
+                aria-label="Events pagination"
+                className="flex items-center justify-center gap-2 pt-10 pb-4 animate-in fade-in-50"
+              >
+                {/* Previous Page Button (<) */}
+                {safeCurrentPage > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurrentPage((prev) => Math.max(1, prev - 1));
+                      eventsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }}
+                    className="flex h-11 w-11 items-center justify-center rounded-2xl glass border border-foreground/15 text-foreground hover:bg-foreground/10 transition-all duration-200 cursor-pointer shadow-xs active:scale-95"
+                    aria-label="Previous page"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                )}
+
+                {/* Numbered Page Buttons */}
+                {getVisiblePages(safeCurrentPage, totalPages).map((pageNum) => {
+                  const isActive = pageNum === safeCurrentPage;
+                  return (
+                    <button
+                      key={pageNum}
+                      type="button"
+                      onClick={() => {
+                        setCurrentPage(pageNum);
+                        eventsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }}
+                      className={cn(
+                        "flex h-11 w-11 items-center justify-center rounded-2xl text-sm font-semibold transition-all duration-200 cursor-pointer shadow-xs active:scale-95 select-none",
+                        isActive
+                          ? "bg-foreground text-background shadow-md scale-105"
+                          : "glass border border-foreground/15 text-foreground/85 hover:text-foreground hover:bg-foreground/10"
+                      )}
+                      aria-label={`Go to page ${pageNum}`}
+                      aria-current={isActive ? "page" : undefined}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+
+                {/* Next Page Button (>) */}
+                {safeCurrentPage < totalPages && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+                      eventsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }}
+                    className="flex h-11 w-11 items-center justify-center rounded-2xl glass border border-foreground/15 text-foreground hover:bg-foreground/10 transition-all duration-200 cursor-pointer shadow-xs active:scale-95"
+                    aria-label="Next page"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                )}
+              </nav>
+            )}
+          </>
         )}
       </section>
     </div>
