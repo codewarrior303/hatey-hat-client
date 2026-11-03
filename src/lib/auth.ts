@@ -27,6 +27,14 @@ export const auth = betterAuth({
   secret: secret || "development-secret-minimum-32-characters-hatey-hat-platform",
   baseURL: appUrl,
   trustedOrigins,
+  session: {
+    expiresIn: 60 * 60 * 24 * 7, // 7 days in seconds
+    updateAge: 60 * 60 * 24, // refresh rolling expiry once a day
+    cookieCache: {
+      enabled: true,
+      maxAge: 60 * 60 * 24 * 7, // 7 days in client cookies
+    },
+  },
   rateLimit: {
     enabled: true,
     window: 60,

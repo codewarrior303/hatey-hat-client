@@ -35,6 +35,12 @@ export const metadata: Metadata = {
     "blood donation",
     "cleanup drives",
   ],
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+  },
 };
 
 export default function RootLayout({

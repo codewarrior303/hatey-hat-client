@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
-import { ArrowRight, Image as ImageIcon, Lock, Mail, User, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowRight, Image as ImageIcon, Lock, Mail, User, Loader2, CheckCircle2, XCircle, Eye, EyeOff } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,7 @@ export default function RegisterPage() {
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
 
   const {
     register,
@@ -218,13 +219,25 @@ export default function RegisterPage() {
                   <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className="pl-9"
+                    className="pl-9 pr-10"
                     autoComplete="new-password"
                     {...register("password")}
                     aria-invalid={Boolean(errors.password)}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors focus:outline-none"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
                 </div>
                 {errors.password && (
                   <p className="text-xs font-medium text-destructive">

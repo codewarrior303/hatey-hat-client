@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="hatGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#238263"/>
+      <stop offset="100%" stop-color="#144f3b"/>
+    </linearGradient>
+    <linearGradient id="amberGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F7BA55"/>
+      <stop offset="100%" stop-color="#E59926"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Squircle rounded background -->
+  <rect width="64" height="64" rx="16" fill="url(#hatGradient)"/>
+
+  <!-- Subtle inner border -->
+  <rect x="1" y="1" width="62" height="62" rx="15" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+
+  <!-- Two clasped hands forming a supportive heart (হাতে হাত) -->
+  <g transform="translate(10, 10)">
+    <!-- Heart outline badge -->
+    <path
+      d="M22 13.5C24.8 10.7 29 10 32 13C35 10 39.2 10.7 42 13.5C45.5 17 45.5 22.5 42 26L32 36L22 26C18.5 22.5 18.5 17 22 13.5Z"
+      fill="url(#amberGradient)"
+      opacity="0.22"
+    />
+
+    <!-- Left hand reaching up & in -->
+    <path
+      d="M7 26L16 19C17.5 17.8 19.8 18 21 19.5L24 23.5L29 18.5C30.2 17.3 32.2 17.3 33.5 18.5C34.8 19.8 34.8 21.8 33.5 23L27 29.5L21.5 35L15 28.5L7 32"
+      stroke="#F2A93B"
+      stroke-width="3.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+
+    <!-- Right hand clasped together in support -->
+    <path
+      d="M37 26L31 20C29.8 18.8 27.8 18.8 26.5 20"
+      stroke="#FFFFFF"
+      stroke-width="3"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+
+    <!-- Heart accent in center -->
+    <path
+      d="M22 8C19 5.5 14.5 6 13 9.5C11.5 13 14 17 22 22C30 17 32.5 13 31 9.5C29.5 6 25 5.5 22 8Z"
+      fill="url(#amberGradient)"
+    />
+  </g>
+</svg>
