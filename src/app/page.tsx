@@ -22,7 +22,7 @@ import { EventGridSkeleton } from "@/components/events/event-skeleton";
 import { ErrorState } from "@/components/ui/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
-import { apiFetch, type EventItem } from "@/lib/api";
+import { apiFetch, getCachedData, type EventItem } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 interface StatsSummary {
@@ -33,9 +33,12 @@ interface StatsSummary {
 }
 
 export default function HomePage() {
-  const [events, setEvents] = React.useState<EventItem[]>([]);
-  const [stats, setStats] = React.useState<StatsSummary | null>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const cachedRecent = typeof window !== "undefined" ? getCachedData<EventItem[]>("/api/events?limit=6") : null;
+  const cachedStats = typeof window !== "undefined" ? getCachedData<StatsSummary>("/api/events/stats/summary") : null;
+
+  const [events, setEvents] = React.useState<EventItem[]>(cachedRecent || []);
+  const [stats, setStats] = React.useState<StatsSummary | null>(cachedStats);
+  const [isLoading, setIsLoading] = React.useState(!cachedRecent);
   const [error, setError] = React.useState<string | null>(null);
 
   // Newsletter state with custom validation tooltip
@@ -45,7 +48,10 @@ export default function HomePage() {
 
   const fetchRecentEvents = React.useCallback(async () => {
     try {
-      setIsLoading(true);
+      const cached = typeof window !== "undefined" ? getCachedData<EventItem[]>("/api/events?limit=6") : null;
+      if (!cached) {
+        setIsLoading(true);
+      }
       setError(null);
       const [eventsRes, statsRes] = await Promise.allSettled([
         apiFetch<EventItem[]>("/api/events?limit=6"),

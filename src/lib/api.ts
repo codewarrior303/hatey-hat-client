@@ -1,4 +1,7 @@
 import { authClient } from "./auth-client";
+import { getCachedData, setCachedData, invalidateCache } from "./cache";
+
+export { getCachedData, setCachedData, invalidateCache };
 
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "http://localhost:5000";
@@ -43,13 +46,30 @@ export async function getAuthToken(): Promise<string | null> {
 
 interface FetchOptions extends RequestInit {
   auth?: boolean;
+  skipCache?: boolean;
 }
 
 export async function apiFetch<T>(
   path: string,
   options: FetchOptions = {}
 ): Promise<{ success: boolean; data: T; message?: string; count?: number }> {
-  const { auth = false, headers = {}, ...rest } = options;
+  const { auth = false, skipCache = false, headers = {}, ...rest } = options;
+
+  const isGet = !rest.method || rest.method.toUpperCase() === "GET";
+  const shouldCache = isGet && !skipCache;
+
+  // 1. Instant cache return for GET requests (eliminates redundant database/network hits)
+  if (shouldCache) {
+    const cached = getCachedData<T>(path);
+    if (cached !== null) {
+      return {
+        success: true,
+        data: cached,
+        count: Array.isArray(cached) ? cached.length : undefined,
+      };
+    }
+  }
+
   const reqHeaders: Record<string, string> = {
     "Content-Type": "application/json",
     ...(headers as Record<string, string>),
@@ -102,6 +122,17 @@ export async function apiFetch<T>(
   if (!res.ok) {
     const message = body?.message || `Request failed with status ${res.status}`;
     throw new ClientApiError(res.status, message, body?.errors);
+  }
+
+  // 2. Save fresh GET response to session cache
+  if (shouldCache && body?.data !== undefined) {
+    setCachedData(path, body.data);
+  }
+
+  // 3. Automatically invalidate cache when data is modified
+  if (!isGet) {
+    invalidateCache("/api/events");
+    invalidateCache("/api/joins");
   }
 
   return body;

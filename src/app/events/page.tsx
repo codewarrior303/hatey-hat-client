@@ -21,7 +21,7 @@ import { EventCard } from "@/components/events/event-card";
 import { EventGridSkeleton } from "@/components/events/event-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
-import { apiFetch, EVENT_TYPES, type EventItem } from "@/lib/api";
+import { apiFetch, getCachedData, EVENT_TYPES, type EventItem } from "@/lib/api";
 
 const EVENTS_PER_PAGE = 9;
 
@@ -35,9 +35,22 @@ export default function UpcomingEventsPage() {
   const [searchInput, setSearchInput] = React.useState(currentSearch);
   const [selectedType, setSelectedType] = React.useState(currentType);
 
-  const [events, setEvents] = React.useState<EventItem[]>([]);
-  const [allEvents, setAllEvents] = React.useState<EventItem[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
+  // Endpoint helper for cache-key and fetch synchronization
+  const getEndpoint = (search: string, type: string) => {
+    const params = new URLSearchParams();
+    if (search) params.set("search", search);
+    if (type && type !== "all") params.set("type", type);
+    const qs = params.toString();
+    return `/api/events${qs ? `?${qs}` : ""}`;
+  };
+
+  const initialEndpoint = getEndpoint(currentSearch, currentType);
+  const cachedInitialEvents = typeof window !== "undefined" ? getCachedData<EventItem[]>(initialEndpoint) : null;
+  const cachedAllEvents = typeof window !== "undefined" ? getCachedData<EventItem[]>("/api/events") : null;
+
+  const [events, setEvents] = React.useState<EventItem[]>(cachedInitialEvents || []);
+  const [allEvents, setAllEvents] = React.useState<EventItem[]>(cachedAllEvents || []);
+  const [isLoading, setIsLoading] = React.useState(!cachedInitialEvents);
   const [error, setError] = React.useState<string | null>(null);
 
   // Pagination state
@@ -137,15 +150,12 @@ export default function UpcomingEventsPage() {
   // Fetch events from server whenever query parameters change
   const fetchEvents = React.useCallback(async () => {
     try {
-      setIsLoading(true);
+      const endpoint = getEndpoint(currentSearch, currentType);
+      const cached = typeof window !== "undefined" ? getCachedData<EventItem[]>(endpoint) : null;
+      if (!cached) {
+        setIsLoading(true);
+      }
       setError(null);
-
-      const params = new URLSearchParams();
-      if (currentSearch) params.set("search", currentSearch);
-      if (currentType && currentType !== "all") params.set("type", currentType);
-
-      const qs = params.toString();
-      const endpoint = `/api/events${qs ? `?${qs}` : ""}`;
 
       const res = await apiFetch<EventItem[]>(endpoint);
       setEvents(res.data || []);

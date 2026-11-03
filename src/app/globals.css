@@ -422,3 +422,59 @@ h1, h2, h3, h4, .font-heading {
   animation: indeterminate-slide 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
+/* =========================================================================
+   Toast Notification Animations (Smooth Spring Enter & Float Exit)
+   ========================================================================= */
+@keyframes toast-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.92);
+  }
+  60% {
+    transform: translateY(2px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-exit {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    max-height: 56px;
+    margin-bottom: 0px;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.9);
+    max-height: 0px;
+    margin-bottom: -8px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+  }
+}
+
+.toast-enter-animation {
+  animation: toast-enter 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.toast-exit-animation {
+  animation: toast-exit 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* =========================================================================
+   Disable Tooltips on Phone, Tablet & Touch Devices
+   ========================================================================= */
+@media (hover: none), (pointer: coarse), (max-width: 1024px) {
+  [data-radix-tooltip-content],
+  [role="tooltip"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+}
+
+

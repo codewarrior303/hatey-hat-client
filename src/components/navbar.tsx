@@ -46,9 +46,21 @@ export function Navbar() {
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
 
-  // Subscribe to react-hot-toast notifications
+  // Subscribe to react-hot-toast notifications with deduplication and max 2 cap
   const { toasts } = useToaster();
-  const visibleToasts = toasts.filter((t) => t.visible);
+  const activeToasts = React.useMemo(() => {
+    const seen = new Set<string>();
+    const unique: typeof toasts = [];
+    for (const t of toasts) {
+      const msg = String(resolveValue(t.message, t));
+      if (!seen.has(msg)) {
+        seen.add(msg);
+        unique.push(t);
+      }
+      if (unique.length >= 2) break;
+    }
+    return unique;
+  }, [toasts]);
 
   // Auto-close dropdown when changing route or returning
   React.useEffect(() => {
@@ -371,19 +383,20 @@ export function Navbar() {
       </div>
 
       {/* Live Notification Container - Sits side-by-side with navbar on desktop (left: 100% + 12px), centered below on smaller screens */}
-      {visibleToasts.length > 0 && (
+      {activeToasts.length > 0 && (
         <div className="pointer-events-none z-50 flex flex-col items-center xl:items-start gap-2 absolute top-full mt-2.5 left-1/2 -translate-x-1/2 xl:top-0 xl:mt-0 xl:left-full xl:ml-3 xl:translate-x-0 max-w-[calc(100vw-2rem)]">
-          {visibleToasts.map((t) => (
+          {activeToasts.map((t) => (
             <div
               key={t.id}
               role="alert"
               className={cn(
-                "pointer-events-auto flex items-center justify-between gap-3 rounded-full pl-4 pr-3 h-14 min-h-14 max-h-14 py-1.5 text-xs sm:text-sm font-medium border transition-all duration-200 animate-in fade-in-50",
+                "pointer-events-auto flex items-center justify-between gap-3 rounded-full pl-4 pr-3 h-14 min-h-14 max-h-14 py-1.5 text-xs sm:text-sm font-medium border shadow-lg backdrop-blur-2xl transition-all duration-300",
                 isScrolled ? "glass-strong shadow-md" : "glass shadow-xs",
                 "max-w-[calc(100vw-3rem)] xl:max-w-none whitespace-nowrap",
                 t.type === "error"
                   ? "border-red-500/50 text-foreground"
-                  : "border-foreground/15 text-foreground"
+                  : "border-foreground/15 text-foreground",
+                t.visible ? "toast-enter-animation" : "toast-exit-animation pointer-events-none"
               )}
             >
               {/* Clean notification message text - single line, never awkwardly wrapping on desktop or mobile */}

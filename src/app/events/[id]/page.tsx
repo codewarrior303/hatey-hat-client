@@ -29,7 +29,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
 import { useSession } from "@/lib/auth-client";
-import { apiFetch, type EventItem, ClientApiError } from "@/lib/api";
+import { apiFetch, getCachedData, type EventItem, ClientApiError } from "@/lib/api";
 import { formatDate, getHighResImageUrl } from "@/lib/utils";
 
 const FALLBACK_IMAGE =
@@ -41,18 +41,27 @@ export default function EventDetailsPage() {
   const eventId = params.id as string;
   const { data: session } = useSession();
 
-  const [event, setEvent] = React.useState<EventItem | null>(null);
-  const [isPast, setIsPast] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const cachedEvent = typeof window !== "undefined" && eventId ? getCachedData<EventItem>(`/api/events/${eventId}`) : null;
+
+  const [event, setEvent] = React.useState<EventItem | null>(cachedEvent);
+  const [isPast, setIsPast] = React.useState(
+    cachedEvent ? new Date(cachedEvent.eventDate).getTime() <= Date.now() : false
+  );
+  const [isLoading, setIsLoading] = React.useState(!cachedEvent);
   const [isJoining, setIsJoining] = React.useState(false);
   const [hasJoined, setHasJoined] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [imgSrc, setImgSrc] = React.useState<string>("");
+  const [imgSrc, setImgSrc] = React.useState<string>(
+    cachedEvent ? getHighResImageUrl(cachedEvent.thumbnail) || FALLBACK_IMAGE : ""
+  );
 
   const fetchEvent = React.useCallback(async () => {
     if (!eventId) return;
     try {
-      setIsLoading(true);
+      const cached = typeof window !== "undefined" ? getCachedData<EventItem>(`/api/events/${eventId}`) : null;
+      if (!cached) {
+        setIsLoading(true);
+      }
       setError(null);
       const res = await apiFetch<EventItem>(`/api/events/${eventId}`);
       setEvent(res.data);
@@ -124,7 +133,7 @@ export default function EventDetailsPage() {
   const handleShare = () => {
     if (typeof window !== "undefined") {
       navigator.clipboard.writeText(window.location.href);
-      toast.success("Event link copied to clipboard!");
+      toast.success("Event link copied to clipboard!", { id: "clipboard-copy" });
     }
   };
 
