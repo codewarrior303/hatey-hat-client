@@ -90,8 +90,8 @@ export function Navbar() {
     <header className="sticky top-3 z-50 w-full px-3 sm:px-6 pointer-events-none transition-all duration-300">
       <div
         className={cn(
-          "container mx-auto max-w-5xl pointer-events-auto rounded-full transition-all duration-300 px-4 sm:px-6 h-14 flex items-center justify-between",
-          isScrolled ? "glass-strong shadow-md scale-[0.99]" : "glass shadow-xs"
+          "container mx-auto max-w-5xl pointer-events-auto rounded-full transition-colors duration-200 px-4 sm:px-6 h-14 flex items-center justify-between",
+          isScrolled ? "glass-strong shadow-md" : "glass shadow-xs"
         )}
       >
         {/* Brand Logo */}
@@ -153,7 +153,7 @@ export function Navbar() {
                         </button>
                       </DropdownMenuTrigger>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom" className="glass text-xs">
+                    <TooltipContent side="bottom">
                       <p className="font-medium">{user.name || user.email}</p>
                     </TooltipContent>
 

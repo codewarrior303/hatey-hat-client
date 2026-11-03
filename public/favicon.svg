@@ -1,52 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <defs>
-    <linearGradient id="hatGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#238263"/>
-      <stop offset="100%" stop-color="#144f3b"/>
-    </linearGradient>
-    <linearGradient id="amberGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#F7BA55"/>
-      <stop offset="100%" stop-color="#E59926"/>
-    </linearGradient>
-  </defs>
+  <style>
+    .bg { fill: #111111; }
+    .icon { stroke: #FFFFFF; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #000000; }
+      .icon { stroke: #F5F5F7; }
+    }
+  </style>
+  <!-- Squircle rounded background matching navbar badge -->
+  <rect width="64" height="64" rx="18" class="bg"/>
+  <rect x="0.5" y="0.5" width="63" height="63" rx="17.5" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
 
-  <!-- Squircle rounded background -->
-  <rect width="64" height="64" rx="16" fill="url(#hatGradient)"/>
-
-  <!-- Subtle inner border -->
-  <rect x="1" y="1" width="62" height="62" rx="15" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
-
-  <!-- Two clasped hands forming a supportive heart (হাতে হাত) -->
-  <g transform="translate(10, 10)">
-    <!-- Heart outline badge -->
-    <path
-      d="M22 13.5C24.8 10.7 29 10 32 13C35 10 39.2 10.7 42 13.5C45.5 17 45.5 22.5 42 26L32 36L22 26C18.5 22.5 18.5 17 22 13.5Z"
-      fill="url(#amberGradient)"
-      opacity="0.22"
-    />
-
-    <!-- Left hand reaching up & in -->
-    <path
-      d="M7 26L16 19C17.5 17.8 19.8 18 21 19.5L24 23.5L29 18.5C30.2 17.3 32.2 17.3 33.5 18.5C34.8 19.8 34.8 21.8 33.5 23L27 29.5L21.5 35L15 28.5L7 32"
-      stroke="#F2A93B"
-      stroke-width="3.5"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    />
-
-    <!-- Right hand clasped together in support -->
-    <path
-      d="M37 26L31 20C29.8 18.8 27.8 18.8 26.5 20"
-      stroke="#FFFFFF"
-      stroke-width="3"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    />
-
-    <!-- Heart accent in center -->
-    <path
-      d="M22 8C19 5.5 14.5 6 13 9.5C11.5 13 14 17 22 22C30 17 32.5 13 31 9.5C29.5 6 25 5.5 22 8Z"
-      fill="url(#amberGradient)"
-    />
+  <!-- Centered Lucide HeartHandshake icon -->
+  <g transform="translate(14, 14) scale(1.5)" class="icon" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+    <path d="M12 5 9.04 7.96a2.17 2.17 0 0 0 0 3.08v0c.82.82 2.13.85 3 .07l2.07-1.9a2.82 2.82 0 0 1 3.79 0l2.96 2.66" />
+    <path d="m18 15-2-2" />
+    <path d="m15 18-2-2" />
   </g>
 </svg>

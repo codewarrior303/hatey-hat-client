@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { Heart, MapPin, Globe } from "lucide-react";
+import { Heart, MapPin } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
-import { GithubIcon } from "@/components/icons/social-icons";
+import { FacebookIcon, InstagramIcon, XIcon } from "@/components/icons/social-icons";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -17,26 +17,37 @@ export function Footer() {
               Hatey Hat is an open community platform connecting neighbours across Dhaka to organize,
               discover, and join local grassroots relief, cleanup, and educational initiatives.
             </p>
+            {/* Social Links: Facebook, Instagram, X (Twitter) */}
             <div className="flex items-center gap-3 pt-2">
               <a
-                href="https://github.com/codewarrior303/hatey-hat-client"
+                href="https://facebook.com"
                 target="_blank"
                 rel="noreferrer"
                 className="flex h-9 w-9 items-center justify-center rounded-full glass border-border hover:bg-foreground hover:text-background transition-all"
-                aria-label="GitHub Repository (Client)"
-                title="GitHub Client"
+                aria-label="Follow Hatey Hat on Facebook"
+                title="Facebook"
               >
-                <GithubIcon className="h-4 w-4" />
+                <FacebookIcon className="h-4 w-4" />
               </a>
               <a
-                href="https://github.com/codewarrior303/hatey-hat-server"
+                href="https://instagram.com"
                 target="_blank"
                 rel="noreferrer"
                 className="flex h-9 w-9 items-center justify-center rounded-full glass border-border hover:bg-foreground hover:text-background transition-all"
-                aria-label="GitHub Repository (Server)"
-                title="GitHub Server"
+                aria-label="Follow Hatey Hat on Instagram"
+                title="Instagram"
               >
-                <Globe className="h-4 w-4" />
+                <InstagramIcon className="h-4 w-4" />
+              </a>
+              <a
+                href="https://x.com"
+                target="_blank"
+                rel="noreferrer"
+                className="flex h-9 w-9 items-center justify-center rounded-full glass border-border hover:bg-foreground hover:text-background transition-all"
+                aria-label="Follow Hatey Hat on X (Twitter)"
+                title="X (Twitter)"
+              >
+                <XIcon className="h-3.5 w-3.5" />
               </a>
             </div>
           </div>
@@ -84,10 +95,6 @@ export function Footer() {
               <div className="flex items-start gap-2.5">
                 <MapPin className="h-4 w-4 text-foreground/70 shrink-0 mt-0.5" />
                 <span>Dhaka Metropolitan Area, Bangladesh</span>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <Globe className="h-4 w-4 text-foreground/70 shrink-0" />
-                <span>Open Source & Community Run</span>
               </div>
             </div>
           </div>

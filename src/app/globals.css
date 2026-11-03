@@ -107,7 +107,7 @@
 html {
   scrollbar-width: thin;
   scrollbar-color: var(--scroll-thumb) transparent;
-  scroll-behavior: smooth;
+  scrollbar-gutter: stable;
 }
 
 ::-webkit-scrollbar {
