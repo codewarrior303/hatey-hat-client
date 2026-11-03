@@ -1,34 +1,73 @@
-# Hatey Hat (হাতে হাত)
+# Hatey Hat (হাতে হাত) 🤝
 
 > **"Hate hat, ekshathe poth chola."**  
-> A community-driven social service and grassroots event management platform empowering neighbours to organize, join, and track local relief initiatives in Dhaka.
+> A modern, community-driven social service and grassroots initiative management platform designed to connect neighbours across Dhaka, Bangladesh to organize, join, and track local relief drives.
 
-**Live Site URL:** [https://hatey-hat.vercel.app](https://hatey-hat.vercel.app)  
+[![Next.js](https://img.shields.io/badge/Next.js-16%20(Turbopack)-black?style=flat-square&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-v4-38bdf8?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Better Auth](https://img.shields.io/badge/Better%20Auth-MongoDB%20%2B%20JWT-ff6b6b?style=flat-square)](https://better-auth.com/)
+[![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=flat-square&logo=vercel&logoColor=white)](https://hatey-hat.vercel.app)
+
+**Live Production Web App:** [https://hatey-hat.vercel.app](https://hatey-hat.vercel.app)  
+**Live Production API:** [https://hatey-hat-api.vercel.app](https://hatey-hat-api.vercel.app)
 
 ---
 
-## Key Features
+## Key Features & Highlights
 
-- **Hyper-Local Social Event Discovery:** Explore verified community welfare events across Dhaka (e.g. Winter Clothes Distribution in Mirpur 10, Blanket Distribution in Mohammadpur, Tree Plantation at Dhanmondi Lake, and Turag Riverbank Cleanups in Uttara).
-- **Dynamic Search & Server-Side Filtering:** Filter upcoming events in real-time by category (Donation, Cleanup, Plantation, Food Distribution, Blood Donation, Education, Health Camp, Other) and search across titles and landmarks with state persisted in URL query parameters.
-- **One-Click Event Joining with Duplicate Protection:** Logged-in community members can join any upcoming social initiative instantly with duplicate participation prevented and verified on MongoDB unique indexes.
-- **Strict Organizer Ownership & Modal Confirmations:** Organizers can manage, update, and delete their own initiatives. Deletions use accessible `AlertDialog` confirmation modals (zero native `confirm()` or `alert()`) and enforce server-side 403 access control.
-- **Future-Date Validation on Client & Server:** Events are strictly enforced to take place in the future via HTML5 datetime min boundaries, Zod schema refinement, and server-side query filters excluding past events.
-- **Robust Authentication & Session Persistence:** Powered by Better Auth with MongoDB adapter and JWT issuance. Private routes feature intelligent loading skeletons that prevent session bounce or flash on page reload.
-- **Adaptive Light/Dark Theming:** Fully tuned warm palette (deep community green `#1F6F54`, warm amber `#F2A93B`, cream `#FBF6EC`, and high-contrast dark mode) persisted across sessions with zero flash on initial load.
-- **Comprehensive Volunteer Profile:** Volunteers can view and update their public display name and avatar image in real time via Better Auth's user management.
+### 1. Hyper-Local Grassroots Discovery
+- Explore vetted social relief initiatives across neighbourhoods in Dhaka (Winter Clothes Drive in Mirpur 10, Blanket Distribution in Mohammadpur, Lake Cleanups at Dhanmondi Lake, Riverbank Cleanups in Uttara, Blood Donation in Badda, and Street Food Distribution in Old Dhaka).
+- Real-time search by keywords, landmarks, or titles with instant keyboard-navigable autocomplete suggestions.
+
+### 2. Numbered Interactive Pagination (9 Items / Page)
+- When initiatives exceed 9, a responsive, Apple squircle pagination controller appears with `<` and `>` arrow navigation.
+- Smoothly animates and scrolls back to the top of the grid on page change.
+- Categorical and search filters automatically reset pagination state.
+
+### 3. Apple-Style Frosted Liquid Glass Floating Navbar
+- Floating pill navbar with dynamic scroll detection (`glass-strong` background with depth).
+- Absolute center lock prevents layout shift or element movement during session hydration.
+- Live Dynamic Island-style notification toast floating right beside the navbar with single-line wrapping protection.
+- Stays persistent and sticky across all scroll depths via modern `overflow-x: clip`.
+
+### 4. 2K & 4K Resolution Image Engine
+- Built-in URL transformer automatically upgrades event thumbnails to ultra-high definition (2K/4K) across popular hosting providers (Unsplash, Pexels, Cloudinary, Google User Content, Wikimedia, Imgur, WordPress).
+- Eliminates low-resolution blurring on high-DPI Retina screens.
+- Aspect ratio of `16:10` with `object-top` framing ensures portrait photos and volunteer faces are never cropped off.
+
+### 5. Scheduling Conflict Protection
+- Client and server enforce scheduling safety: prevents creating duplicate events for the same category (`eventType`) and location on the same day.
+- Clean toast alerts inform organizers of conflicting initiatives before submission.
+
+### 6. Robust Authentication & Social Login
+- Powered by Better Auth with MongoDB adapter, issuing cryptographically verified JWT tokens.
+- Supports email/password authentication (with client-side strength meter) and Google Social Login.
+- Private routes are shielded by intelligent loading skeletons that prevent session flickering on page reload.
+
+### 7. Organizer & Volunteer Dashboards
+- **Manage Events:** Organizers can update or delete initiatives with custom accessible modal confirmation dialogs (zero native `confirm()` alerts).
+- **Joined Events:** Volunteers can review all initiatives they have signed up for and cancel participation with one click.
+- **Profile Customization:** Real-time updates for display name and avatar photo.
+
+### 8. Accessible & Responsive UI
+- Fully responsive across mobile, tablet, laptop, and ultra-wide desktop monitors.
+- Smooth dark and light mode toggle with ambient grayscale mesh gradient backgrounds that eliminate harsh contrast.
 
 ---
 
 ## Tech Stack
 
-- **Framework:** [Next.js](https://nextjs.org/) 16 (App Router) + TypeScript
-- **Styling & UI:** [Tailwind CSS](https://tailwindcss.com/) v4 + [shadcn/ui](https://ui.shadcn.com/)
-- **Forms & Validation:** [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/) + `@hookform/resolvers`
-- **Authentication:** [Better Auth](https://better-auth.com/) (MongoDB Adapter + JWT Plugin + Google Social Login)
-- **Notifications:** [react-hot-toast](https://react-hot-toast.com/) (styled to match light/dark theme)
-- **Theme:** [next-themes](https://github.com/pacocoursey/next-themes)
-- **Icons:** [lucide-react](https://lucide.dev/) + custom vector social icons (including the new X logo)
+| Category | Technology |
+| :--- | :--- |
+| **Framework** | [Next.js](https://nextjs.org/) 16 (App Router + Turbopack) |
+| **Language** | [TypeScript](https://www.typescriptlang.org/) 5.x |
+| **Styling** | [Tailwind CSS](https://tailwindcss.com/) v4 + [shadcn/ui](https://ui.shadcn.com/) |
+| **Authentication** | [Better Auth](https://better-auth.com/) (MongoDB Adapter + JWT + Google OAuth) |
+| **Forms & Validation** | [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/) |
+| **Notifications** | [react-hot-toast](https://react-hot-toast.com/) (Frosted Liquid Glass styled) |
+| **Icons** | [lucide-react](https://lucide.dev/) |
+| **Theming** | [next-themes](https://github.com/pacocoursey/next-themes) |
 
 ---
 
@@ -38,38 +77,105 @@
 client/
 ├── src/
 │   ├── app/
-│   │   ├── api/auth/[...all]/route.ts  # Better Auth route handler
+│   │   ├── api/auth/[...all]/route.ts  # Better Auth API handler
 │   │   ├── events/
-│   │   │   ├── page.tsx                # Upcoming events (search + type filters)
-│   │   │   ├── create/page.tsx         # Create event (protected)
-│   │   │   ├── joined/page.tsx         # Joined events (protected)
-│   │   │   ├── manage/page.tsx         # Organizer manage panel (protected)
+│   │   │   ├── page.tsx                # Upcoming initiatives (search + pagination)
+│   │   │   ├── create/page.tsx         # Create initiative (protected)
+│   │   │   ├── joined/page.tsx         # Volunteer's joined activities (protected)
+│   │   │   ├── manage/page.tsx         # Organizer's events panel (protected)
 │   │   │   └── [id]/
-│   │   │       ├── page.tsx            # Event details + Join button
-│   │   │       └── edit/page.tsx       # Edit event (protected, owner only)
+│   │   │       ├── page.tsx            # Event details + Join action
+│   │   │       └── edit/page.tsx       # Edit initiative (owner only)
 │   │   ├── login/page.tsx              # Email/password + Google auth
-│   │   ├── register/page.tsx           # Registration with password rule indicators
-│   │   ├── profile/page.tsx            # Profile management (protected)
-│   │   ├── error.tsx                   # Client error boundary
-│   │   ├── not-found.tsx               # Custom 404 page
-│   │   ├── loading.tsx                 # Global suspense fallback
-│   │   ├── globals.css                 # Theme variables & custom variant definitions
-│   │   └── layout.tsx                  # Root layout with fonts, ThemeProvider & Toaster
+│   │   ├── register/page.tsx           # Registration with password strength meter
+│   │   ├── profile/page.tsx            # Profile management (name + photo)
+│   │   ├── layout.tsx                  # Root layout with ambient backdrop & scrollbar
+│   │   ├── globals.css                 # Tailwind v4 theme tokens & glass effects
+│   │   └── page.tsx                    # Landing hero + Impact statistics + Featured events
 │   ├── components/
-│   │   ├── auth/private-route.tsx      # Skeleton-based route guard
-│   │   ├── events/                     # EventCard, EventGrid, EventForm, Skeletons
-│   │   ├── icons/                      # GoogleIcon, XIcon, SocialIcons
-│   │   ├── ui/                         # shadcn/ui components
-│   │   ├── brand-logo.tsx              # Reusable consistent brand logo
-│   │   ├── navbar.tsx                  # Responsive navigation with mobile drawer
-│   │   ├── footer.tsx                  # Eye-catching footer with X icon
-│   │   └── theme-toggle.tsx            # Light/dark mode toggle
+│   │   ├── auth/                       # Protected route guard
+│   │   ├── events/                     # EventCard, EventForm, EventSkeleton
+│   │   ├── icons/                      # Brand Google and Social icons
+│   │   ├── ui/                         # shadcn/ui components (Button, Input, Sheet, Badge...)
+│   │   ├── navbar.tsx                  # Floating sticky navbar & dynamic toast container
+│   │   ├── footer.tsx                  # Footer with newsletter subscription & quick links
+│   │   ├── brand-logo.tsx              # Hatey Hat brand identity
+│   │   └── custom-scrollbar.tsx        # Framer-style minimal custom scrollbar
 │   └── lib/
-│       ├── api.ts                      # Express API client with JWT bearer auth
+│       ├── api.ts                      # Centralized authenticated apiFetch client
 │       ├── auth.ts                     # Better Auth server configuration
-│       ├── auth-client.ts              # Better Auth client hooks (useSession, signIn, etc.)
-│       └── utils.ts                    # Class merging and date formatting utilities
+│       ├── auth-client.ts              # Better Auth React hooks client
+│       └── utils.ts                    # cn(), formatDate(), getHighResImageUrl()
+├── public/                             # Static assets, branding & metadata icons
+├── next.config.ts                      # Next.js configuration
+├── tsconfig.json                       # TypeScript compiler settings
+└── package.json
 ```
 
 ---
 
+## Environment Variables
+
+Create `.env.local` inside `client/`:
+
+```bash
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_API_URL=http://localhost:5000
+
+# Better Auth Configuration
+BETTER_AUTH_URL=http://localhost:3000
+BETTER_AUTH_SECRET=your-better-auth-secret-min-32-chars-long
+MONGODB_URI=mongodb+srv://<user>:<password>@cluster0.mongodb.net/hatey-hat?retryWrites=true&w=majority
+
+# Optional: Google OAuth
+GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+```
+
+---
+
+## Local Development & Setup
+
+### Prerequisites
+- **Node.js** >= 20.x
+- **npm** >= 10.x
+
+### Quickstart
+```bash
+# Navigate to the client folder
+cd client
+
+# Install dependencies
+npm install
+
+# Start development server with Turbopack
+npm run dev
+
+# Run TypeScript type check
+npm run typecheck
+
+# Run ESLint validation
+npm run lint
+
+# Build for production
+npm run build
+
+# Start production build locally
+npm start
+```
+
+---
+
+## Deployment (Vercel)
+
+The client is ready for zero-configuration deployment on Vercel:
+
+1. Import your Git repository into Vercel and select `client` as the root directory.
+2. Configure the environment variables (`NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_API_URL`, `BETTER_AUTH_URL`, `BETTER_AUTH_SECRET`, `MONGODB_URI`).
+3. Deploy! Vercel automatically builds and optimizes static & dynamic routes.
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
