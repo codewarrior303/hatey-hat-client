@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   PlusCircle,
   HeartHandshake,
@@ -12,6 +13,8 @@ import {
   Sparkles,
   AlertCircle,
   Loader2,
+  CheckCircle2,
+  BellOff,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -23,6 +26,7 @@ import { ErrorState } from "@/components/ui/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { apiFetch, getCachedData, type EventItem } from "@/lib/api";
+import { useSession } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
 interface StatsSummary {
@@ -33,22 +37,62 @@ interface StatsSummary {
 }
 
 export default function HomePage() {
-  const cachedRecent = typeof window !== "undefined" ? getCachedData<EventItem[]>("/api/events?limit=6") : null;
-  const cachedStats = typeof window !== "undefined" ? getCachedData<StatsSummary>("/api/events/stats/summary") : null;
+  const router = useRouter();
+  const { data: session } = useSession();
+  const user = session?.user;
+
+  const cachedRecent =
+    typeof window !== "undefined"
+      ? getCachedData<EventItem[]>("/api/events?limit=6")
+      : null;
+  const cachedStats =
+    typeof window !== "undefined"
+      ? getCachedData<StatsSummary>("/api/events/stats/summary")
+      : null;
 
   const [events, setEvents] = React.useState<EventItem[]>(cachedRecent || []);
   const [stats, setStats] = React.useState<StatsSummary | null>(cachedStats);
   const [isLoading, setIsLoading] = React.useState(!cachedRecent);
   const [error, setError] = React.useState<string | null>(null);
 
-  // Newsletter state with custom validation tooltip
+  // Newsletter state
   const [newsletterEmail, setNewsletterEmail] = React.useState("");
-  const [newsletterError, setNewsletterError] = React.useState<string | null>(null);
+  const [newsletterError, setNewsletterError] = React.useState<string | null>(
+    null,
+  );
   const [isSubscribing, setIsSubscribing] = React.useState(false);
+  const [isUnsubscribing, setIsUnsubscribing] = React.useState(false);
+  const [isSubscribed, setIsSubscribed] = React.useState<boolean>(false);
+
+  // Fetch subscription status for logged-in user
+  const checkSubscriberStatus = React.useCallback(async () => {
+    if (!user?.email) {
+      setIsSubscribed(false);
+      return;
+    }
+    try {
+      const res = await apiFetch<{ isSubscribed: boolean; email: string }>(
+        "/api/subscribers/status",
+        { auth: true, skipCache: true }
+      );
+      if (res?.data) {
+        setIsSubscribed(Boolean(res.data.isSubscribed));
+      }
+    } catch {
+      setIsSubscribed(false);
+    }
+  }, [user?.email]);
+
+  React.useEffect(() => {
+    checkSubscriberStatus();
+  }, [checkSubscriberStatus]);
 
   const fetchRecentEvents = React.useCallback(async () => {
     try {
-      const cached = typeof window !== "undefined" ? getCachedData<EventItem[]>("/api/events?limit=6") : null;
+      const cached =
+        typeof window !== "undefined"
+          ? getCachedData<EventItem[]>("/api/events?limit=6")
+          : null;
       if (!cached) {
         setIsLoading(true);
       }
@@ -80,16 +124,13 @@ export default function HomePage() {
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmed = newsletterEmail.trim();
 
-    if (!trimmed) {
-      setNewsletterError("Please fill out this field.");
-      return;
-    }
-
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!emailRegex.test(trimmed)) {
-      setNewsletterError("Please enter a valid email address (e.g. name@example.com).");
+    // User must be logged in to subscribe
+    if (!user) {
+      toast.error("Please sign in to subscribe to community updates.", {
+        id: "newsletter-login-required",
+      });
+      router.push("/login");
       return;
     }
 
@@ -97,18 +138,53 @@ export default function HomePage() {
     setIsSubscribing(true);
 
     try {
-      const res = await apiFetch<{ success: boolean; message: string }>("/api/subscribers", {
-        method: "POST",
-        body: JSON.stringify({ email: trimmed }),
-      });
-      toast.success(res.message || "Thank you for subscribing to community updates!");
+      const res = await apiFetch<{ success: boolean; message: string }>(
+        "/api/subscribers",
+        {
+          method: "POST",
+          auth: true,
+          body: JSON.stringify({ email: user.email }),
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+      toast.success(
+        res.message || "Thank you for subscribing to community updates!",
+        { id: "newsletter-subscribed" }
+      );
+      setIsSubscribed(true);
       setNewsletterEmail("");
     } catch (err: any) {
-      const msg = err?.message || "Could not subscribe at this time. Please try again.";
+      const msg =
+        err?.message || "Could not subscribe at this time. Please try again.";
       setNewsletterError(msg);
-      toast.error(msg);
+      toast.error(msg, { id: "newsletter-error" });
     } finally {
       setIsSubscribing(false);
+    }
+  };
+
+  const handleUnsubscribe = async () => {
+    if (!user) return;
+    setIsUnsubscribing(true);
+    try {
+      const res = await apiFetch<{ success: boolean; message: string }>(
+        "/api/subscribers/unsubscribe",
+        {
+          method: "POST",
+          auth: true,
+        }
+      );
+      toast.success(
+        res.message || "You have been unsubscribed from community updates.",
+        { id: "newsletter-unsubscribed" }
+      );
+      setIsSubscribed(false);
+    } catch (err: any) {
+      toast.error(err?.message || "Could not unsubscribe at this time.", {
+        id: "newsletter-unsub-error",
+      });
+    } finally {
+      setIsUnsubscribing(false);
     }
   };
 
@@ -181,17 +257,17 @@ export default function HomePage() {
           {/* Subtle Tagline Pill */}
           <div className="inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-xs sm:text-[13px] font-medium text-foreground/80 shadow-xs">
             <Sparkles className="h-3.5 w-3.5 opacity-60" />
-            <span>Hate hat, ekshathe poth chola</span>
+            <span>Hatey hat, ekshathe poth chola</span>
           </div>
 
           {/* Hero Headline (56-76px on desktop, weight 600, tight tracking) */}
           <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-[76px] font-semibold tracking-[-0.035em] text-foreground leading-[1.08] max-w-4xl mx-auto">
-            Unite with neighbours to build a kinder Dhaka.
+            Unite with your community to build a kinder Bangladesh.
           </h1>
 
           <p className="text-[17px] sm:text-[19px] text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-            A community-driven platform to organize, discover, and join grassroots social service
-            events — from winter clothes distributions to neighbourhood cleanups.
+            The community hub to organize and join grassroots initiatives across
+            Bangladesh.
           </p>
 
           {/* Pill Action Buttons */}
@@ -222,31 +298,39 @@ export default function HomePage() {
 
           {/* Real Database Impact Snapshot (Honest Numbers) */}
           <div className="glass max-w-3xl mx-auto p-6 sm:p-8 rounded-[28px] mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 text-center shadow-xs">
-              <div className="space-y-1">
-                <p className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
-                  {stats ? `${stats.upcomingEvents}` : "10+"}
-                </p>
-                <p className="text-xs text-muted-foreground font-medium">Upcoming Events</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
-                  {stats ? `${stats.totalJoins}` : "Active"}
-                </p>
-                <p className="text-xs text-muted-foreground font-medium">Volunteers Joined</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
-                  Free
-                </p>
-                <p className="text-xs text-muted-foreground font-medium">Open to Everyone</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
-                  Dhaka
-                </p>
-                <p className="text-xs text-muted-foreground font-medium">Grassroots & Local</p>
-              </div>
+            <div className="space-y-1">
+              <p className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
+                {stats ? `${stats.upcomingEvents}` : "10+"}
+              </p>
+              <p className="text-xs text-muted-foreground font-medium">
+                Upcoming Events
+              </p>
             </div>
+            <div className="space-y-1">
+              <p className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
+                {stats ? `${stats.totalJoins}` : "Active"}
+              </p>
+              <p className="text-xs text-muted-foreground font-medium">
+                Volunteers Joined
+              </p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
+                Free
+              </p>
+              <p className="text-xs text-muted-foreground font-medium">
+                Open to Everyone
+              </p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
+                Dhaka
+              </p>
+              <p className="text-xs text-muted-foreground font-medium">
+                Grassroots & Local
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -266,7 +350,11 @@ export default function HomePage() {
               </p>
             </div>
 
-            <Button asChild variant="outline" className="gap-2 shrink-0 self-start sm:self-auto glass rounded-full">
+            <Button
+              asChild
+              variant="outline"
+              className="gap-2 shrink-0 self-start sm:self-auto glass rounded-full"
+            >
               <Link href="/events">
                 <span>View All Events</span>
                 <ArrowRight className="h-4 w-4" />
@@ -308,7 +396,8 @@ export default function HomePage() {
               Built for Community Action
             </h2>
             <p className="text-[15px] text-muted-foreground">
-              Simple, honest tools to turn community goodwill into organized neighbourhood support.
+              Simple, honest tools to turn community goodwill into organized
+              neighbourhood support.
             </p>
           </div>
         </ScrollReveal>
@@ -348,7 +437,8 @@ export default function HomePage() {
               Community in Action
             </h2>
             <p className="text-[15px] text-muted-foreground">
-              A glimpse into solidarity, volunteer teamwork, and grassroots care across Dhaka.
+              A glimpse into solidarity, volunteer teamwork, and grassroots care
+              across Bangladesh.
             </p>
           </div>
         </ScrollReveal>
@@ -393,68 +483,129 @@ export default function HomePage() {
                 Stay in the community loop.
               </h2>
               <p className="text-[15px] text-muted-foreground leading-relaxed">
-                Get weekly updates on upcoming relief drives, cleanups, and local volunteer initiatives
-                across Dhaka.
+                Get weekly updates on upcoming relief drives, cleanups, and
+                local volunteer initiatives across Dhaka.
               </p>
             </div>
 
-            <form
-              noValidate
-              onSubmit={handleNewsletterSubmit}
-              className="relative flex flex-col sm:flex-row items-center gap-3 max-w-md mx-auto pt-2"
-            >
-              <div className="relative w-full sm:w-auto flex-1">
-                <Input
-                  type="email"
-                  maxLength={100}
-                  autoComplete="email"
-                  disabled={isSubscribing}
-                  value={newsletterEmail}
-                  onChange={(e) => {
-                    setNewsletterEmail(e.target.value);
-                    if (newsletterError) setNewsletterError(null);
-                  }}
-                  placeholder="Enter your email address"
-                  className={cn(
-                    "h-12 rounded-full px-5 glass bg-transparent border-foreground/15 text-foreground placeholder:text-muted-foreground text-sm w-full transition-all",
-                    newsletterError && "border-destructive focus-visible:ring-destructive"
-                  )}
-                  aria-invalid={Boolean(newsletterError)}
-                />
-
-                {/* Custom Apple-styled Tooltip popup replacing browser native popup */}
-                {newsletterError && (
-                  <div
-                    role="alert"
-                    className="absolute left-4 -bottom-10 z-30 flex items-center gap-1.5 rounded-lg bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 px-3 py-1.5 text-xs font-medium shadow-xl border border-white/10 dark:border-black/10 animate-in fade-in-0 slide-in-from-top-1 duration-200"
-                  >
-                    {/* Top pointer arrow */}
-                    <div className="absolute -top-1 left-4 h-2 w-2 rotate-45 bg-neutral-900 dark:bg-neutral-100" />
-                    <AlertCircle className="h-3.5 w-3.5 text-amber-400 dark:text-amber-600 shrink-0 relative z-10" />
-                    <span className="relative z-10">{newsletterError}</span>
+            {user && isSubscribed ? (
+              /* State 1: Active Subscription Display with Unsubscribe Action */
+              <div className="pt-2 animate-in fade-in-50 duration-300 max-w-lg mx-auto">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-2xl glass border border-foreground/15 bg-foreground/5 shadow-xs text-left w-full">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 shrink-0 border border-emerald-500/20">
+                      <CheckCircle2 className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0 space-y-0.5">
+                      <p className="text-sm font-semibold text-foreground truncate">
+                        Subscribed to Community Updates
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        Weekly updates delivered to{" "}
+                        <span className="font-medium text-foreground">{user.email}</span>
+                      </p>
+                    </div>
                   </div>
-                )}
-              </div>
 
-              <Button
-                type="submit"
-                size="lg"
-                disabled={isSubscribing}
-                className="w-full sm:w-auto h-12 px-7 rounded-full font-medium shrink-0 shadow-xs"
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={isUnsubscribing}
+                    onClick={handleUnsubscribe}
+                    className="rounded-full h-10 px-5 text-xs font-semibold text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/25 transition-all cursor-pointer shadow-xs shrink-0 self-center sm:self-auto active:scale-95"
+                  >
+                    {isUnsubscribing ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        <span>Unsubscribing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <BellOff className="h-3.5 w-3.5" />
+                        <span>Unsubscribe</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            ) : user ? (
+              /* State 2: Logged-in User Ready to Subscribe with Verified Account Email */
+              <form
+                noValidate
+                onSubmit={handleNewsletterSubmit}
+                className="relative flex flex-col sm:flex-row items-center gap-3 max-w-md mx-auto pt-2 animate-in fade-in-50"
               >
-                {isSubscribing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Subscribing...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Subscribe</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </>
-                )}
-              </Button>
-            </form>
+                <div className="relative w-full sm:w-auto flex-1">
+                  <Input
+                    type="email"
+                    value={user.email}
+                    readOnly
+                    disabled={isSubscribing}
+                    className="h-12 rounded-full px-5 glass bg-foreground/5 border-foreground/15 text-foreground text-sm w-full cursor-default font-medium select-none"
+                    aria-label="Your account email address"
+                  />
+                  {newsletterError && (
+                    <div
+                      role="alert"
+                      className="absolute left-4 -bottom-10 z-30 flex items-center gap-1.5 rounded-lg bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 px-3 py-1.5 text-xs font-medium shadow-xl border border-white/10 dark:border-black/10 animate-in fade-in-0 slide-in-from-top-1 duration-200"
+                    >
+                      <div className="absolute -top-1 left-4 h-2 w-2 rotate-45 bg-neutral-900 dark:bg-neutral-100" />
+                      <AlertCircle className="h-3.5 w-3.5 text-amber-400 dark:text-amber-600 shrink-0 relative z-10" />
+                      <span className="relative z-10">{newsletterError}</span>
+                    </div>
+                  )}
+                </div>
+
+                <Button
+                  type="submit"
+                  size="lg"
+                  disabled={isSubscribing}
+                  className="w-full sm:w-auto h-12 px-7 rounded-full font-medium shrink-0 shadow-xs cursor-pointer active:scale-95"
+                >
+                  {isSubscribing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Subscribing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Subscribe</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+              </form>
+            ) : (
+              /* State 3: Visitor Not Logged In -> Login Required */
+              <div className="relative flex flex-col sm:flex-row items-center gap-3 max-w-md mx-auto pt-2 animate-in fade-in-50">
+                <div className="relative w-full sm:w-auto flex-1">
+                  <Input
+                    type="email"
+                    maxLength={100}
+                    placeholder="Enter your email address"
+                    value={newsletterEmail}
+                    onChange={(e) => setNewsletterEmail(e.target.value)}
+                    className="h-12 rounded-full px-5 glass bg-transparent border-foreground/15 text-foreground placeholder:text-muted-foreground text-sm w-full"
+                  />
+                </div>
+
+                <Button
+                  type="button"
+                  onClick={() => {
+                    toast.error("Please sign in to subscribe to community updates.", {
+                      id: "newsletter-login-required",
+                    });
+                    router.push("/login");
+                  }}
+                  size="lg"
+                  className="w-full sm:w-auto h-12 px-7 rounded-full font-medium shrink-0 shadow-xs cursor-pointer active:scale-95"
+                >
+                  <span>Subscribe</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
 
             <p className="text-xs text-muted-foreground pt-1">
               No spam. Community updates only. Unsubscribe anytime.

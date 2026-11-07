@@ -58,7 +58,8 @@ export default function EditEventPage() {
             Update Event Details
           </h1>
           <p className="text-[15px] text-muted-foreground max-w-2xl">
-            Update your initiative&apos;s schedule, meeting landmark, description, or thumbnail image.
+            Update your initiative&apos;s schedule, meeting landmark,
+            description, or thumbnail image.
           </p>
         </div>
 

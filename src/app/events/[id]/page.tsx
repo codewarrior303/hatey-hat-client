@@ -29,7 +29,12 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
 import { useSession } from "@/lib/auth-client";
-import { apiFetch, getCachedData, type EventItem, ClientApiError } from "@/lib/api";
+import {
+  apiFetch,
+  getCachedData,
+  type EventItem,
+  ClientApiError,
+} from "@/lib/api";
 import { formatDate, getHighResImageUrl } from "@/lib/utils";
 
 const FALLBACK_IMAGE =
@@ -41,24 +46,34 @@ export default function EventDetailsPage() {
   const eventId = params.id as string;
   const { data: session } = useSession();
 
-  const cachedEvent = typeof window !== "undefined" && eventId ? getCachedData<EventItem>(`/api/events/${eventId}`) : null;
+  const cachedEvent =
+    typeof window !== "undefined" && eventId
+      ? getCachedData<EventItem>(`/api/events/${eventId}`)
+      : null;
 
   const [event, setEvent] = React.useState<EventItem | null>(cachedEvent);
   const [isPast, setIsPast] = React.useState(
-    cachedEvent ? new Date(cachedEvent.eventDate).getTime() <= Date.now() : false
+    cachedEvent
+      ? new Date(cachedEvent.eventDate).getTime() <= Date.now()
+      : false,
   );
   const [isLoading, setIsLoading] = React.useState(!cachedEvent);
   const [isJoining, setIsJoining] = React.useState(false);
   const [hasJoined, setHasJoined] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [imgSrc, setImgSrc] = React.useState<string>(
-    cachedEvent ? getHighResImageUrl(cachedEvent.thumbnail) || FALLBACK_IMAGE : ""
+    cachedEvent
+      ? getHighResImageUrl(cachedEvent.thumbnail) || FALLBACK_IMAGE
+      : "",
   );
 
   const fetchEvent = React.useCallback(async () => {
     if (!eventId) return;
     try {
-      const cached = typeof window !== "undefined" ? getCachedData<EventItem>(`/api/events/${eventId}`) : null;
+      const cached =
+        typeof window !== "undefined"
+          ? getCachedData<EventItem>(`/api/events/${eventId}`)
+          : null;
       if (!cached) {
         setIsLoading(true);
       }
@@ -80,7 +95,7 @@ export default function EventDetailsPage() {
     try {
       const res = await apiFetch<any[]>("/api/joins/my", { auth: true });
       const alreadyJoined = res.data?.some(
-        (j: any) => j.eventId === eventId || j.eventId?._id === eventId
+        (j: any) => j.eventId === eventId || j.eventId?._id === eventId,
       );
       if (alreadyJoined) setHasJoined(true);
     } catch {
@@ -102,7 +117,9 @@ export default function EventDetailsPage() {
       toast("Please sign in to join this community event", {
         icon: "👋",
       });
-      router.push(`/login?redirect=${encodeURIComponent(`/events/${eventId}`)}`);
+      router.push(
+        `/login?redirect=${encodeURIComponent(`/events/${eventId}`)}`,
+      );
       return;
     }
 
@@ -113,17 +130,24 @@ export default function EventDetailsPage() {
         auth: true,
       });
 
-      toast.success(res.message || "You have successfully joined this event! See you there.");
+      toast.success(
+        res.message ||
+          "You have successfully joined this event! See you there.",
+      );
       setHasJoined(true);
       if (event && typeof event.participants === "number") {
         setEvent({ ...event, participants: event.participants + 1 });
       }
     } catch (err: any) {
       if (err instanceof ClientApiError && err.statusCode === 409) {
-        toast.success("You are already registered for this event. See you there!");
+        toast.success(
+          "You are already registered for this event. See you there!",
+        );
         setHasJoined(true);
       } else {
-        toast.error(err?.message || "Could not join this event. Please try again.");
+        toast.error(
+          err?.message || "Could not join this event. Please try again.",
+        );
       }
     } finally {
       setIsJoining(false);
@@ -133,7 +157,9 @@ export default function EventDetailsPage() {
   const handleShare = () => {
     if (typeof window !== "undefined") {
       navigator.clipboard.writeText(window.location.href);
-      toast.success("Event link copied to clipboard!", { id: "clipboard-copy" });
+      toast.success("Event link copied to clipboard!", {
+        id: "clipboard-copy",
+      });
     }
   };
 
@@ -205,7 +231,10 @@ export default function EventDetailsPage() {
               {event.eventType}
             </span>
             {isPast && (
-              <Badge variant="destructive" className="font-semibold rounded-full">
+              <Badge
+                variant="destructive"
+                className="font-semibold rounded-full"
+              >
                 Concluded
               </Badge>
             )}
@@ -222,7 +251,12 @@ export default function EventDetailsPage() {
             </h1>
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
               <User className="h-4 w-4 text-foreground/70 shrink-0" />
-              <span>Organized by <strong className="text-foreground font-semibold">{event.creatorName}</strong></span>
+              <span>
+                Organized by{" "}
+                <strong className="text-foreground font-semibold">
+                  {event.creatorName}
+                </strong>
+              </span>
               <span className="text-xs">({event.creatorEmail})</span>
             </p>
           </div>
@@ -259,7 +293,12 @@ export default function EventDetailsPage() {
                 <span>You Have Joined</span>
               </Button>
             ) : isPast ? (
-              <Button variant="outline" size="lg" disabled className="gap-2 rounded-full h-11 px-6">
+              <Button
+                variant="outline"
+                size="lg"
+                disabled
+                className="gap-2 rounded-full h-11 px-6"
+              >
                 <AlertTriangle className="h-4 w-4" />
                 <span>Past Event</span>
               </Button>
@@ -320,7 +359,8 @@ export default function EventDetailsPage() {
               </p>
             </div>
             <p className="text-[15px] font-semibold text-foreground">
-              {event.participants || 0} {event.participants === 1 ? "Volunteer" : "Volunteers"} Joined
+              {event.participants || 0}{" "}
+              {event.participants === 1 ? "Volunteer" : "Volunteers"} Joined
             </p>
           </div>
         </div>
@@ -343,8 +383,9 @@ export default function EventDetailsPage() {
               Preparation Guidelines for Volunteers
             </p>
             <p>
-              Please arrive 15 minutes before the scheduled time. Wear comfortable clothing suitable for
-              community service, bring a water bottle, and verify the landmark ahead of time.
+              Please arrive 15 minutes before the scheduled time. Wear
+              comfortable clothing suitable for community service, bring a water
+              bottle, and verify the landmark ahead of time.
             </p>
           </div>
         </div>

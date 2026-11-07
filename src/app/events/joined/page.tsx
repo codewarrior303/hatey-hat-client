@@ -48,8 +48,8 @@ export default function JoinedEventsPage() {
             My Joined Activities
           </h1>
           <p className="text-[15px] text-muted-foreground max-w-2xl">
-            All the social welfare drives and volunteer events you have registered to take part in,
-            ordered by event date.
+            All the social welfare drives and volunteer events you have
+            registered to take part in, ordered by event date.
           </p>
         </div>
 
@@ -68,7 +68,10 @@ export default function JoinedEventsPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {joins.map((join) => {
-              const eventId = typeof join.eventId === "string" ? join.eventId : (join.eventId as any)?._id;
+              const eventId =
+                typeof join.eventId === "string"
+                  ? join.eventId
+                  : (join.eventId as any)?._id;
               return (
                 <article
                   key={join._id}
@@ -77,7 +80,10 @@ export default function JoinedEventsPage() {
                   <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[18px] bg-neutral-100 dark:bg-neutral-900">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={getHighResImageUrl(join.eventThumbnail) || FALLBACK_IMAGE}
+                      src={
+                        getHighResImageUrl(join.eventThumbnail) ||
+                        FALLBACK_IMAGE
+                      }
                       alt={join.eventTitle}
                       className="h-full w-full object-cover"
                       onError={(e) => {
@@ -115,7 +121,10 @@ export default function JoinedEventsPage() {
 
                     {eventId && (
                       <div className="pt-2">
-                        <Button asChild className="w-full rounded-full gap-2 font-medium h-10 shadow-xs">
+                        <Button
+                          asChild
+                          className="w-full rounded-full gap-2 font-medium h-10 shadow-xs"
+                        >
                           <Link href={`/events/${eventId}`}>
                             <span>View Event Details</span>
                             <ArrowRight className="h-4 w-4" />

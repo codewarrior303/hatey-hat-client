@@ -42,7 +42,9 @@ export default function ManageEventsPage() {
   const [error, setError] = React.useState<string | null>(null);
 
   // Delete modal state
-  const [eventToDelete, setEventToDelete] = React.useState<EventItem | null>(null);
+  const [eventToDelete, setEventToDelete] = React.useState<EventItem | null>(
+    null,
+  );
   const [isDeleting, setIsDeleting] = React.useState(false);
 
   const fetchMyEvents = React.useCallback(async () => {
@@ -93,12 +95,15 @@ export default function ManageEventsPage() {
               Manage My Events
             </h1>
             <p className="text-[15px] text-muted-foreground max-w-2xl">
-              View, update, or cancel events you have organized. Only you have permission to modify
-              your event records.
+              View, update, or cancel events you have organized. Only you have
+              permission to modify your event records.
             </p>
           </div>
 
-          <Button asChild className="gap-2 font-medium shrink-0 self-start sm:self-auto rounded-full h-11 px-6 shadow-xs">
+          <Button
+            asChild
+            className="gap-2 font-medium shrink-0 self-start sm:self-auto rounded-full h-11 px-6 shadow-xs"
+          >
             <Link href="/events/create">
               <PlusCircle className="h-4 w-4" />
               <span>Create New Event</span>
@@ -166,13 +171,23 @@ export default function ManageEventsPage() {
 
                   {/* Actions Row */}
                   <div className="grid grid-cols-3 gap-2 pt-2 border-t border-foreground/10">
-                    <Button asChild variant="outline" size="sm" className="gap-1.5 rounded-full px-2 text-xs h-9 glass">
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 rounded-full px-2 text-xs h-9 glass"
+                    >
                       <Link href={`/events/${event._id}`}>
                         <Eye className="h-3.5 w-3.5" />
                         <span>View</span>
                       </Link>
                     </Button>
-                    <Button asChild variant="outline" size="sm" className="gap-1.5 rounded-full px-2 text-xs h-9 glass">
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 rounded-full px-2 text-xs h-9 glass"
+                    >
                       <Link href={`/events/${event._id}/edit`}>
                         <Edit2 className="h-3.5 w-3.5" />
                         <span>Edit</span>
@@ -209,8 +224,11 @@ export default function ManageEventsPage() {
               </AlertDialogTitle>
               <AlertDialogDescription className="text-sm text-muted-foreground leading-relaxed">
                 This will permanently remove{" "}
-                <strong className="text-foreground font-semibold">&ldquo;{eventToDelete?.title}&rdquo;</strong> and all associated
-                volunteer registrations. This action cannot be undone.
+                <strong className="text-foreground font-semibold">
+                  &ldquo;{eventToDelete?.title}&rdquo;
+                </strong>{" "}
+                and all associated volunteer registrations. This action cannot
+                be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="gap-2 sm:gap-3 pt-4 border-t border-foreground/10">

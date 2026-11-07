@@ -18,7 +18,9 @@ const FALLBACK_IMAGE =
 
 export function EventCard({ event }: EventCardProps) {
   const router = useRouter();
-  const [imgSrc, setImgSrc] = React.useState(getHighResImageUrl(event.thumbnail) || FALLBACK_IMAGE);
+  const [imgSrc, setImgSrc] = React.useState(
+    getHighResImageUrl(event.thumbnail) || FALLBACK_IMAGE,
+  );
 
   React.useEffect(() => {
     setImgSrc(getHighResImageUrl(event.thumbnail) || FALLBACK_IMAGE);
@@ -91,7 +93,8 @@ export function EventCard({ event }: EventCardProps) {
             <div className="flex items-center gap-2 text-foreground/80">
               <Users className="h-4 w-4 text-foreground/60 shrink-0" />
               <span>
-                {event.participants} {event.participants === 1 ? "volunteer" : "volunteers"} joined
+                {event.participants}{" "}
+                {event.participants === 1 ? "volunteer" : "volunteers"} joined
               </span>
             </div>
           )}
@@ -99,7 +102,10 @@ export function EventCard({ event }: EventCardProps) {
 
         {/* Pinned Action Button */}
         <div className="pt-2">
-          <Button asChild className="w-full rounded-full gap-2 font-medium h-10 shadow-xs">
+          <Button
+            asChild
+            className="w-full rounded-full gap-2 font-medium h-10 shadow-xs"
+          >
             <Link href={`/events/${event._id}`}>
               <span>View Event</span>
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />

@@ -29,8 +29,9 @@ export default function CreateEventPage() {
             Organize a New Social Event
           </h1>
           <p className="text-[15px] text-muted-foreground max-w-2xl">
-            Start a relief drive, neighbourhood cleanup, tree plantation, or healthcare camp.
-            Neighbours in Dhaka can view your event details and join as volunteers.
+            Start a relief drive, neighbourhood cleanup, tree plantation, or
+            healthcare camp. Neighbours in Dhaka can view your event details and
+            join as volunteers.
           </p>
         </div>
 

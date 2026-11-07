@@ -3,7 +3,17 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, Filter, X, SlidersHorizontal, PlusCircle, MapPin, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Search,
+  Filter,
+  X,
+  SlidersHorizontal,
+  PlusCircle,
+  MapPin,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -21,7 +31,12 @@ import { EventCard } from "@/components/events/event-card";
 import { EventGridSkeleton } from "@/components/events/event-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
-import { apiFetch, getCachedData, EVENT_TYPES, type EventItem } from "@/lib/api";
+import {
+  apiFetch,
+  getCachedData,
+  EVENT_TYPES,
+  type EventItem,
+} from "@/lib/api";
 
 const EVENTS_PER_PAGE = 9;
 
@@ -45,11 +60,21 @@ export default function UpcomingEventsPage() {
   };
 
   const initialEndpoint = getEndpoint(currentSearch, currentType);
-  const cachedInitialEvents = typeof window !== "undefined" ? getCachedData<EventItem[]>(initialEndpoint) : null;
-  const cachedAllEvents = typeof window !== "undefined" ? getCachedData<EventItem[]>("/api/events") : null;
+  const cachedInitialEvents =
+    typeof window !== "undefined"
+      ? getCachedData<EventItem[]>(initialEndpoint)
+      : null;
+  const cachedAllEvents =
+    typeof window !== "undefined"
+      ? getCachedData<EventItem[]>("/api/events")
+      : null;
 
-  const [events, setEvents] = React.useState<EventItem[]>(cachedInitialEvents || []);
-  const [allEvents, setAllEvents] = React.useState<EventItem[]>(cachedAllEvents || []);
+  const [events, setEvents] = React.useState<EventItem[]>(
+    cachedInitialEvents || [],
+  );
+  const [allEvents, setAllEvents] = React.useState<EventItem[]>(
+    cachedAllEvents || [],
+  );
   const [isLoading, setIsLoading] = React.useState(!cachedInitialEvents);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -101,7 +126,10 @@ export default function UpcomingEventsPage() {
   // Click outside listener for suggestions dropdown
   React.useEffect(() => {
     const handleClickOutside = (e: MouseEvent | TouchEvent) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(e.target as Node)
+      ) {
         setIsSuggestionsOpen(false);
       }
     };
@@ -122,7 +150,11 @@ export default function UpcomingEventsPage() {
 
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!isSuggestionsOpen || matchingSuggestions.length === 0) {
-      if (e.key === "ArrowDown" && trimmedQuery && matchingSuggestions.length > 0) {
+      if (
+        e.key === "ArrowDown" &&
+        trimmedQuery &&
+        matchingSuggestions.length > 0
+      ) {
         setIsSuggestionsOpen(true);
         setHighlightedIndex(0);
         e.preventDefault();
@@ -135,9 +167,15 @@ export default function UpcomingEventsPage() {
       setHighlightedIndex((prev) => (prev + 1) % matchingSuggestions.length);
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      setHighlightedIndex((prev) => (prev - 1 + matchingSuggestions.length) % matchingSuggestions.length);
+      setHighlightedIndex(
+        (prev) =>
+          (prev - 1 + matchingSuggestions.length) % matchingSuggestions.length,
+      );
     } else if (e.key === "Enter") {
-      if (highlightedIndex >= 0 && highlightedIndex < matchingSuggestions.length) {
+      if (
+        highlightedIndex >= 0 &&
+        highlightedIndex < matchingSuggestions.length
+      ) {
         e.preventDefault();
         selectSuggestion(matchingSuggestions[highlightedIndex]);
       }
@@ -151,7 +189,10 @@ export default function UpcomingEventsPage() {
   const fetchEvents = React.useCallback(async () => {
     try {
       const endpoint = getEndpoint(currentSearch, currentType);
-      const cached = typeof window !== "undefined" ? getCachedData<EventItem[]>(endpoint) : null;
+      const cached =
+        typeof window !== "undefined"
+          ? getCachedData<EventItem[]>(endpoint)
+          : null;
       if (!cached) {
         setIsLoading(true);
       }
@@ -196,11 +237,16 @@ export default function UpcomingEventsPage() {
     router.push("/events");
   };
 
-  const hasActiveFilters = Boolean(currentSearch || (currentType && currentType !== "all"));
+  const hasActiveFilters = Boolean(
+    currentSearch || (currentType && currentType !== "all"),
+  );
 
   // Pagination calculations (9 initiatives per page)
   const totalPages = Math.ceil(events.length / EVENTS_PER_PAGE);
-  const safeCurrentPage = Math.min(Math.max(1, currentPage), Math.max(1, totalPages));
+  const safeCurrentPage = Math.min(
+    Math.max(1, currentPage),
+    Math.max(1, totalPages),
+  );
 
   const paginatedEvents = React.useMemo(() => {
     const startIndex = (safeCurrentPage - 1) * EVENTS_PER_PAGE;
@@ -237,11 +283,15 @@ export default function UpcomingEventsPage() {
             Upcoming Initiatives
           </h1>
           <p className="text-[15px] text-muted-foreground max-w-2xl">
-            Browse and join upcoming social welfare drives across Dhaka neighbourhoods.
+            Browse and join upcoming social welfare drives across Dhaka
+            neighbourhoods.
           </p>
         </div>
 
-        <Button asChild className="gap-2 shrink-0 self-start md:self-auto rounded-full font-medium h-11 px-6 shadow-xs">
+        <Button
+          asChild
+          className="gap-2 shrink-0 self-start md:self-auto rounded-full font-medium h-11 px-6 shadow-xs"
+        >
           <Link href="/events/create">
             <PlusCircle className="h-4 w-4" />
             <span>Organize an Event</span>
@@ -251,7 +301,10 @@ export default function UpcomingEventsPage() {
 
       {/* Floating Glass Filter and Search Bar */}
       <div className="rounded-[28px] glass p-4 sm:p-5 shadow-xs space-y-4">
-        <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 md:grid-cols-12 gap-3">
+        <form
+          onSubmit={handleSearchSubmit}
+          className="grid grid-cols-1 md:grid-cols-12 gap-3"
+        >
           {/* Search by title / location with Real-Time Suggestions */}
           <div ref={searchContainerRef} className="md:col-span-7 relative">
             <Search className="absolute left-4 top-3.5 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -315,7 +368,7 @@ export default function UpcomingEventsPage() {
                             "w-full flex items-center justify-between gap-3 p-2.5 rounded-xl text-left transition-all select-none",
                             isHighlighted
                               ? "bg-foreground/10 text-foreground"
-                              : "hover:bg-foreground/5 text-foreground/90"
+                              : "hover:bg-foreground/5 text-foreground/90",
                           )}
                         >
                           <div className="flex items-center gap-3 min-w-0">
@@ -328,7 +381,9 @@ export default function UpcomingEventsPage() {
                               </p>
                               <p className="text-xs text-muted-foreground truncate flex items-center gap-1.5 mt-0.5">
                                 <MapPin className="h-3 w-3 shrink-0 text-muted-foreground/70" />
-                                <span className="truncate">{item.location}</span>
+                                <span className="truncate">
+                                  {item.location}
+                                </span>
                               </p>
                             </div>
                           </div>
@@ -348,9 +403,13 @@ export default function UpcomingEventsPage() {
                   </div>
                 ) : (
                   <div className="px-4 py-5 text-center text-sm text-muted-foreground overflow-hidden">
-                    <p className="font-medium text-foreground">No matching initiatives</p>
+                    <p className="font-medium text-foreground">
+                      No matching initiatives
+                    </p>
                     <p className="text-xs text-muted-foreground/80 mt-1 max-w-full px-2 break-all line-clamp-1">
-                      Press Search or Enter to query all records for &ldquo;{searchInput.slice(0, 30)}{searchInput.length > 30 ? "..." : ""}&rdquo;
+                      Press Search or Enter to query all records for &ldquo;
+                      {searchInput.slice(0, 30)}
+                      {searchInput.length > 30 ? "..." : ""}&rdquo;
                     </p>
                   </div>
                 )}
@@ -372,7 +431,11 @@ export default function UpcomingEventsPage() {
                   All Categories
                 </SelectItem>
                 {EVENT_TYPES.map((type) => (
-                  <SelectItem key={type} value={type} className="rounded-xl cursor-pointer">
+                  <SelectItem
+                    key={type}
+                    value={type}
+                    className="rounded-xl cursor-pointer"
+                  >
                     {type}
                   </SelectItem>
                 ))}
@@ -382,7 +445,10 @@ export default function UpcomingEventsPage() {
 
           {/* Search submit button */}
           <div className="md:col-span-2 flex gap-2">
-            <Button type="submit" className="h-11 w-full gap-2 rounded-full font-medium shadow-xs">
+            <Button
+              type="submit"
+              className="h-11 w-full gap-2 rounded-full font-medium shadow-xs"
+            >
               <Search className="h-4 w-4" />
               <span>Search</span>
             </Button>
@@ -397,7 +463,10 @@ export default function UpcomingEventsPage() {
               Filters:
             </span>
             {currentSearch && (
-              <Badge variant="secondary" className="glass gap-1.5 rounded-full px-3 py-1 font-normal text-foreground">
+              <Badge
+                variant="secondary"
+                className="glass gap-1.5 rounded-full px-3 py-1 font-normal text-foreground"
+              >
                 &ldquo;{currentSearch}&rdquo;
                 <button
                   type="button"
@@ -409,7 +478,10 @@ export default function UpcomingEventsPage() {
               </Badge>
             )}
             {currentType !== "all" && (
-              <Badge variant="secondary" className="glass gap-1.5 rounded-full px-3 py-1 font-normal text-foreground">
+              <Badge
+                variant="secondary"
+                className="glass gap-1.5 rounded-full px-3 py-1 font-normal text-foreground"
+              >
                 {currentType}
                 <button
                   type="button"
@@ -471,7 +543,10 @@ export default function UpcomingEventsPage() {
                     type="button"
                     onClick={() => {
                       setCurrentPage((prev) => Math.max(1, prev - 1));
-                      eventsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      eventsSectionRef.current?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                      });
                     }}
                     className="flex h-11 w-11 items-center justify-center rounded-2xl glass border border-foreground/15 text-foreground hover:bg-foreground/10 transition-all duration-200 cursor-pointer shadow-xs active:scale-95"
                     aria-label="Previous page"
@@ -489,13 +564,16 @@ export default function UpcomingEventsPage() {
                       type="button"
                       onClick={() => {
                         setCurrentPage(pageNum);
-                        eventsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                        eventsSectionRef.current?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "start",
+                        });
                       }}
                       className={cn(
                         "flex h-11 w-11 items-center justify-center rounded-2xl text-sm font-semibold transition-all duration-200 cursor-pointer shadow-xs active:scale-95 select-none",
                         isActive
                           ? "bg-foreground text-background shadow-md scale-105"
-                          : "glass border border-foreground/15 text-foreground/85 hover:text-foreground hover:bg-foreground/10"
+                          : "glass border border-foreground/15 text-foreground/85 hover:text-foreground hover:bg-foreground/10",
                       )}
                       aria-label={`Go to page ${pageNum}`}
                       aria-current={isActive ? "page" : undefined}
@@ -511,7 +589,10 @@ export default function UpcomingEventsPage() {
                     type="button"
                     onClick={() => {
                       setCurrentPage((prev) => Math.min(totalPages, prev + 1));
-                      eventsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      eventsSectionRef.current?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                      });
                     }}
                     className="flex h-11 w-11 items-center justify-center rounded-2xl glass border border-foreground/15 text-foreground hover:bg-foreground/10 transition-all duration-200 cursor-pointer shadow-xs active:scale-95"
                     aria-label="Next page"

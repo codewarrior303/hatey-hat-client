@@ -26,8 +26,9 @@ const profileSchema = z.object({
     .trim()
     .url("Must be a valid URL starting with http:// or https://")
     .refine(
-      (val) => /^https?:\/\//i.test(val) && !/^(javascript|data|vbscript):/i.test(val),
-      "Photo URL must start with http:// or https://"
+      (val) =>
+        /^https?:\/\//i.test(val) && !/^(javascript|data|vbscript):/i.test(val),
+      "Photo URL must start with http:// or https://",
     )
     .or(z.literal(""))
     .optional(),
@@ -83,7 +84,9 @@ export default function ProfilePage() {
 
       toast.success("Profile updated successfully!");
     } catch (err: any) {
-      toast.error(err?.message || "An unexpected error occurred while updating profile");
+      toast.error(
+        err?.message || "An unexpected error occurred while updating profile",
+      );
     } finally {
       setIsUpdating(false);
     }
@@ -100,7 +103,8 @@ export default function ProfilePage() {
             Volunteer Profile
           </h1>
           <p className="text-[15px] text-muted-foreground">
-            Your name and avatar appear when you create community initiatives across Dhaka.
+            Your name and avatar appear when you create community initiatives
+            across Dhaka.
           </p>
         </div>
 
@@ -114,7 +118,9 @@ export default function ProfilePage() {
                 alt={previewName || user?.name || "User"}
               />
               <AvatarFallback className="text-xl font-semibold">
-                {getFallbackAvatar(previewName || user?.name || user?.email || "User")}
+                {getFallbackAvatar(
+                  previewName || user?.name || user?.email || "User",
+                )}
               </AvatarFallback>
             </Avatar>
 

@@ -4,7 +4,11 @@ import * as React from "react";
 import Link from "next/link";
 import { ArrowUp, Heart, MapPin } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
-import { FacebookIcon, InstagramIcon, XIcon } from "@/components/icons/social-icons";
+import {
+  FacebookIcon,
+  InstagramIcon,
+  XIcon,
+} from "@/components/icons/social-icons";
 import {
   Tooltip,
   TooltipContent,
@@ -23,9 +27,9 @@ export function Footer() {
           <div className="lg:col-span-2 space-y-4">
             <BrandLogo showTagline scrollToTop />
             <p className="text-[14px] text-muted-foreground leading-relaxed max-w-sm pt-1">
-              Hatey Hat is an open community platform connecting neighbours
-              across Dhaka to organize, discover, and join local grassroots
-              relief, cleanup, and educational initiatives.
+              Hatey Hat connects communities across Bangladesh to organize,
+              discover, and participate in grassroots relief, environment, and
+              educational drives.
             </p>
 
             {/* Social Links with Custom Tooltips and Non-Inverting Hover */}
@@ -158,7 +162,7 @@ export function Footer() {
               className="flex items-center gap-1.5 font-medium text-foreground/80 cursor-pointer select-none"
               aria-label="Scroll back to top"
             >
-              <span>Hatey hat, ekshathe poth chola</span>
+              <span>Hatey Hat, ekshathe poth chola</span>
               <Heart className="h-3.5 w-3.5 text-foreground fill-foreground" />
             </button>
             <button

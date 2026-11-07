@@ -66,7 +66,7 @@ export function BrandLogo({
         </span>
         {showTagline && (
           <span className="text-[11px] text-muted-foreground font-normal tracking-normal -mt-0.5">
-            Hate hat, ekshathe poth chola
+            Hatey Hat, ekshathe poth chola
           </span>
         )}
       </div>

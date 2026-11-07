@@ -32,13 +32,9 @@ export const metadata: Metadata = {
     "cleanup drives",
   ],
   icons: {
-    icon: [
-      { url: "/favicon.svg", type: "image/svg+xml" },
-    ],
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
     shortcut: "/favicon.svg",
-    apple: [
-      { url: "/apple-icon", type: "image/png" },
-    ],
+    apple: [{ url: "/apple-icon", type: "image/png" }],
   },
 };
 
@@ -48,11 +44,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={jost.variable}
-    >
+    <html lang="en" suppressHydrationWarning className={jost.variable}>
       <body className="min-h-screen flex flex-col bg-background text-foreground antialiased relative font-sans selection:bg-foreground selection:text-background">
         {/* Fixed Ambient Background (Subtle Grayscale Blobs for Liquid Glass Depth) */}
         <div
