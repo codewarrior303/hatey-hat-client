@@ -55,24 +55,49 @@ export default function HomePage() {
   const [isUnsubscribing, setIsUnsubscribing] = React.useState(false);
   const [isSubscribed, setIsSubscribed] = React.useState<boolean>(false);
 
-  // Fetch subscription status for logged-in user
+  // Storage key helper for persisting subscription across reloads and tab closures
+  const getSubKey = React.useCallback(
+    (email?: string | null) => (email ? `hatey_hat_sub_${email.toLowerCase().trim()}` : null),
+    []
+  );
+
+  // Sync subscription status with local cache and MongoDB database
   const checkSubscriberStatus = React.useCallback(async () => {
     if (!user?.email) {
       setIsSubscribed(false);
       return;
     }
+
+    const storageKey = getSubKey(user.email);
+    // 1. Immediately read persistent state from localStorage so page reload/tab re-open is instantaneous
+    if (typeof window !== "undefined" && storageKey) {
+      const saved = localStorage.getItem(storageKey);
+      if (saved === "true") {
+        setIsSubscribed(true);
+      }
+    }
+
+    // 2. Authoritative check with database
     try {
       const res = await apiFetch<{ isSubscribed: boolean; email: string }>(
         "/api/subscribers/status",
         { auth: true, skipCache: true }
       );
-      if (res?.data) {
-        setIsSubscribed(Boolean(res.data.isSubscribed));
+      const isSub = Boolean(
+        (res?.data as any)?.isSubscribed ?? (res as any)?.isSubscribed
+      );
+      setIsSubscribed(isSub);
+      if (typeof window !== "undefined" && storageKey) {
+        if (isSub) {
+          localStorage.setItem(storageKey, "true");
+        } else {
+          localStorage.removeItem(storageKey);
+        }
       }
     } catch {
-      setIsSubscribed(false);
+      // Retain existing client state if network glitch
     }
-  }, [user?.email]);
+  }, [user?.email, getSubKey]);
 
   React.useEffect(() => {
     checkSubscriberStatus();
@@ -143,6 +168,10 @@ export default function HomePage() {
         { id: "newsletter-subscribed" }
       );
       setIsSubscribed(true);
+      const storageKey = getSubKey(user.email);
+      if (typeof window !== "undefined" && storageKey) {
+        localStorage.setItem(storageKey, "true");
+      }
       setNewsletterEmail("");
     } catch (err: any) {
       const msg =
@@ -170,6 +199,10 @@ export default function HomePage() {
         { id: "newsletter-unsubscribed" }
       );
       setIsSubscribed(false);
+      const storageKey = getSubKey(user.email);
+      if (typeof window !== "undefined" && storageKey) {
+        localStorage.removeItem(storageKey);
+      }
     } catch (err: any) {
       toast.error(err?.message || "Could not unsubscribe at this time.", {
         id: "newsletter-unsub-error",
@@ -487,19 +520,21 @@ export default function HomePage() {
 
             {user && isSubscribed ? (
               /* State 1: Active Subscription Display with Unsubscribe Action */
-              <div className="pt-2 animate-in fade-in-50 duration-300 max-w-lg mx-auto">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-2xl glass border border-foreground/15 bg-foreground/5 shadow-xs text-left w-full">
+              <div className="pt-2 animate-in fade-in-50 duration-300 max-w-xl sm:max-w-2xl mx-auto">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 sm:p-6 rounded-2xl glass border border-foreground/15 bg-foreground/5 shadow-xs text-left w-full">
                   <div className="flex items-center gap-3.5 min-w-0">
                     <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 shrink-0 border border-emerald-500/20">
                       <CheckCircle2 className="h-5 w-5" />
                     </div>
                     <div className="min-w-0 space-y-0.5">
-                      <p className="text-sm font-semibold text-foreground truncate">
+                      <p className="text-sm font-semibold text-foreground">
                         Subscribed to Community Updates
                       </p>
-                      <p className="text-xs text-muted-foreground truncate">
+                      <p className="text-xs sm:text-[13px] text-muted-foreground break-all sm:break-normal">
                         Weekly updates delivered to{" "}
-                        <span className="font-medium text-foreground">{user.email}</span>
+                        <strong className="text-foreground font-semibold">
+                          {user.email}
+                        </strong>
                       </p>
                     </div>
                   </div>
@@ -510,19 +545,10 @@ export default function HomePage() {
                     size="sm"
                     disabled={isUnsubscribing}
                     onClick={handleUnsubscribe}
-                    className="rounded-full h-10 px-5 text-xs font-semibold text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/25 transition-all cursor-pointer shadow-xs shrink-0 self-center sm:self-auto active:scale-95"
+                    className="rounded-full h-10 px-5 text-xs font-semibold text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/25 transition-all cursor-pointer shadow-xs shrink-0 self-center sm:self-auto active:scale-95 gap-1.5"
                   >
-                    {isUnsubscribing ? (
-                      <>
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        <span>Unsubscribing...</span>
-                      </>
-                    ) : (
-                      <>
-                        <BellOff className="h-3.5 w-3.5" />
-                        <span>Unsubscribe</span>
-                      </>
-                    )}
+                    <BellOff className="h-3.5 w-3.5" />
+                    <span>{isUnsubscribing ? "Unsubscribing..." : "Unsubscribe"}</span>
                   </Button>
                 </div>
               </div>
@@ -558,19 +584,13 @@ export default function HomePage() {
                   type="submit"
                   size="lg"
                   disabled={isSubscribing}
-                  className="w-full sm:w-auto h-12 px-7 rounded-full font-medium shrink-0 shadow-xs cursor-pointer active:scale-95"
-                >
-                  {isSubscribing ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Subscribing...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Subscribe</span>
-                      <ArrowRight className="h-4 w-4" />
-                    </>
+                  className={cn(
+                    "w-full sm:w-auto h-12 px-7 rounded-full font-medium shrink-0 shadow-xs cursor-pointer active:scale-95 transition-all gap-2",
+                    isSubscribing && "opacity-80 pointer-events-none"
                   )}
+                >
+                  <span>{isSubscribing ? "Subscribing..." : "Subscribe"}</span>
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
               </form>
             ) : (
