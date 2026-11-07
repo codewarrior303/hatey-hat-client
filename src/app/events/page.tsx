@@ -59,23 +59,9 @@ export default function UpcomingEventsPage() {
     return `/api/events${qs ? `?${qs}` : ""}`;
   };
 
-  const initialEndpoint = getEndpoint(currentSearch, currentType);
-  const cachedInitialEvents =
-    typeof window !== "undefined"
-      ? getCachedData<EventItem[]>(initialEndpoint)
-      : null;
-  const cachedAllEvents =
-    typeof window !== "undefined"
-      ? getCachedData<EventItem[]>("/api/events")
-      : null;
-
-  const [events, setEvents] = React.useState<EventItem[]>(
-    cachedInitialEvents || [],
-  );
-  const [allEvents, setAllEvents] = React.useState<EventItem[]>(
-    cachedAllEvents || [],
-  );
-  const [isLoading, setIsLoading] = React.useState(!cachedInitialEvents);
+  const [events, setEvents] = React.useState<EventItem[]>([]);
+  const [allEvents, setAllEvents] = React.useState<EventItem[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
   // Pagination state

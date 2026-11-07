@@ -41,18 +41,9 @@ export default function HomePage() {
   const { data: session } = useSession();
   const user = session?.user;
 
-  const cachedRecent =
-    typeof window !== "undefined"
-      ? getCachedData<EventItem[]>("/api/events?limit=6")
-      : null;
-  const cachedStats =
-    typeof window !== "undefined"
-      ? getCachedData<StatsSummary>("/api/events/stats/summary")
-      : null;
-
-  const [events, setEvents] = React.useState<EventItem[]>(cachedRecent || []);
-  const [stats, setStats] = React.useState<StatsSummary | null>(cachedStats);
-  const [isLoading, setIsLoading] = React.useState(!cachedRecent);
+  const [events, setEvents] = React.useState<EventItem[]>([]);
+  const [stats, setStats] = React.useState<StatsSummary | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
   // Newsletter state
@@ -299,7 +290,10 @@ export default function HomePage() {
           {/* Real Database Impact Snapshot (Honest Numbers) */}
           <div className="glass max-w-3xl mx-auto p-6 sm:p-8 rounded-[28px] mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 text-center shadow-xs">
             <div className="space-y-1">
-              <p className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
+              <p
+                suppressHydrationWarning
+                className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground"
+              >
                 {stats ? `${stats.upcomingEvents}` : "10+"}
               </p>
               <p className="text-xs text-muted-foreground font-medium">
@@ -307,7 +301,10 @@ export default function HomePage() {
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
+              <p
+                suppressHydrationWarning
+                className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground"
+              >
                 {stats ? `${stats.totalJoins}` : "Active"}
               </p>
               <p className="text-xs text-muted-foreground font-medium">

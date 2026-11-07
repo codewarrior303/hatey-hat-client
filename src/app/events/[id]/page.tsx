@@ -46,26 +46,13 @@ export default function EventDetailsPage() {
   const eventId = params.id as string;
   const { data: session } = useSession();
 
-  const cachedEvent =
-    typeof window !== "undefined" && eventId
-      ? getCachedData<EventItem>(`/api/events/${eventId}`)
-      : null;
-
-  const [event, setEvent] = React.useState<EventItem | null>(cachedEvent);
-  const [isPast, setIsPast] = React.useState(
-    cachedEvent
-      ? new Date(cachedEvent.eventDate).getTime() <= Date.now()
-      : false,
-  );
-  const [isLoading, setIsLoading] = React.useState(!cachedEvent);
+  const [event, setEvent] = React.useState<EventItem | null>(null);
+  const [isPast, setIsPast] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [isJoining, setIsJoining] = React.useState(false);
   const [hasJoined, setHasJoined] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [imgSrc, setImgSrc] = React.useState<string>(
-    cachedEvent
-      ? getHighResImageUrl(cachedEvent.thumbnail) || FALLBACK_IMAGE
-      : "",
-  );
+  const [imgSrc, setImgSrc] = React.useState<string>("");
 
   const fetchEvent = React.useCallback(async () => {
     if (!eventId) return;
