@@ -64,6 +64,32 @@ export default function RegisterPage() {
     }
   }, [session, sessionPending, redirectUrl, router]);
 
+  // Reset loading states when navigating back via browser history (bfcache) or when page regains visibility
+  React.useEffect(() => {
+    const resetLoadingStates = () => {
+      setIsGoogleLoading(false);
+      setIsLoading(false);
+    };
+
+    window.addEventListener("pageshow", resetLoadingStates);
+    window.addEventListener("popstate", resetLoadingStates);
+    window.addEventListener("focus", resetLoadingStates);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        resetLoadingStates();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("pageshow", resetLoadingStates);
+      window.removeEventListener("popstate", resetLoadingStates);
+      window.removeEventListener("focus", resetLoadingStates);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
   const onSubmit = async (data: RegisterInput) => {
     try {
       setIsLoading(true);
@@ -93,10 +119,15 @@ export default function RegisterPage() {
   const handleGoogleLogin = async () => {
     try {
       setIsGoogleLoading(true);
+      const fallbackTimer = setTimeout(() => {
+        setIsGoogleLoading(false);
+      }, 7000);
+
       await signIn.social({
         provider: "google",
         callbackURL: redirectUrl,
       });
+      clearTimeout(fallbackTimer);
     } catch (err: any) {
       toast.error(err?.message || "Could not connect to Google sign in");
       setIsGoogleLoading(false);
