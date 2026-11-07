@@ -21,11 +21,11 @@ export const metadata: Metadata = {
     template: "%s | Hatey Hat",
   },
   description:
-    "Hate hat, ekshathe poth chola. Join, create, and track social service events in Dhaka — from winter clothes drives to neighbourhood cleanups and tree plantations.",
+    "Hatey Hat, ekshathe poth chola. Join, create, and track grassroots social service events across Bangladesh — from winter clothes distributions to community cleanups and tree plantations.",
   keywords: [
     "social service",
     "community events",
-    "Dhaka volunteers",
+    "Bangladesh volunteers",
     "winter clothes distribution",
     "tree plantation",
     "blood donation",

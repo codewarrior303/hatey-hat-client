@@ -65,7 +65,10 @@ export function BrandLogo({
           Hatey<span className="text-muted-foreground font-normal ml-0.5">Hat</span>
         </span>
         {showTagline && (
-          <span className="text-[11px] text-muted-foreground font-normal tracking-normal -mt-0.5">
+          <span
+            suppressHydrationWarning
+            className="text-[11px] text-muted-foreground font-normal tracking-normal -mt-0.5"
+          >
             Hatey Hat, ekshathe poth chola
           </span>
         )}

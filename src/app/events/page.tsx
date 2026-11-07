@@ -283,8 +283,7 @@ export default function UpcomingEventsPage() {
             Upcoming Initiatives
           </h1>
           <p className="text-[15px] text-muted-foreground max-w-2xl">
-            Browse and join upcoming social welfare drives across Dhaka
-            neighbourhoods.
+            Browse and join upcoming social welfare drives across communities in Bangladesh.
           </p>
         </div>
 

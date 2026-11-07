@@ -146,7 +146,7 @@ export function Footer() {
             <div className="space-y-2.5 text-[14px] text-muted-foreground">
               <div className="flex items-start gap-2.5">
                 <MapPin className="h-4 w-4 text-foreground/70 shrink-0 mt-0.5" />
-                <span>Dhaka Metropolitan Area, Bangladesh</span>
+                <span>Nationwide Grassroots Initiatives, Bangladesh</span>
               </div>
             </div>
           </div>

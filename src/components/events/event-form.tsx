@@ -253,7 +253,7 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
               <MapPin className="absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground" />
               <Input
                 id="location"
-                placeholder="e.g., Mirpur 10 Circle, Dhaka"
+                placeholder="e.g., Mirpur 10, Dhaka or GEC Circle, Chattogram"
                 className="pl-10 h-11 rounded-xl glass bg-transparent border-foreground/15 text-sm"
                 {...register("location")}
                 aria-invalid={Boolean(errors.location)}

@@ -104,7 +104,7 @@ export default function ProfilePage() {
           </h1>
           <p className="text-[15px] text-muted-foreground">
             Your name and avatar appear when you create community initiatives
-            across Dhaka.
+            across Bangladesh.
           </p>
         </div>
 

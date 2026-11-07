@@ -61,7 +61,7 @@ export default function JoinedEventsPage() {
           <EmptyState
             icon={CheckCircle2}
             title="No Events Joined Yet"
-            description="You haven't joined any volunteer events yet. Explore upcoming drives around Dhaka and take part."
+            description="You haven't joined any volunteer events yet. Explore upcoming drives across Bangladesh and take part."
             actionHref="/events"
             actionLabel="Discover Upcoming Events"
           />

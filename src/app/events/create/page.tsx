@@ -30,7 +30,7 @@ export default function CreateEventPage() {
           </h1>
           <p className="text-[15px] text-muted-foreground max-w-2xl">
             Start a relief drive, neighbourhood cleanup, tree plantation, or
-            healthcare camp. Neighbours in Dhaka can view your event details and
+            healthcare camp. Volunteers across Bangladesh can view your event details and
             join as volunteers.
           </p>
         </div>

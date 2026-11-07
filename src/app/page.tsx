@@ -227,7 +227,7 @@ export default function HomePage() {
       icon: MapPin,
       title: "Hyper-Local Initiatives",
       description:
-        "Find relief camps, clothing drives, cleanups, and health camps happening directly in your neighbourhood across Dhaka.",
+        "Find relief camps, clothing drives, cleanups, and health camps happening directly in your neighbourhood across Bangladesh.",
     },
     {
       icon: HeartHandshake,
@@ -324,10 +324,10 @@ export default function HomePage() {
             </div>
             <div className="space-y-1">
               <p className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
-                Dhaka
+                Bangladesh
               </p>
               <p className="text-xs text-muted-foreground font-medium">
-                Grassroots & Local
+                Grassroots & Nationwide
               </p>
             </div>
           </div>
@@ -346,7 +346,7 @@ export default function HomePage() {
                 Upcoming Initiatives
               </h2>
               <p className="text-[15px] text-muted-foreground">
-                Social service drives happening across Dhaka neighbourhoods.
+                Social service drives happening across communities in Bangladesh.
               </p>
             </div>
 
@@ -484,7 +484,7 @@ export default function HomePage() {
               </h2>
               <p className="text-[15px] text-muted-foreground leading-relaxed">
                 Get weekly updates on upcoming relief drives, cleanups, and
-                local volunteer initiatives across Dhaka.
+                local volunteer initiatives across Bangladesh.
               </p>
             </div>
 
