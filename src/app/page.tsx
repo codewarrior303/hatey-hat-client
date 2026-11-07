@@ -54,6 +54,7 @@ export default function HomePage() {
   const [isSubscribing, setIsSubscribing] = React.useState(false);
   const [isUnsubscribing, setIsUnsubscribing] = React.useState(false);
   const [isSubscribed, setIsSubscribed] = React.useState<boolean>(false);
+  const [persistedSubEmail, setPersistedSubEmail] = React.useState<string | null>(null);
 
   // Storage key helper for persisting subscription across reloads and tab closures
   const getSubKey = React.useCallback(
@@ -61,43 +62,65 @@ export default function HomePage() {
     []
   );
 
-  // Sync subscription status with local cache and MongoDB database
-  const checkSubscriberStatus = React.useCallback(async () => {
-    if (!user?.email) {
-      setIsSubscribed(false);
-      return;
-    }
-
-    const storageKey = getSubKey(user.email);
-    // 1. Immediately read persistent state from localStorage so page reload/tab re-open is instantaneous
-    if (typeof window !== "undefined" && storageKey) {
-      const saved = localStorage.getItem(storageKey);
-      if (saved === "true") {
+  // 1. Immediately read persistent state on client mount so page reload/tab re-open is instantaneous
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedEmail = localStorage.getItem("hatey_hat_sub_email");
+      if (savedEmail) {
+        setPersistedSubEmail(savedEmail);
         setIsSubscribed(true);
       }
     }
+  }, []);
 
-    // 2. Authoritative check with database
+  // Sync subscription status with local cache and MongoDB database
+  const checkSubscriberStatus = React.useCallback(async () => {
+    const activeEmail = user?.email || persistedSubEmail;
+    if (!activeEmail) {
+      return;
+    }
+
+    const storageKey = getSubKey(activeEmail);
+    // Read persistent state from localStorage so page reload/tab re-open is instantaneous
+    if (typeof window !== "undefined") {
+      const saved = storageKey ? localStorage.getItem(storageKey) : null;
+      const globalSaved = localStorage.getItem("hatey_hat_sub_email");
+      if (saved === "true" || (globalSaved && globalSaved.toLowerCase() === activeEmail.toLowerCase())) {
+        setIsSubscribed(true);
+        if (!persistedSubEmail) {
+          setPersistedSubEmail(activeEmail);
+        }
+      }
+    }
+
+    // Authoritative check with database (supports optional JWT & email query param)
     try {
+      const queryParam = `?email=${encodeURIComponent(activeEmail.toLowerCase())}`;
       const res = await apiFetch<{ isSubscribed: boolean; email: string }>(
-        "/api/subscribers/status",
+        `/api/subscribers/status${queryParam}`,
         { auth: true, skipCache: true }
       );
       const isSub = Boolean(
         (res?.data as any)?.isSubscribed ?? (res as any)?.isSubscribed
       );
       setIsSubscribed(isSub);
-      if (typeof window !== "undefined" && storageKey) {
+      if (typeof window !== "undefined") {
         if (isSub) {
-          localStorage.setItem(storageKey, "true");
+          if (storageKey) localStorage.setItem(storageKey, "true");
+          localStorage.setItem("hatey_hat_sub_email", activeEmail.toLowerCase());
+          setPersistedSubEmail(activeEmail);
         } else {
-          localStorage.removeItem(storageKey);
+          if (storageKey) localStorage.removeItem(storageKey);
+          if (localStorage.getItem("hatey_hat_sub_email") === activeEmail.toLowerCase()) {
+            localStorage.removeItem("hatey_hat_sub_email");
+          }
+          setPersistedSubEmail(null);
         }
       }
     } catch {
       // Retain existing client state if network glitch
     }
-  }, [user?.email, getSubKey]);
+  }, [user?.email, persistedSubEmail, getSubKey]);
 
   React.useEffect(() => {
     checkSubscriberStatus();
@@ -168,9 +191,11 @@ export default function HomePage() {
         { id: "newsletter-subscribed" }
       );
       setIsSubscribed(true);
+      setPersistedSubEmail(user.email);
       const storageKey = getSubKey(user.email);
-      if (typeof window !== "undefined" && storageKey) {
-        localStorage.setItem(storageKey, "true");
+      if (typeof window !== "undefined") {
+        if (storageKey) localStorage.setItem(storageKey, "true");
+        localStorage.setItem("hatey_hat_sub_email", user.email.toLowerCase());
       }
       setNewsletterEmail("");
     } catch (err: any) {
@@ -184,7 +209,7 @@ export default function HomePage() {
   };
 
   const handleUnsubscribe = async () => {
-    if (!user) return;
+    const activeEmail = user?.email || persistedSubEmail;
     setIsUnsubscribing(true);
     try {
       const res = await apiFetch<{ success: boolean; message: string }>(
@@ -192,6 +217,8 @@ export default function HomePage() {
         {
           method: "POST",
           auth: true,
+          body: activeEmail ? JSON.stringify({ email: activeEmail }) : undefined,
+          headers: { "Content-Type": "application/json" },
         }
       );
       toast.success(
@@ -199,9 +226,13 @@ export default function HomePage() {
         { id: "newsletter-unsubscribed" }
       );
       setIsSubscribed(false);
-      const storageKey = getSubKey(user.email);
-      if (typeof window !== "undefined" && storageKey) {
-        localStorage.removeItem(storageKey);
+      setPersistedSubEmail(null);
+      if (typeof window !== "undefined") {
+        if (activeEmail) {
+          const storageKey = getSubKey(activeEmail);
+          if (storageKey) localStorage.removeItem(storageKey);
+        }
+        localStorage.removeItem("hatey_hat_sub_email");
       }
     } catch (err: any) {
       toast.error(err?.message || "Could not unsubscribe at this time.", {
@@ -518,7 +549,7 @@ export default function HomePage() {
               </p>
             </div>
 
-            {user && isSubscribed ? (
+            {isSubscribed && (user?.email || persistedSubEmail) ? (
               /* State 1: Active Subscription Display with Unsubscribe Action */
               <div className="pt-2 animate-in fade-in-50 duration-300 max-w-xl sm:max-w-2xl mx-auto">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 sm:p-6 rounded-2xl glass border border-foreground/15 bg-foreground/5 shadow-xs text-left w-full">
@@ -533,7 +564,7 @@ export default function HomePage() {
                       <p className="text-xs sm:text-[13px] text-muted-foreground break-all sm:break-normal">
                         Weekly updates delivered to{" "}
                         <strong className="text-foreground font-semibold">
-                          {user.email}
+                          {user?.email || persistedSubEmail}
                         </strong>
                       </p>
                     </div>
