@@ -16,7 +16,7 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="mt-auto mt-16 sm:mt-24 pb-12 px-4 sm:px-6">
+    <footer className="mt-auto pb-10 sm:pb-12 px-4 sm:px-6">
       <div className="container mx-auto max-w-5xl rounded-[32px] glass p-8 sm:p-12 shadow-xs transition-colors">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand & Mission (2 cols) */}
