@@ -23,8 +23,9 @@ export function Footer() {
           <div className="lg:col-span-2 space-y-4">
             <BrandLogo showTagline scrollToTop />
             <p className="text-[14px] text-muted-foreground leading-relaxed max-w-sm pt-1">
-              Hatey Hat is an open community platform connecting neighbours across Dhaka to organize,
-              discover, and join local grassroots relief, cleanup, and educational initiatives.
+              Hatey Hat is an open community platform connecting neighbours
+              across Dhaka to organize, discover, and join local grassroots
+              relief, cleanup, and educational initiatives.
             </p>
 
             {/* Social Links with Custom Tooltips and Non-Inverting Hover */}
@@ -91,27 +92,42 @@ export function Footer() {
             </h4>
             <ul className="space-y-2 text-[14px] text-muted-foreground">
               <li>
-                <Link href="/events" className="hover:text-foreground transition-colors">
+                <Link
+                  href="/events"
+                  className="hover:text-foreground transition-colors"
+                >
                   Upcoming Events
                 </Link>
               </li>
               <li>
-                <Link href="/events/create" className="hover:text-foreground transition-colors">
+                <Link
+                  href="/events/create"
+                  className="hover:text-foreground transition-colors"
+                >
                   Start an Initiative
                 </Link>
               </li>
               <li>
-                <Link href="/events/joined" className="hover:text-foreground transition-colors">
+                <Link
+                  href="/events/joined"
+                  className="hover:text-foreground transition-colors"
+                >
                   Joined Activities
                 </Link>
               </li>
               <li>
-                <Link href="/events/manage" className="hover:text-foreground transition-colors">
+                <Link
+                  href="/events/manage"
+                  className="hover:text-foreground transition-colors"
+                >
                   Manage Events
                 </Link>
               </li>
               <li>
-                <Link href="/profile" className="hover:text-foreground transition-colors">
+                <Link
+                  href="/profile"
+                  className="hover:text-foreground transition-colors"
+                >
                   Volunteer Profile
                 </Link>
               </li>
@@ -134,7 +150,7 @@ export function Footer() {
 
         {/* Bottom Bar */}
         <div className="mt-10 pt-6 border-t border-foreground/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-          <p>© {currentYear} Hatey Hat. Built for the communities of Dhaka.</p>
+          <p>© {currentYear} Hatey Hat. One community, One Bangladesh.</p>
           <div className="flex items-center gap-3">
             <button
               type="button"
