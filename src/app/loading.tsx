@@ -5,20 +5,20 @@ export default function Loading() {
     <div
       role="status"
       aria-label="Loading page content"
-      className="min-h-[70vh] w-full flex flex-col items-center justify-center px-4 py-16 relative overflow-hidden select-none"
+      className="flex-1 w-full min-h-[380px] flex flex-col items-center justify-center px-4 py-8 sm:py-12 my-auto relative select-none"
     >
       {/* Ambient background glow orbs */}
       <div
         aria-hidden="true"
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full bg-foreground/5 blur-3xl pointer-events-none"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 rounded-full bg-foreground/5 blur-3xl pointer-events-none"
       />
       <div
         aria-hidden="true"
-        className="absolute top-1/2 left-1/2 -translate-x-1/3 -translate-y-2/3 w-60 h-60 rounded-full bg-emerald-500/5 blur-3xl pointer-events-none"
+        className="absolute top-1/2 left-1/2 -translate-x-1/3 -translate-y-2/3 w-56 h-56 rounded-full bg-emerald-500/5 blur-3xl pointer-events-none"
       />
 
       {/* Frosted liquid-glass loading capsule */}
-      <div className="relative z-10 glass-strong rounded-[32px] p-8 sm:p-10 max-w-sm w-full mx-auto flex flex-col items-center text-center shadow-2xl border border-border/60">
+      <div className="relative z-10 glass-strong rounded-[32px] p-8 sm:p-10 max-w-sm w-full mx-auto flex flex-col items-center text-center shadow-2xl border border-border/60 my-auto">
         {/* Animated Brand Emblem */}
         <div className="relative flex items-center justify-center">
           <div
