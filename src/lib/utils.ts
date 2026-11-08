@@ -27,14 +27,21 @@ export function getFallbackAvatar(name: string): string {
 }
 
 /**
- * Formats numbers compactly for high-volume scale:
- * e.g. 0 -> "0", 999 -> "999", 1000 -> "1K", 1500 -> "1.5K", 10000 -> "10K", 1000000 -> "1M", 10000000 -> "10M", 1000000000 -> "1B".
+ * Formats numbers compactly across all features:
+ * - Below 100: exact number (0, 1, 99)
+ * - 100 to 999: rounded down to hundreds with a plus (100+, 200+, 300+, 900+)
+ * - 1,000+: compact notation (1K, 2K, 1.5K, 10K, 1M, 10M, 1B)
  */
 export function formatCompactNumber(num: number | string | null | undefined): string {
   if (num === null || num === undefined || num === "") return "0";
   const parsed = typeof num === "string" ? Number(num) : num;
   if (isNaN(parsed)) return String(num);
-  if (Math.abs(parsed) < 1000) return parsed.toLocaleString("en-US");
+  if (parsed < 0) return "0";
+  if (parsed < 100) return parsed.toLocaleString("en-US");
+  if (parsed < 1000) {
+    const hundreds = Math.floor(parsed / 100) * 100;
+    return `${hundreds}+`;
+  }
 
   return new Intl.NumberFormat("en-US", {
     notation: "compact",

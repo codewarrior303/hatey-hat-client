@@ -37,6 +37,7 @@ import {
   EVENT_TYPES,
   type EventItem,
 } from "@/lib/api";
+import { formatCompactNumber } from "@/lib/utils";
 
 const EVENTS_PER_PAGE = 9;
 
@@ -337,7 +338,7 @@ export default function UpcomingEventsPage() {
                   <div className="space-y-1">
                     <div className="flex items-center justify-between px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-foreground/10">
                       <span>Initiative Suggestions</span>
-                      <span>{matchingSuggestions.length} found</span>
+                      <span>{formatCompactNumber(matchingSuggestions.length)} found</span>
                     </div>
                     {matchingSuggestions.map((item, index) => {
                       const isHighlighted = index === highlightedIndex;
