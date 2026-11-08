@@ -136,8 +136,12 @@ export default function AdminPage() {
   const [deletingId, setDeletingId] = React.useState<string | null>(null);
   const [isClearingConcluded, setIsClearingConcluded] = React.useState(false);
 
+  const isFetchingRef = React.useRef(false);
+
   const fetchAdminMetrics = React.useCallback(
     async (isManualRefresh = false, isSilentPolling = false) => {
+      if (isFetchingRef.current && isSilentPolling) return;
+      isFetchingRef.current = true;
       if (isManualRefresh) {
         setIsRefreshing(true);
       } else if (!isSilentPolling) {
@@ -166,6 +170,7 @@ export default function AdminPage() {
           );
         }
       } finally {
+        isFetchingRef.current = false;
         setIsLoading(false);
         setIsRefreshing(false);
       }
@@ -179,15 +184,26 @@ export default function AdminPage() {
     }
   }, [isAuthorized, fetchAdminMetrics]);
 
-  // Real-time auto-polling every 4 seconds for live subscriber & event metrics
+  // Adaptive background polling (10s interval, pauses when document is hidden)
   React.useEffect(() => {
     if (!isAuthorized) return;
     const interval = setInterval(() => {
       if (typeof document !== "undefined" && document.visibilityState === "visible") {
         fetchAdminMetrics(false, true);
       }
-    }, 4000);
-    return () => clearInterval(interval);
+    }, 10000);
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchAdminMetrics(false, true);
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
   }, [isAuthorized, fetchAdminMetrics]);
 
   const handleDeleteEvent = async (id: string, title: string) => {
