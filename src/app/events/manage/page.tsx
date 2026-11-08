@@ -30,7 +30,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
 import { EventGridSkeleton } from "@/components/events/event-skeleton";
-import { apiFetch, type EventItem } from "@/lib/api";
+import { apiFetch, invalidateCache, type EventItem } from "@/lib/api";
 import { formatDate, getHighResImageUrl } from "@/lib/utils";
 
 const FALLBACK_IMAGE =
@@ -74,6 +74,7 @@ export default function ManageEventsPage() {
       });
 
       toast.success("Event and volunteer registrations deleted successfully");
+      invalidateCache();
       setEvents((prev) => prev.filter((e) => e._id !== eventToDelete._id));
       setEventToDelete(null);
     } catch (err: any) {

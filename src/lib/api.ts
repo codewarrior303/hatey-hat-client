@@ -86,6 +86,7 @@ export async function apiFetch<T>(
   let res: Response;
   try {
     res = await fetch(url, {
+      cache: "no-store",
       ...rest,
       headers: reqHeaders,
     });

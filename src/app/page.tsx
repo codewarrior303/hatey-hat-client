@@ -25,7 +25,7 @@ import { EventGridSkeleton } from "@/components/events/event-skeleton";
 import { ErrorState } from "@/components/ui/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
-import { apiFetch, getCachedData, type EventItem } from "@/lib/api";
+import { apiFetch, getCachedData, setCachedData, invalidateCache, type EventItem } from "@/lib/api";
 import { useSession } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
@@ -132,17 +132,24 @@ export default function HomePage() {
         typeof window !== "undefined"
           ? getCachedData<EventItem[]>("/api/events?limit=6")
           : null;
-      if (!cached) {
+      if (cached && cached.length > 0) {
+        setEvents(cached);
+        setIsLoading(false);
+      } else {
         setIsLoading(true);
       }
       setError(null);
       const [eventsRes, statsRes] = await Promise.allSettled([
-        apiFetch<EventItem[]>("/api/events?limit=6"),
-        apiFetch<StatsSummary>("/api/events/stats/summary"),
+        apiFetch<EventItem[]>("/api/events?limit=6", { skipCache: true }),
+        apiFetch<StatsSummary>("/api/events/stats/summary", { skipCache: true }),
       ]);
 
       if (eventsRes.status === "fulfilled") {
-        setEvents(eventsRes.value.data || []);
+        const freshEvents = eventsRes.value.data || [];
+        setEvents(freshEvents);
+        if (typeof window !== "undefined") {
+          setCachedData("/api/events?limit=6", freshEvents);
+        }
       } else {
         setError(eventsRes.reason?.message || "Failed to load recent events");
       }
