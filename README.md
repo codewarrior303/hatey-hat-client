@@ -60,47 +60,6 @@ Across Bangladesh, countless citizens and youth groups step forward every day to
 - **Notifications:** [react-hot-toast](https://react-hot-toast.com/)
 - **Theming:** [next-themes](https://github.com/pacocoursey/next-themes) (Dark / Light mode)
 
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- [Node.js](https://nodejs.org/) (version 20 or higher)
-- [npm](https://www.npmjs.com/) or [pnpm](https://pnpm.io/)
-
-### Installation
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/codewarrior303/hatey-hat-client.git
-   cd hatey-hat-client
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Configure Environment Variables:**
-   Create a `.env.local` file in the root directory:
-   ```env
-   NEXT_PUBLIC_APP_URL=http://localhost:3000
-   NEXT_PUBLIC_API_URL=http://localhost:5000
-   BETTER_AUTH_SECRET=your-secure-random-secret-key
-   BETTER_AUTH_URL=http://localhost:3000
-   GOOGLE_CLIENT_ID=your-google-client-id
-   GOOGLE_CLIENT_SECRET=your-google-client-secret
-   MONGODB_URI=your-mongodb-connection-string
-   MONGODB_DB=hatey-hat
-   ```
-
-4. **Run the development server:**
-   ```bash
-   npm run dev
-   ```
-
-5. Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
 
 ---
 
@@ -111,5 +70,5 @@ This project is licensed under the [MIT License](LICENSE).
 ---
 
 <p align="center">
-  <strong>Hatey Hat (হাতে হাত)</strong> • <em>One community, One Bangladesh.</em>
+  <em>One community, One Bangladesh.</em>
 </p>
