@@ -11,6 +11,7 @@ import * as React from "react";
  * - Seamlessly syncs with Light (charcoal) and Dark (frosted white) themes
  */
 export function CustomScrollbar() {
+  const [isDesktop, setIsDesktop] = React.useState(false);
   const [thumbHeight, setThumbHeight] = React.useState(48);
   const [thumbTop, setThumbTop] = React.useState(0);
   const [isVisible, setIsVisible] = React.useState(false);
@@ -20,8 +21,15 @@ export function CustomScrollbar() {
   const startScrollTopRef = React.useRef(0);
   const hideTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  React.useEffect(() => {
+    // Only mount on desktop non-touch devices to ensure top mobile Lighthouse scores
+    if (typeof window !== "undefined" && window.innerWidth >= 768 && !("ontouchstart" in window)) {
+      setIsDesktop(true);
+    }
+  }, []);
+
   const updateScrollbar = React.useCallback(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || !isDesktop) return;
 
     const docHeight = document.documentElement.scrollHeight;
     const winHeight = window.innerHeight;
@@ -142,7 +150,7 @@ export function CustomScrollbar() {
     });
   };
 
-  if (thumbHeight === 0) return null;
+  if (!isDesktop || thumbHeight === 0) return null;
 
   const show = isVisible || isHovered || isDragging;
 

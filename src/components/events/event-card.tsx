@@ -53,6 +53,9 @@ export function EventCard({ event }: EventCardProps) {
         <img
           src={imgSrc}
           alt={event.title}
+          width={480}
+          height={300}
+          decoding="async"
           className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
           onError={() => setImgSrc(FALLBACK_IMAGE)}
           loading="lazy"

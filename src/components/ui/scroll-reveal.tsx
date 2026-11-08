@@ -32,16 +32,6 @@ export function ScrollReveal({
     const el = elementRef.current;
     if (!el) return;
 
-    // Check if element is already inside the viewport on initial render
-    const rect = el.getBoundingClientRect();
-    if (rect.top < window.innerHeight && rect.bottom > 0) {
-      setIsVisible(true);
-      return;
-    }
-
-    // Otherwise, temporarily hide to trigger entrance animation
-    setIsVisible(false);
-
     const observer = new IntersectionObserver(
       (entries) => {
         const [entry] = entries;
@@ -52,7 +42,7 @@ export function ScrollReveal({
       },
       {
         threshold,
-        rootMargin: "0px 0px 50px 0px",
+        rootMargin: "0px 0px 80px 0px",
       }
     );
 

@@ -193,8 +193,8 @@ export default function HomePage() {
       }
       setError(null);
       const [eventsRes, statsRes] = await Promise.allSettled([
-        apiFetch<EventItem[]>("/api/events?limit=6", { skipCache: true }),
-        apiFetch<StatsSummary>("/api/events/stats/summary", { skipCache: true }),
+        apiFetch<EventItem[]>("/api/events?limit=6"),
+        apiFetch<StatsSummary>("/api/events/stats/summary"),
       ]);
 
       if (eventsRes.status === "fulfilled") {
@@ -653,6 +653,9 @@ export default function HomePage() {
                   <img
                     src={action.image}
                     alt={action.title}
+                    width={400}
+                    height={300}
+                    decoding="async"
                     className="h-full w-full object-cover transition-transform duration-700 ease-out hover:scale-105"
                     loading="lazy"
                   />

@@ -4,7 +4,12 @@ import { getCachedData, setCachedData, invalidateCache } from "./cache";
 export { getCachedData, setCachedData, invalidateCache };
 
 export const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "http://localhost:5000";
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") ||
+  (typeof window !== "undefined" &&
+  window.location.hostname !== "localhost" &&
+  !window.location.hostname.includes("127.0.0.1")
+    ? "https://hatey-hat-api.vercel.app"
+    : "http://localhost:5000");
 
 export class ClientApiError extends Error {
   constructor(
