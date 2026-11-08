@@ -112,8 +112,24 @@ export default function EventDetailsPage() {
       return;
     }
 
+    if (hasJoined || isJoining) return;
+
+    // 1. Instantaneous Optimistic UI Update (0ms delay - identical to YouTube Like)
+    setHasJoined(true);
+    setShowBurst(true);
+    setTimeout(() => setShowBurst(false), 1400);
+    setEvent((prev) =>
+      prev
+        ? {
+            ...prev,
+            participants: (prev.participants || 0) + 1,
+          }
+        : null
+    );
+
+    // 2. Perform network sync in background
+    setIsJoining(true);
     try {
-      setIsJoining(true);
       const res = await apiFetch(`/api/events/${eventId}/join`, {
         method: "POST",
         auth: true,
@@ -122,27 +138,29 @@ export default function EventDetailsPage() {
       toast.success(
         res.message ||
           "You have successfully joined this event! See you there.",
-      );
-      setHasJoined(true);
-      setShowBurst(true);
-      setTimeout(() => setShowBurst(false), 1400);
-      setEvent((prev) =>
-        prev
-          ? {
-              ...prev,
-              participants: (prev.participants || 0) + 1,
-            }
-          : null
+        { id: "join-success" }
       );
     } catch (err: any) {
       if (err instanceof ClientApiError && err.statusCode === 409) {
+        // Already registered on server, keep optimistic state
         toast.success(
           "You are already registered for this event. See you there!",
+          { id: "join-success" }
         );
-        setHasJoined(true);
       } else {
+        // Rollback optimistic state on genuine error
+        setHasJoined(false);
+        setEvent((prev) =>
+          prev
+            ? {
+                ...prev,
+                participants: Math.max(0, (prev.participants || 1) - 1),
+              }
+            : null
+        );
         toast.error(
           err?.message || "Could not join this event. Please try again.",
+          { id: "join-error" }
         );
       }
     } finally {
