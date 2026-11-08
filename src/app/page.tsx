@@ -36,7 +36,7 @@ import {
   type EventType,
 } from "@/lib/api";
 import { useSession } from "@/lib/auth-client";
-import { cn } from "@/lib/utils";
+import { cn, formatCompactNumber } from "@/lib/utils";
 
 interface StatsSummary {
   upcomingEvents: number;
@@ -463,7 +463,7 @@ export default function HomePage() {
                 suppressHydrationWarning
                 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground"
               >
-                {stats ? `${stats.upcomingEvents}` : "10+"}
+                {stats ? formatCompactNumber(stats.upcomingEvents) : "0"}
               </p>
               <p className="text-xs text-muted-foreground font-medium">
                 Upcoming Events
@@ -474,7 +474,7 @@ export default function HomePage() {
                 suppressHydrationWarning
                 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground"
               >
-                {stats ? `${stats.totalJoins}` : "Active"}
+                {stats ? formatCompactNumber(stats.totalJoins) : "0"}
               </p>
               <p className="text-xs text-muted-foreground font-medium">
                 Volunteers Joined

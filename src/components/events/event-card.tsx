@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { CalendarDays, MapPin, ArrowRight, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { formatDate, getHighResImageUrl } from "@/lib/utils";
+import { formatDate, getHighResImageUrl, formatCompactNumber } from "@/lib/utils";
 import type { EventItem } from "@/lib/api";
 
 interface EventCardProps {
@@ -93,7 +93,7 @@ export function EventCard({ event }: EventCardProps) {
             <div className="flex items-center gap-2 text-foreground/80">
               <Users className="h-4 w-4 text-foreground/60 shrink-0" />
               <span>
-                {event.participants}{" "}
+                {formatCompactNumber(event.participants)}{" "}
                 {event.participants === 1 ? "volunteer" : "volunteers"} joined
               </span>
             </div>

@@ -30,7 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSession, authClient } from "@/lib/auth-client";
 import { apiFetch, invalidateCache } from "@/lib/api";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatCompactNumber } from "@/lib/utils";
 
 const AUTHORIZED_ADMIN_EMAIL = "abirahnafshahriar@gmail.com";
 
@@ -497,7 +497,7 @@ export default function AdminPage() {
               </div>
               <div className="space-y-0.5">
                 <p className="text-3xl font-bold tracking-tight text-foreground">
-                  {stats?.totalEventsCreated ?? 0}
+                  {formatCompactNumber(stats?.totalEventsCreated ?? 0)}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   All-time registered initiatives
@@ -517,10 +517,10 @@ export default function AdminPage() {
               </div>
               <div className="space-y-0.5">
                 <p className="text-3xl font-bold tracking-tight text-foreground">
-                  {stats?.totalJoins ?? 0}
+                  {formatCompactNumber(stats?.totalJoins ?? 0)}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  All-time joins ({stats?.liveJoins ?? 0} active)
+                  All-time joins ({formatCompactNumber(stats?.liveJoins ?? 0)} active)
                 </p>
               </div>
             </div>
@@ -537,7 +537,7 @@ export default function AdminPage() {
               </div>
               <div className="space-y-0.5">
                 <p className="text-3xl font-bold tracking-tight text-foreground">
-                  {stats?.totalEventsDeleted ?? 0}
+                  {formatCompactNumber(stats?.totalEventsDeleted ?? 0)}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Removed by organizers
@@ -557,10 +557,10 @@ export default function AdminPage() {
               </div>
               <div className="space-y-0.5">
                 <p className="text-3xl font-bold tracking-tight text-foreground">
-                  {stats?.concludedEvents ?? 0}
+                  {formatCompactNumber(stats?.concludedEvents ?? 0)}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Past drives ({stats?.upcomingEvents ?? 0} active)
+                  Past drives ({formatCompactNumber(stats?.upcomingEvents ?? 0)} active)
                 </p>
               </div>
             </div>
@@ -577,7 +577,7 @@ export default function AdminPage() {
               </div>
               <div className="space-y-0.5">
                 <p className="text-3xl font-bold tracking-tight text-foreground">
-                  {stats?.totalSubscribers ?? 0}
+                  {formatCompactNumber(stats?.totalSubscribers ?? 0)}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Active community subscribers
@@ -591,7 +591,7 @@ export default function AdminPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h2 className="text-xl font-semibold tracking-tight text-foreground">
-                  Initiatives Breakdown ({filteredEvents.length})
+                  Initiatives Breakdown ({formatCompactNumber(filteredEvents.length)})
                 </h2>
                 <p className="text-xs text-muted-foreground">
                   Monitor event lifecycle, dates, and volunteer joins in real time.
@@ -714,7 +714,7 @@ export default function AdminPage() {
                             )}
                           </td>
                           <td className="py-3 px-4 text-center font-bold text-foreground">
-                            {ev.participants}
+                            {formatCompactNumber(ev.participants)}
                           </td>
                           <td className="py-3 px-4 text-right">
                             <div className="flex items-center justify-end gap-1">
@@ -764,7 +764,7 @@ export default function AdminPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h2 className="text-xl font-semibold tracking-tight text-foreground">
-                  Newsletter Subscribers ({filteredSubscribers.length})
+                  Newsletter Subscribers ({formatCompactNumber(filteredSubscribers.length)})
                 </h2>
                 <p className="text-xs text-muted-foreground">
                   Citizens registered to receive emergency relief alerts and community updates.
@@ -858,7 +858,7 @@ export default function AdminPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h2 className="text-xl font-semibold tracking-tight text-foreground">
-                  Recent System & Security Audit Logs ({filteredActivity.length})
+                  Recent System & Security Audit Logs ({formatCompactNumber(filteredActivity.length)})
                 </h2>
                 <p className="text-xs text-muted-foreground">
                   Real-time security trail of user join actions, event creations, and administrative updates.

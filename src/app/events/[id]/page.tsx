@@ -37,7 +37,7 @@ import {
   type EventItem,
   ClientApiError,
 } from "@/lib/api";
-import { formatDate, getHighResImageUrl, cn } from "@/lib/utils";
+import { formatDate, getHighResImageUrl, cn, formatCompactNumber } from "@/lib/utils";
 
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80";
@@ -356,7 +356,7 @@ export default function EventDetailsPage() {
               <Users className="h-4 w-4 text-foreground/70 shrink-0" />
               <span>
                 <strong className="font-semibold text-foreground">
-                  {event.participants || 0}
+                  {formatCompactNumber(event.participants || 0)}
                 </strong>{" "}
                 {(event.participants || 0) === 1
                   ? "Volunteer Joined"
@@ -473,7 +473,7 @@ export default function EventDetailsPage() {
               </p>
             </div>
             <p className="text-[15px] font-semibold text-foreground">
-              {event.participants || 0}{" "}
+              {formatCompactNumber(event.participants || 0)}{" "}
               {event.participants === 1 ? "Volunteer" : "Volunteers"} Joined
             </p>
           </div>

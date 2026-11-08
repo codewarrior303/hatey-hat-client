@@ -27,6 +27,23 @@ export function getFallbackAvatar(name: string): string {
 }
 
 /**
+ * Formats numbers compactly for high-volume scale:
+ * e.g. 0 -> "0", 999 -> "999", 1000 -> "1K", 1500 -> "1.5K", 10000 -> "10K", 1000000 -> "1M", 10000000 -> "10M", 1000000000 -> "1B".
+ */
+export function formatCompactNumber(num: number | string | null | undefined): string {
+  if (num === null || num === undefined || num === "") return "0";
+  const parsed = typeof num === "string" ? Number(num) : num;
+  if (isNaN(parsed)) return String(num);
+  if (Math.abs(parsed) < 1000) return parsed.toLocaleString("en-US");
+
+  return new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    compactDisplay: "short",
+    maximumFractionDigits: 1,
+  }).format(parsed);
+}
+
+/**
  * Automatically upgrades image URLs to 2K/4K high-resolution
  * - Unsplash: replaces low-res width/quality with 2K/4K (w=2560&q=95)
  * - Google / Blogspot / lh3: upgrades downsampled flags (=w400, =s320) to full resolution (=s2560)
