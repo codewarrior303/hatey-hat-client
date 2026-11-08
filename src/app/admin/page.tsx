@@ -611,7 +611,7 @@ export default function AdminPage() {
                 </div>
 
                 {/* Delete all concluded button if viewing concluded events */}
-                {stats?.concludedEvents && stats.concludedEvents > 0 && statusFilter === "concluded" && (
+                {Boolean(stats?.concludedEvents && stats.concludedEvents > 0 && statusFilter === "concluded") && (
                   <Button
                     type="button"
                     variant="outline"
