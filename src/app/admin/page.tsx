@@ -20,6 +20,7 @@ import {
   Filter,
   ExternalLink,
   Mail,
+  Loader2,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -28,7 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSession, authClient } from "@/lib/auth-client";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, invalidateCache } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 
 const AUTHORIZED_ADMIN_EMAIL = "abirahnafshahriar@gmail.com";
@@ -132,41 +133,122 @@ export default function AdminPage() {
     }
   };
 
-  const fetchAdminMetrics = React.useCallback(async (isManualRefresh = false) => {
-    if (isManualRefresh) {
-      setIsRefreshing(true);
-    } else {
-      setIsLoading(true);
-    }
-    setError(null);
-    try {
-      const res = await apiFetch<AdminData>("/api/admin/metrics", {
-        auth: true,
-        skipCache: true,
-      });
-      if (res?.data) {
-        setAdminData(res.data);
-      }
+  const [deletingId, setDeletingId] = React.useState<string | null>(null);
+  const [isClearingConcluded, setIsClearingConcluded] = React.useState(false);
+
+  const fetchAdminMetrics = React.useCallback(
+    async (isManualRefresh = false, isSilentPolling = false) => {
       if (isManualRefresh) {
-        toast.success("Metrics refreshed with live database data!", {
-          id: "admin-refresh-success",
-        });
+        setIsRefreshing(true);
+      } else if (!isSilentPolling) {
+        setIsLoading(true);
       }
-    } catch (err: any) {
-      setError(
-        err?.message || "Failed to load administrative analytics from server."
-      );
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  }, []);
+      if (!isSilentPolling) {
+        setError(null);
+      }
+      try {
+        const res = await apiFetch<AdminData>("/api/admin/metrics", {
+          auth: true,
+          skipCache: true,
+        });
+        if (res?.data) {
+          setAdminData(res.data);
+        }
+        if (isManualRefresh) {
+          toast.success("Metrics refreshed with live database data!", {
+            id: "admin-refresh-success",
+          });
+        }
+      } catch (err: any) {
+        if (!isSilentPolling) {
+          setError(
+            err?.message || "Failed to load administrative analytics from server."
+          );
+        }
+      } finally {
+        setIsLoading(false);
+        setIsRefreshing(false);
+      }
+    },
+    []
+  );
 
   React.useEffect(() => {
     if (isAuthorized) {
       fetchAdminMetrics();
     }
   }, [isAuthorized, fetchAdminMetrics]);
+
+  // Real-time auto-polling every 4 seconds for live subscriber & event metrics
+  React.useEffect(() => {
+    if (!isAuthorized) return;
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        fetchAdminMetrics(false, true);
+      }
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [isAuthorized, fetchAdminMetrics]);
+
+  const handleDeleteEvent = async (id: string, title: string) => {
+    if (!confirm(`Are you sure you want to permanently delete "${title}" from the database? All volunteer join records for this event will also be removed.`)) {
+      return;
+    }
+
+    setDeletingId(id);
+    // Optimistic removal
+    setAdminData((prev) =>
+      prev
+        ? {
+            ...prev,
+            events: prev.events.filter((e) => e._id !== id),
+            stats: {
+              ...prev.stats,
+              currentEventsCount: Math.max(0, prev.stats.currentEventsCount - 1),
+              totalEventsDeleted: prev.stats.totalEventsDeleted + 1,
+            },
+          }
+        : null
+    );
+
+    try {
+      const res = await apiFetch<any>(`/api/admin/events/${id}`, {
+        method: "DELETE",
+        auth: true,
+      });
+      invalidateCache("/api/events");
+      invalidateCache("/api/joins");
+      toast.success(res.message || "Event permanently removed from database");
+      fetchAdminMetrics(false, true);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to delete event from database");
+      fetchAdminMetrics(false, true);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleClearConcluded = async () => {
+    if (!confirm("Are you sure you want to remove ALL concluded events from the database?")) {
+      return;
+    }
+
+    setIsClearingConcluded(true);
+    try {
+      const res = await apiFetch<any>("/api/admin/events/concluded/all", {
+        method: "DELETE",
+        auth: true,
+      });
+      invalidateCache("/api/events");
+      invalidateCache("/api/joins");
+      toast.success(res.message || "Concluded events removed from database");
+      fetchAdminMetrics(false, true);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to clear concluded events");
+    } finally {
+      setIsClearingConcluded(false);
+    }
+  };
 
   // State 1: Checking authentication status
   if (isPending) {
@@ -512,6 +594,25 @@ export default function AdminPage() {
                   />
                 </div>
 
+                {/* Delete all concluded button if viewing concluded events */}
+                {stats?.concludedEvents && stats.concludedEvents > 0 && statusFilter === "concluded" && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleClearConcluded}
+                    disabled={isClearingConcluded}
+                    className="h-8 rounded-full border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 text-xs gap-1.5 px-3 transition-colors"
+                  >
+                    {isClearingConcluded ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-3 w-3" />
+                    )}
+                    <span>{isClearingConcluded ? "Removing..." : "Delete Concluded"}</span>
+                  </Button>
+                )}
+
                 <div className="flex items-center rounded-full glass p-0.5 border border-foreground/10 text-xs">
                   {(["all", "active", "concluded"] as const).map((tab) => (
                     <button
@@ -547,7 +648,7 @@ export default function AdminPage() {
                         <th className="py-3 px-4">Date & Time</th>
                         <th className="py-3 px-4">Status</th>
                         <th className="py-3 px-4 text-center">Volunteers Joined</th>
-                        <th className="py-3 px-4 text-right">View</th>
+                        <th className="py-3 px-4 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-foreground/5">
@@ -600,20 +701,38 @@ export default function AdminPage() {
                             {ev.participants}
                           </td>
                           <td className="py-3 px-4 text-right">
-                            <Button
-                              asChild
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 rounded-full"
-                            >
-                              <Link
-                                href={`/events/${ev._id}`}
-                                target="_blank"
-                                aria-label="Open public event"
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                asChild
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground"
                               >
-                                <ExternalLink className="h-3.5 w-3.5" />
-                              </Link>
-                            </Button>
+                                <Link
+                                  href={`/events/${ev._id}`}
+                                  target="_blank"
+                                  aria-label="Open public event"
+                                >
+                                  <ExternalLink className="h-3.5 w-3.5" />
+                                </Link>
+                              </Button>
+
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteEvent(ev._id, ev.title)}
+                                disabled={deletingId === ev._id}
+                                title="Permanently delete from database"
+                                className="h-7 w-7 rounded-full text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 transition-colors"
+                              >
+                                {deletingId === ev._id ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                )}
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       ))}
