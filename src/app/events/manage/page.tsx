@@ -12,6 +12,7 @@ import {
   Eye,
   Loader2,
   AlertTriangle,
+  Users,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -170,8 +171,21 @@ export default function ManageEventsPage() {
                     </div>
                   </div>
 
+                  {/* Volunteers Roster Button */}
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-2 rounded-full text-xs h-9 font-medium glass border-foreground/15 hover:bg-foreground hover:text-background transition-colors"
+                  >
+                    <Link href={`/events/${event._id}/participants`}>
+                      <Users className="h-3.5 w-3.5" />
+                      <span>Volunteers Roster & PDF</span>
+                    </Link>
+                  </Button>
+
                   {/* Actions Row */}
-                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-foreground/10">
+                  <div className="grid grid-cols-3 gap-2 pt-1 border-t border-foreground/10">
                     <Button
                       asChild
                       variant="outline"

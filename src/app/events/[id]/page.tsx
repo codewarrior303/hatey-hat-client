@@ -15,6 +15,8 @@ import {
   HeartHandshake,
   Loader2,
   AlertTriangle,
+  FileText,
+  Edit,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -61,6 +63,12 @@ export default function EventDetailsPage() {
   const [showBurst, setShowBurst] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [imgSrc, setImgSrc] = React.useState<string>("");
+
+  const isCreator = Boolean(
+    session?.user?.email &&
+      event?.creatorEmail &&
+      session.user.email.toLowerCase() === event.creatorEmail.toLowerCase()
+  );
 
   // 1. Immediately read persistent join state on mount so page reload/tab re-open is instantaneous
   React.useEffect(() => {
@@ -330,6 +338,44 @@ export default function EventDetailsPage() {
           </div>
         </div>
       </div>
+
+      {/* Organizer Control Banner (Only visible to event creator) */}
+      {isCreator && (
+        <div className="rounded-[24px] glass p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-foreground/15 shadow-xs bg-foreground/[0.03]">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Organizer Controls</span>
+            </div>
+            <p className="text-sm font-medium text-foreground">
+              You organized this event. Access the live volunteer roster & export attendance reports.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            <Button
+              asChild
+              className="gap-2 rounded-full h-10 px-5 text-xs sm:text-sm font-medium shadow-xs"
+            >
+              <Link href={`/events/${eventId}/participants`}>
+                <FileText className="h-4 w-4" />
+                <span>Volunteers Roster & PDF</span>
+              </Link>
+            </Button>
+
+            <Button
+              asChild
+              variant="outline"
+              className="gap-2 rounded-full h-10 px-4 text-xs sm:text-sm font-medium glass"
+            >
+              <Link href={`/events/${eventId}/edit`}>
+                <Edit className="h-3.5 w-3.5" />
+                <span>Edit Event</span>
+              </Link>
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Title & Metadata */}
       <div className="space-y-6">
