@@ -13,6 +13,7 @@ import {
   LogIn,
   Menu,
   X,
+  ShieldCheck,
 } from "lucide-react";
 import toast, { useToaster, resolveValue } from "react-hot-toast";
 
@@ -216,6 +217,26 @@ export function Navbar() {
                         );
                       })}
 
+                      {user.email?.toLowerCase().trim() ===
+                        "abirahnafshahriar@gmail.com" && (
+                        <>
+                          <DropdownMenuSeparator className="bg-foreground/10 my-1" />
+                          <DropdownMenuItem
+                            asChild
+                            onSelect={() => setDropdownOpen(false)}
+                            className="rounded-xl px-2.5 py-2 cursor-pointer focus:bg-foreground/10 text-emerald-600 dark:text-emerald-400 font-semibold"
+                          >
+                            <Link
+                              href="/admin"
+                              className="flex items-center gap-2.5 text-sm"
+                            >
+                              <ShieldCheck className="h-4 w-4" />
+                              <span>Admin Panel</span>
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+
                       <DropdownMenuSeparator className="bg-foreground/10 my-1" />
                       <DropdownMenuItem
                         onClick={handleLogout}
@@ -362,6 +383,21 @@ export function Navbar() {
                           </Link>
                         );
                       })}
+
+                      {user.email?.toLowerCase().trim() ===
+                        "abirahnafshahriar@gmail.com" && (
+                        <Link
+                          href="/admin"
+                          onClick={() => setMobileOpen(false)}
+                          className={cn(
+                            "flex items-center gap-3 px-3 py-2.5 rounded-full text-sm font-semibold transition-colors text-emerald-600 dark:text-emerald-400 hover:bg-foreground/5",
+                            pathname === "/admin" && "bg-emerald-500/15"
+                          )}
+                        >
+                          <ShieldCheck className="h-4 w-4" />
+                          <span>Admin Panel</span>
+                        </Link>
+                      )}
                     </div>
                   )}
                 </div>
