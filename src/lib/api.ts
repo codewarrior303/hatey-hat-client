@@ -3,13 +3,31 @@ import { getCachedData, setCachedData, invalidateCache } from "./cache";
 
 export { getCachedData, setCachedData, invalidateCache };
 
-export const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") ||
-  (typeof window !== "undefined" &&
-  window.location.hostname !== "localhost" &&
-  !window.location.hostname.includes("127.0.0.1")
-    ? "https://hatey-hat-api.vercel.app"
-    : "http://localhost:5000");
+export function getApiBase(): string {
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (host && host !== "localhost" && !host.includes("127.0.0.1")) {
+      return "https://hatey-hat-api.vercel.app";
+    }
+    return "http://localhost:5000";
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    return "https://hatey-hat-api.vercel.app";
+  }
+
+  if (
+    process.env.NEXT_PUBLIC_API_URL &&
+    !process.env.NEXT_PUBLIC_API_URL.includes("localhost") &&
+    !process.env.NEXT_PUBLIC_API_URL.includes("127.0.0.1")
+  ) {
+    return process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, "");
+  }
+
+  return "http://localhost:5000";
+}
+
+export const API_BASE = "https://hatey-hat-api.vercel.app";
 
 export class ClientApiError extends Error {
   constructor(
@@ -88,7 +106,8 @@ export async function apiFetch<T>(
     }
   }
 
-  const url = `${API_BASE}${path.startsWith("/") ? path : `/${path}`}`;
+  const apiBase = getApiBase();
+  const url = `${apiBase}${path.startsWith("/") ? path : `/${path}`}`;
   let res: Response;
   try {
     res = await fetch(url, {
@@ -99,7 +118,7 @@ export async function apiFetch<T>(
   } catch {
     throw new ClientApiError(
       0,
-      `Cannot connect to Hatey Hat API at ${API_BASE}. Please ensure the server is running.`
+      `Cannot connect to Hatey Hat API at ${apiBase}. Please ensure the server is running.`
     );
   }
 
