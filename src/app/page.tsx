@@ -15,6 +15,8 @@ import {
   Loader2,
   CheckCircle2,
   BellOff,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -25,7 +27,14 @@ import { EventGridSkeleton } from "@/components/events/event-skeleton";
 import { ErrorState } from "@/components/ui/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
-import { apiFetch, getCachedData, setCachedData, invalidateCache, type EventItem } from "@/lib/api";
+import {
+  apiFetch,
+  getCachedData,
+  setCachedData,
+  invalidateCache,
+  type EventItem,
+  type EventType,
+} from "@/lib/api";
 import { useSession } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
@@ -55,6 +64,47 @@ export default function HomePage() {
   const [isUnsubscribing, setIsUnsubscribing] = React.useState(false);
   const [isSubscribed, setIsSubscribed] = React.useState<boolean>(false);
   const [persistedSubEmail, setPersistedSubEmail] = React.useState<string | null>(null);
+
+  // Community in Action Carousel State
+  const [activeActionIndex, setActiveActionIndex] = React.useState(0);
+  const actionsScrollRef = React.useRef<HTMLDivElement>(null);
+
+  const scrollToAction = (index: number) => {
+    const container = actionsScrollRef.current;
+    if (!container) return;
+    const targetChild = container.children[index] as HTMLElement;
+    if (targetChild) {
+      targetChild.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "start",
+      });
+    }
+    setActiveActionIndex(index);
+  };
+
+  const handlePrevAction = () => {
+    const nextIdx = Math.max(0, activeActionIndex - 1);
+    scrollToAction(nextIdx);
+  };
+
+  const handleNextAction = () => {
+    const nextIdx = Math.min(communityActions.length - 1, activeActionIndex + 1);
+    scrollToAction(nextIdx);
+  };
+
+  const handleActionsScroll = () => {
+    const container = actionsScrollRef.current;
+    if (!container || !container.children.length) return;
+    const scrollLeft = container.scrollLeft;
+    const firstChild = container.children[0] as HTMLElement;
+    const itemWidth = firstChild ? firstChild.offsetWidth + 24 : 350;
+    const currentIndex = Math.min(
+      communityActions.length - 1,
+      Math.max(0, Math.round(scrollLeft / itemWidth))
+    );
+    setActiveActionIndex(currentIndex);
+  };
 
   // Storage key helper for persisting subscription across reloads and tab closures
   const getSubKey = React.useCallback(
@@ -250,37 +300,92 @@ export default function HomePage() {
     }
   };
 
-  // Representative "Community in Action" photographs across social causes & disaster response
-  const galleryImages = [
+  // Authentic photographs and initiatives across all 10 social action and disaster relief categories
+  const communityActions: {
+    eventType: EventType;
+    title: string;
+    description: string;
+    image: string;
+  }[] = [
     {
-      src: "https://images.unsplash.com/photo-1547082299-de196ea013d6?auto=format&fit=crop&w=800&q=80",
-      alt: "Volunteers navigating boats and delivering emergency food and clean drinking water to flood-affected families",
-      caption: "Flood & Disaster Emergency Aid",
+      eventType: "Flood & Disaster Relief",
+      title: "Flood & Disaster Relief",
+      description:
+        "Emergency boat rescue, dry rations, and clean drinking water for flood-affected families in Feni, Sylhet & Noakhali.",
+      image:
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/04/Emergency_Relief_Distribution_among_Flood_Affected_Families_by_Needy_Foundation.jpg/960px-Emergency_Relief_Distribution_among_Flood_Affected_Families_by_Needy_Foundation.jpg",
     },
     {
-      src: "https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=800&q=80",
-      alt: "Volunteers sorting and packing emergency relief rations, medicine, and saline",
-      caption: "Emergency Relief Packing",
+      eventType: "Emergency Response",
+      title: "Emergency Response",
+      description:
+        "Rapid relief packaging, medical supplies, and volunteer coordination hubs at TSC and university centers.",
+      image:
+        "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/db/Relief_collection_for_flood_affected_people_at_TSC%2CDU_48.jpg/960px-Relief_collection_for_flood_affected_people_at_TSC%2CDU_48.jpg",
     },
     {
-      src: "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=800&q=80",
-      alt: "Youth volunteers conducting environmental cleanup along the waterfront",
-      caption: "Riverside Cleanup Drive",
+      eventType: "Winter Relief",
+      title: "Winter Relief",
+      description:
+        "Distributing thick blankets and warm garments to elderly citizens and street children across northern Bangladesh.",
+      image:
+        "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=800&q=80",
     },
     {
-      src: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=800&q=80",
-      alt: "Carefully planting native saplings in urban park soil",
-      caption: "Urban Tree Plantation",
+      eventType: "Food Distribution",
+      title: "Food Distribution",
+      description:
+        "Fresh community meals, cooked food, and essential grocery packages for daily-wage earners and families in crisis.",
+      image:
+        "https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=800&q=80",
     },
     {
-      src: "https://images.unsplash.com/photo-1593113630400-ea4288922497?auto=format&fit=crop&w=800&q=80",
-      alt: "Preparing and distributing warm meals for local workers and families",
-      caption: "Fresh Community Meals",
+      eventType: "Health Camp",
+      title: "Health Camp",
+      description:
+        "Free physician consultations, diagnostic checkups, essential medicines, and health counseling in remote villages.",
+      image:
+        "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=800&q=80",
     },
     {
-      src: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=800&q=80",
-      alt: "Volunteers organizing and distributing warm clothing and blankets to children",
-      caption: "Winter Clothing Distribution",
+      eventType: "Blood Donation",
+      title: "Blood Donation",
+      description:
+        "Voluntary blood donor drives connecting verified local donors with hospital patients requiring critical transfusions.",
+      image:
+        "https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&w=800&q=80",
+    },
+    {
+      eventType: "Cleanup",
+      title: "Cleanup",
+      description:
+        "Youth-led civic environmental drives removing plastic waste from riverbanks, park trails, and neighbourhood quarters.",
+      image:
+        "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=800&q=80",
+    },
+    {
+      eventType: "Plantation",
+      title: "Plantation",
+      description:
+        "Planting native trees, fruit saplings, and urban forestry to restore greenery and build climate resilience across Bangladesh.",
+      image:
+        "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=800&q=80",
+    },
+    {
+      eventType: "Education",
+      title: "Education",
+      description:
+        "Free learning sessions, stationery kits, and peer mentorship for underprivileged school kids and street children.",
+      image:
+        "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=800&q=80",
+    },
+    {
+      eventType: "Donation",
+      title: "Donation",
+      description:
+        "Crowdfunded transparent financial assistance and emergency grants for medical treatments, shelter repairs, and livelihoods.",
+      image:
+        "https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?auto=format&fit=crop&w=800&q=80",
     },
   ];
 
@@ -494,46 +599,98 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 4. GALLERY SECTION ("COMMUNITY IN ACTION", EQUAL SIZE GLASS CARDS) */}
+      {/* 4. GALLERY & CATEGORIES CAROUSEL ("COMMUNITY IN ACTION", 10 INITIATIVES WITH CONTROLS) */}
       <section className="container mx-auto max-w-6xl px-4 sm:px-6">
         <ScrollReveal direction="up" delay={50}>
-          <div className="text-center max-w-2xl mx-auto space-y-2 mb-12">
-            <p className="text-xs uppercase tracking-widest font-semibold text-muted-foreground">
-              On The Ground
-            </p>
-            <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
-              Community in Action
-            </h2>
-            <p className="text-[15px] text-muted-foreground">
-              A glimpse into solidarity, volunteer teamwork, and grassroots care
-              across Bangladesh.
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+            <div className="space-y-1.5 max-w-2xl">
+              <p className="text-xs uppercase tracking-widest font-semibold text-muted-foreground">
+                On The Ground
+              </p>
+              <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
+                Community in Action
+              </h2>
+              <p className="text-[15px] text-muted-foreground">
+                Grassroots initiatives across Bangladesh. Click any category to view related drives.
+              </p>
+            </div>
+
+            {/* Top Carousel Navigation: < [ 1 / 10 ] > */}
+            <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 pt-1 sm:pt-0">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={handlePrevAction}
+                disabled={activeActionIndex === 0}
+                className="h-10 w-10 rounded-full glass border-foreground/15 hover:bg-foreground/10 transition-colors shadow-2xs"
+                aria-label="Previous category"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+
+              <div className="px-3.5 py-1.5 rounded-full glass border border-foreground/15 text-xs font-semibold tracking-wide text-foreground min-w-[76px] text-center select-none shadow-2xs">
+                [ {activeActionIndex + 1} / {communityActions.length} ]
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={handleNextAction}
+                disabled={activeActionIndex >= communityActions.length - 1}
+                className="h-10 w-10 rounded-full glass border-foreground/15 hover:bg-foreground/10 transition-colors shadow-2xs"
+                aria-label="Next category"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </ScrollReveal>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {galleryImages.map((img, idx) => (
-            <ScrollReveal key={idx} delay={idx * 60} direction="up">
-              <div className="glass glass-card group relative overflow-hidden rounded-[24px] p-2.5 transition-all duration-300">
-                <div className="aspect-[4/3] w-full overflow-hidden rounded-[18px] bg-neutral-100 dark:bg-neutral-900">
+        {/* Carousel Viewport with Snap Scrolling */}
+        <div
+          ref={actionsScrollRef}
+          onScroll={handleActionsScroll}
+          className="flex gap-5 sm:gap-6 overflow-x-auto pb-4 pt-1 px-1 scroll-smooth snap-x snap-mandatory no-scrollbar"
+        >
+          {communityActions.map((action, idx) => (
+            <Link
+              key={action.eventType}
+              href={`/events?type=${encodeURIComponent(action.eventType)}`}
+              className="group relative flex flex-col justify-between overflow-hidden rounded-[24px] glass glass-card p-3 transition-all duration-300 hover:border-foreground/30 hover:shadow-lg cursor-pointer shrink-0 w-[84vw] sm:w-[340px] md:w-[360px] snap-start"
+            >
+              <div>
+                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[18px] bg-neutral-100 dark:bg-neutral-900">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={img.src}
-                    alt={img.alt}
+                    src={action.image}
+                    alt={action.title}
                     className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                     loading="lazy"
                   />
+                  <div className="absolute top-2.5 left-2.5">
+                    <span className="px-2.5 py-1 rounded-full text-[11px] font-medium tracking-tight bg-background/85 backdrop-blur-md text-foreground border border-foreground/15 shadow-2xs">
+                      {action.eventType}
+                    </span>
+                  </div>
                 </div>
-                <div className="p-3 pt-3 flex flex-col">
-                  <p className="text-[15px] font-semibold text-foreground leading-tight">
-                    {img.caption}
-                  </p>
-                  <p className="text-[12px] text-muted-foreground line-clamp-1 mt-0.5">
-                    {img.alt}
+
+                <div className="p-3 pt-3.5 space-y-1.5">
+                  <h3 className="text-[17px] font-semibold text-foreground leading-snug group-hover:text-primary transition-colors">
+                    {action.title}
+                  </h3>
+                  <p className="text-[13px] text-muted-foreground line-clamp-2 leading-relaxed">
+                    {action.description}
                   </p>
                 </div>
               </div>
-            </ScrollReveal>
+
+              <div className="p-3 pt-0 flex items-center gap-1.5 text-[12px] font-semibold text-foreground/80 group-hover:text-foreground">
+                <span>View Initiatives</span>
+                <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1" />
+              </div>
+            </Link>
           ))}
         </div>
       </section>
