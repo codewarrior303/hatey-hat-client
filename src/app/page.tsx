@@ -243,17 +243,17 @@ export default function HomePage() {
     }
   };
 
-  // Neutral "Community in Action" photographs with activity-only captions
+  // Representative "Community in Action" photographs across social causes & disaster response
   const galleryImages = [
     {
-      src: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=800&q=80",
-      alt: "Volunteers organizing and distributing warm clothing to children",
-      caption: "Warm Clothing Distribution",
+      src: "https://images.unsplash.com/photo-1547082299-de196ea013d6?auto=format&fit=crop&w=800&q=80",
+      alt: "Volunteers navigating boats and delivering emergency food and clean drinking water to flood-affected families",
+      caption: "Flood & Disaster Emergency Aid",
     },
     {
-      src: "https://images.unsplash.com/photo-1607962837359-5e7e89f86776?auto=format&fit=crop&w=800&q=80",
-      alt: "Volunteers sorting and packing emergency blankets and essentials",
-      caption: "Essential Blanket Supplies",
+      src: "https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=800&q=80",
+      alt: "Volunteers sorting and packing emergency relief rations, medicine, and saline",
+      caption: "Emergency Relief Packing",
     },
     {
       src: "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=800&q=80",
@@ -271,34 +271,34 @@ export default function HomePage() {
       caption: "Fresh Community Meals",
     },
     {
-      src: "https://images.unsplash.com/photo-1529390079861-591de354faf5?auto=format&fit=crop&w=800&q=80",
-      alt: "Volunteers mentoring children with books and learning materials",
-      caption: "Youth Learning Circle",
+      src: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=800&q=80",
+      alt: "Volunteers organizing and distributing warm clothing and blankets to children",
+      caption: "Winter Clothing Distribution",
     },
   ];
 
   const features = [
     {
+      icon: HeartHandshake,
+      title: "Disaster & Emergency Relief",
+      description:
+        "Mobilize rapid community response during floods, cyclones, and urgent crises with coordinated volunteer boots on the ground.",
+    },
+    {
       icon: MapPin,
       title: "Hyper-Local Initiatives",
       description:
-        "Find relief camps, clothing drives, cleanups, and health camps happening directly in your neighbourhood across Bangladesh.",
-    },
-    {
-      icon: HeartHandshake,
-      title: "One-Click Joining",
-      description:
-        "Join any community welfare event instantly. View all your active commitments organized in your personal dashboard.",
+        "Find relief camps, clothing drives, cleanups, blood donation, and health camps happening directly in your neighbourhood across Bangladesh.",
     },
     {
       icon: PlusCircle,
       title: "Community Event Creation",
       description:
-        "Have a cause in mind? Launch a clothes distribution, neighbourhood cleanup, or book drive with transparent schedules.",
+        "Have a cause or emergency? Launch a flood relief campaign, neighbourhood cleanup, or food drive with transparent schedules.",
     },
     {
       icon: ShieldCheck,
-      title: "Transparent Event Details",
+      title: "Transparent Coordination",
       description:
         "Clear organizer ownership, real-time participant counts, and authentic community accountability on every event page.",
     },
@@ -312,7 +312,7 @@ export default function HomePage() {
           {/* Subtle Tagline Pill */}
           <div className="inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-xs sm:text-[13px] font-medium text-foreground/80 shadow-xs">
             <Sparkles className="h-3.5 w-3.5 opacity-60" />
-            <span>Hatey hat, ekshathe poth chola</span>
+            <span>Hatey Hat, ekshathe poth chola</span>
           </div>
 
           {/* Hero Headline (56-76px on desktop, weight 600, tight tracking) */}
@@ -321,8 +321,8 @@ export default function HomePage() {
           </h1>
 
           <p className="text-[17px] sm:text-[19px] text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-            The community hub to organize and join grassroots initiatives across
-            Bangladesh.
+            The community platform to organize and join disaster relief, emergency
+            response, and grassroots social initiatives across Bangladesh.
           </p>
 
           {/* Pill Action Buttons */}

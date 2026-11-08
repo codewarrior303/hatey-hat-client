@@ -21,15 +21,18 @@ export const metadata: Metadata = {
     template: "%s | Hatey Hat",
   },
   description:
-    "Hatey Hat, ekshathe poth chola. Join, create, and track grassroots social service events across Bangladesh — from winter clothes distributions to community cleanups and tree plantations.",
+    "Hatey Hat, ekshathe poth chola. The unified platform to organize, join, and support community social events and disaster relief across Bangladesh — from flood relief and emergency response to cleanups, tree plantations, blood donation, and winter drives.",
   keywords: [
-    "social service",
+    "social service Bangladesh",
+    "disaster relief platform",
+    "flood relief Bangladesh",
+    "emergency response volunteers",
     "community events",
-    "Bangladesh volunteers",
     "winter clothes distribution",
     "tree plantation",
     "blood donation",
     "cleanup drives",
+    "grassroots initiatives",
   ],
   icons: {
     icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],

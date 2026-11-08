@@ -140,13 +140,16 @@ export async function apiFetch<T>(
 
 // Common event type constants
 export const EVENT_TYPES = [
+  "Flood & Disaster Relief",
+  "Emergency Response",
+  "Winter Relief",
+  "Food Distribution",
+  "Health Camp",
+  "Blood Donation",
   "Cleanup",
   "Plantation",
-  "Donation",
-  "Food Distribution",
-  "Blood Donation",
   "Education",
-  "Health Camp",
+  "Donation",
   "Other",
 ] as const;
 

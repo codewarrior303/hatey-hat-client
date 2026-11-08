@@ -82,24 +82,40 @@ interface EventFormProps {
 // Verified high quality community initiative photo presets (2K/4K high-res)
 const PHOTO_PRESETS = [
   {
-    label: "Winter Relief",
-    url: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=2560&q=95",
+    label: "Flood & Disaster Relief",
+    url: "https://images.unsplash.com/photo-1547082299-de196ea013d6?auto=format&fit=crop&w=2560&q=95",
   },
   {
-    label: "Blanket Drive",
-    url: "https://images.unsplash.com/photo-1607962837359-5e7e89f86776?auto=format&fit=crop&w=2560&q=95",
+    label: "Emergency Supplies",
+    url: "https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=2560&q=95",
   },
   {
-    label: "Cleanup Drive",
-    url: "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=2560&q=95",
+    label: "Community Meals",
+    url: "https://images.unsplash.com/photo-1593113630400-ea4288922497?auto=format&fit=crop&w=2560&q=95",
+  },
+  {
+    label: "Medical & Health Camp",
+    url: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=2560&q=95",
+  },
+  {
+    label: "Blood Donation",
+    url: "https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&w=2560&q=95",
   },
   {
     label: "Tree Plantation",
     url: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=2560&q=95",
   },
   {
-    label: "Community Meals",
-    url: "https://images.unsplash.com/photo-1593113630400-ea4288922497?auto=format&fit=crop&w=2560&q=95",
+    label: "Cleanup Drive",
+    url: "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=2560&q=95",
+  },
+  {
+    label: "Winter Relief",
+    url: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=2560&q=95",
+  },
+  {
+    label: "Blanket Drive",
+    url: "https://images.unsplash.com/photo-1607962837359-5e7e89f86776?auto=format&fit=crop&w=2560&q=95",
   },
 ];
 
@@ -198,7 +214,7 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
               <Type className="absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground" />
               <Input
                 id="title"
-                placeholder="e.g., Winter Clothes Distribution – Mirpur 10"
+                placeholder="e.g., Emergency Flood Relief Drive – Feni or Community Cleanup – Mirpur 10"
                 className="pl-10 h-11 rounded-xl glass bg-transparent border-foreground/15 text-sm"
                 {...register("title")}
                 aria-invalid={Boolean(errors.title)}
