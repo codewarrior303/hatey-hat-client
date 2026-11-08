@@ -315,40 +315,35 @@ export default function HomePage() {
       title: "Flood & Disaster Relief",
       description:
         "Emergency boat rescue, dry rations, and clean drinking water for flood-affected families in Feni, Sylhet & Noakhali.",
-      image:
-        "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/04/Emergency_Relief_Distribution_among_Flood_Affected_Families_by_Needy_Foundation.jpg/960px-Emergency_Relief_Distribution_among_Flood_Affected_Families_by_Needy_Foundation.jpg",
+      image: "/community/flood-relief.jpg",
     },
     {
       eventType: "Emergency Response",
       title: "Emergency Response",
       description:
-        "Rapid relief packaging, medical supplies, and volunteer coordination hubs at TSC and university centers.",
-      image:
-        "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/db/Relief_collection_for_flood_affected_people_at_TSC%2CDU_48.jpg/960px-Relief_collection_for_flood_affected_people_at_TSC%2CDU_48.jpg",
+        "Rapid volunteer rescue teams navigating floodwaters to evacuate stranded families from submerged houses.",
+      image: "/community/emergency-response.jpg",
     },
     {
       eventType: "Winter Relief",
       title: "Winter Relief",
       description:
-        "Distributing thick blankets and warm garments to elderly citizens and street children across northern Bangladesh.",
-      image:
-        "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=800&q=80",
+        "Distributing thick blankets and warm garments to elderly citizens and smiling children across northern Bangladesh.",
+      image: "/community/winter-relief.jpg",
     },
     {
       eventType: "Food Distribution",
       title: "Food Distribution",
       description:
-        "Fresh community meals, cooked food, and essential grocery packages for daily-wage earners and families in crisis.",
-      image:
-        "https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=800&q=80",
+        "Essential grocery rations and food packages distributed in organized community rows for families in crisis.",
+      image: "/community/food-distribution.jpg",
     },
     {
       eventType: "Health Camp",
       title: "Health Camp",
       description:
-        "Free physician consultations, diagnostic checkups, essential medicines, and health counseling in remote villages.",
-      image:
-        "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=800&q=80",
+        "Free physician consultations, diagnostic checkups, essential medicines, and medical care for vulnerable communities.",
+      image: "/community/health-camp.jpg",
     },
     {
       eventType: "Blood Donation",
