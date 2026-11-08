@@ -169,18 +169,7 @@ export function generateEventParticipantsPDF(
       fillColor: [248, 250, 252],
     },
     didDrawPage: (data) => {
-      // 4. SUBTLE WATERMARK ON EVERY A4 PAGE
-      doc.saveGraphicsState();
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(55);
-      doc.setTextColor(240, 243, 248); // Very light slate watermark
-      doc.text("HATEY HAT", pageWidth / 2, pageHeight / 2 + 10, {
-        align: "center",
-        angle: 35,
-      });
-      doc.restoreGraphicsState();
-
-      // 5. FOOTER ON EVERY A4 PAGE
+      // 4. FOOTER ON EVERY A4 PAGE
       const totalPages = (doc as any).internal.getNumberOfPages();
       const currentPage = (doc as any).internal.getCurrentPageInfo().pageNumber;
 

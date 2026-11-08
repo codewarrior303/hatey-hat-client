@@ -252,7 +252,7 @@ export default function EventParticipantsPage() {
                   Ready for A4 Export
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Official watermark & clean layout
+                  Clean official report format
                 </p>
               </div>
             </div>
