@@ -28,6 +28,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
+import { JoinBurstEffect } from "@/components/events/join-burst";
 import { useSession } from "@/lib/auth-client";
 import {
   apiFetch,
@@ -35,7 +36,7 @@ import {
   type EventItem,
   ClientApiError,
 } from "@/lib/api";
-import { formatDate, getHighResImageUrl } from "@/lib/utils";
+import { formatDate, getHighResImageUrl, cn } from "@/lib/utils";
 
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80";
@@ -51,6 +52,7 @@ export default function EventDetailsPage() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [isJoining, setIsJoining] = React.useState(false);
   const [hasJoined, setHasJoined] = React.useState(false);
+  const [showBurst, setShowBurst] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [imgSrc, setImgSrc] = React.useState<string>("");
 
@@ -122,9 +124,16 @@ export default function EventDetailsPage() {
           "You have successfully joined this event! See you there.",
       );
       setHasJoined(true);
-      if (event && typeof event.participants === "number") {
-        setEvent({ ...event, participants: event.participants + 1 });
-      }
+      setShowBurst(true);
+      setTimeout(() => setShowBurst(false), 1400);
+      setEvent((prev) =>
+        prev
+          ? {
+              ...prev,
+              participants: (prev.participants || 0) + 1,
+            }
+          : null
+      );
     } catch (err: any) {
       if (err instanceof ClientApiError && err.statusCode === 409) {
         toast.success(
@@ -248,7 +257,20 @@ export default function EventDetailsPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5 shrink-0">
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            {/* Live Total Joined Counter Pill */}
+            <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full glass border border-foreground/15 text-xs sm:text-sm font-medium text-foreground select-none shadow-2xs">
+              <Users className="h-4 w-4 text-foreground/70 shrink-0" />
+              <span>
+                <strong className="font-semibold text-foreground">
+                  {event.participants || 0}
+                </strong>{" "}
+                {(event.participants || 0) === 1
+                  ? "Volunteer Joined"
+                  : "Volunteers Joined"}
+              </span>
+            </div>
+
             <TooltipProvider delayDuration={150}>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -269,46 +291,58 @@ export default function EventDetailsPage() {
               </Tooltip>
             </TooltipProvider>
 
-            {hasJoined ? (
-              <Button
-                variant="secondary"
-                size="lg"
-                className="gap-2 font-medium rounded-full h-11 px-6 glass bg-foreground/10 text-foreground cursor-default"
-                disabled
-              >
-                <CheckCircle2 className="h-4 w-4 text-foreground" />
-                <span>You Have Joined</span>
-              </Button>
-            ) : isPast ? (
-              <Button
-                variant="outline"
-                size="lg"
-                disabled
-                className="gap-2 rounded-full h-11 px-6"
-              >
-                <AlertTriangle className="h-4 w-4" />
-                <span>Past Event</span>
-              </Button>
-            ) : (
-              <Button
-                size="lg"
-                onClick={handleJoinEvent}
-                disabled={isJoining}
-                className="gap-2 font-medium rounded-full h-11 px-7 shadow-sm"
-              >
-                {isJoining ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Joining...</span>
-                  </>
-                ) : (
-                  <>
-                    <HeartHandshake className="h-4 w-4" />
-                    <span>Join Event</span>
-                  </>
-                )}
-              </Button>
-            )}
+            <div className="relative inline-flex">
+              <JoinBurstEffect active={showBurst} />
+
+              {hasJoined ? (
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  className={cn(
+                    "gap-2 font-medium rounded-full h-11 px-6 glass bg-foreground/10 text-foreground cursor-default transition-all duration-300",
+                    showBurst && "animate-yt-pop"
+                  )}
+                  disabled
+                >
+                  <CheckCircle2
+                    className={cn(
+                      "h-4 w-4 text-foreground transition-transform",
+                      showBurst && "animate-yt-pop"
+                    )}
+                  />
+                  <span>You Have Joined</span>
+                </Button>
+              ) : isPast ? (
+                <Button
+                  variant="outline"
+                  size="lg"
+                  disabled
+                  className="gap-2 rounded-full h-11 px-6"
+                >
+                  <AlertTriangle className="h-4 w-4" />
+                  <span>Past Event</span>
+                </Button>
+              ) : (
+                <Button
+                  size="lg"
+                  onClick={handleJoinEvent}
+                  disabled={isJoining}
+                  className="relative gap-2 font-medium rounded-full h-11 px-7 shadow-sm transition-transform active:scale-95"
+                >
+                  {isJoining ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Joining...</span>
+                    </>
+                  ) : (
+                    <>
+                      <HeartHandshake className="h-4 w-4" />
+                      <span>Join Event</span>
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
