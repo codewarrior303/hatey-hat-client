@@ -259,7 +259,7 @@ export default function UpcomingEventsPage() {
   };
 
   return (
-    <div className="container mx-auto max-w-6xl px-4 sm:px-6 py-8 md:py-12 space-y-8">
+    <div className="container mx-auto max-w-6xl px-4 sm:px-6 pt-24 sm:pt-28 pb-12 space-y-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-foreground/10">
         <div className="space-y-1.5">

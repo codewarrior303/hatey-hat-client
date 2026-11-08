@@ -62,38 +62,41 @@ export function getHighResImageUrl(url: string | null | undefined): string {
   const clean = url.trim();
 
   try {
-    // 1. Unsplash images: upgrade to 2K (w=2560, q=95, high-DPI)
+    // 1. Unsplash images: upgrade to 4K UHD (w=3840, q=100) and remove forced crop
     if (clean.includes("images.unsplash.com")) {
       const parsed = new URL(clean);
-      parsed.searchParams.set("w", "2560");
-      parsed.searchParams.set("q", "95");
+      parsed.searchParams.set("w", "3840");
+      parsed.searchParams.set("q", "100");
       parsed.searchParams.set("auto", "format");
-      parsed.searchParams.set("fit", "crop");
+      // Prevent Unsplash from artificially cropping the original photo
+      if (parsed.searchParams.get("fit") === "crop") {
+        parsed.searchParams.set("fit", "max");
+      }
       return parsed.toString();
     }
 
-    // 2. Google User Content / Blogspot / Photos (e.g. =w500, =s400, etc.)
+    // 2. Google User Content / Blogspot / Photos (upgrade to 4K =s3840 / =w3840)
     if (
       clean.includes("googleusercontent.com") ||
       clean.includes("ggpht.com") ||
       clean.includes("bp.blogspot.com")
     ) {
-      return clean.replace(/=s\d+(-c)?/i, "=s2560").replace(/=w\d+(-h\d+)?/i, "=w2560");
+      return clean.replace(/=s\d+(-c)?/i, "=s3840").replace(/=w\d+(-h\d+)?/i, "=w3840");
     }
 
-    // 3. Pexels images: upgrade to 2K/4K (w=2560, dpr=2)
+    // 3. Pexels images: upgrade to 4K UHD (w=3840, dpr=2)
     if (clean.includes("images.pexels.com")) {
       const parsed = new URL(clean);
-      parsed.searchParams.set("w", "2560");
+      parsed.searchParams.set("w", "3840");
       parsed.searchParams.set("dpr", "2");
       parsed.searchParams.set("auto", "compress");
       parsed.searchParams.set("cs", "tinysrgb");
       return parsed.toString();
     }
 
-    // 4. Cloudinary images: upgrade to w_2560,q_auto:best
+    // 4. Cloudinary images: upgrade to w_3840,q_auto:best
     if (clean.includes("res.cloudinary.com") && clean.includes("/upload/")) {
-      return clean.replace(/\/upload\/(?:[a-zA-Z0-9_,]+)?\//, "/upload/w_2560,q_auto:best,f_auto/");
+      return clean.replace(/\/upload\/(?:[a-zA-Z0-9_,]+)?\//, "/upload/w_3840,q_auto:best,f_auto/");
     }
 
     // 5. Imgur thumbnails (e.g. abcd123m.jpg -> abcd123.jpg)

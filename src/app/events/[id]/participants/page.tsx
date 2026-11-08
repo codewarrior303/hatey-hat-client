@@ -111,7 +111,7 @@ export default function EventParticipantsPage() {
 
   return (
     <PrivateRoute>
-      <div className="container mx-auto max-w-5xl px-4 sm:px-6 py-8 md:py-12 space-y-8 animate-in fade-in-50">
+      <div className="container mx-auto max-w-5xl px-4 sm:px-6 pt-24 sm:pt-28 pb-12 space-y-8 animate-in fade-in-50">
         {/* Navigation & Header */}
         <div className="space-y-4">
           <Button

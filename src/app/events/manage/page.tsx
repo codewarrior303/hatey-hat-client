@@ -87,7 +87,7 @@ export default function ManageEventsPage() {
 
   return (
     <PrivateRoute>
-      <div className="container mx-auto max-w-6xl px-4 sm:px-6 py-8 md:py-12 space-y-8 animate-in fade-in-50">
+      <div className="container mx-auto max-w-6xl px-4 sm:px-6 pt-24 sm:pt-28 pb-12 space-y-8 animate-in fade-in-50">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-foreground/10">
           <div className="space-y-1.5">
             <p className="text-xs uppercase tracking-widest font-semibold text-muted-foreground">

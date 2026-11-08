@@ -298,7 +298,7 @@ export default function EventDetailsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 py-8 md:py-12 max-w-4xl space-y-8">
+    <div className="container mx-auto px-4 sm:px-6 pt-24 sm:pt-28 pb-12 max-w-4xl space-y-8">
       {/* Back Button */}
       <div>
         <Link
@@ -310,21 +310,28 @@ export default function EventDetailsPage() {
         </Link>
       </div>
 
-      {/* Hero Banner Image in Glass Container */}
-      <div className="relative aspect-[16/10] w-full max-h-[520px] overflow-hidden rounded-[28px] glass p-2 shadow-sm">
-        <div className="w-full h-full overflow-hidden rounded-[22px] bg-neutral-100 dark:bg-neutral-900 relative">
+      {/* Hero Banner Image in Glass Container - Adaptive Showcase (100% Uncropped & High-Res) */}
+      <div className="relative w-full min-h-[280px] sm:min-h-[380px] max-h-[640px] overflow-hidden rounded-[28px] glass p-2 shadow-sm flex items-center justify-center bg-black/40">
+        {/* Ambient blurred backdrop: fills letterbox space with natural colors, zero hard edges */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-cover bg-center blur-2xl opacity-40 scale-110 pointer-events-none"
+          style={{ backgroundImage: `url(${imgSrc})` }}
+        />
+
+        <div className="w-full h-full max-h-[600px] overflow-hidden rounded-[22px] relative z-10 flex items-center justify-center py-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imgSrc}
             alt={event.title}
-            className="h-full w-full object-cover object-top select-none [image-rendering:-webkit-optimize-contrast] contrast-[1.01]"
+            className="w-auto h-auto max-h-[560px] max-w-full rounded-[18px] object-contain select-none shadow-md [image-rendering:-webkit-optimize-contrast]"
             loading="eager"
             decoding="async"
             fetchPriority="high"
             onError={() => setImgSrc(FALLBACK_IMAGE)}
           />
-          <div className="absolute top-4 left-4 flex gap-2">
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium tracking-wide text-white bg-black/45 backdrop-blur-md border border-white/20 shadow-xs">
+          <div className="absolute top-4 left-4 flex gap-2 z-20">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium tracking-wide text-white bg-black/60 backdrop-blur-md border border-white/20 shadow-xs">
               {event.eventType}
             </span>
             {isPast && (
