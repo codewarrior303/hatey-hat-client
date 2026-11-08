@@ -99,7 +99,8 @@ export default function EventDetailsPage() {
         skipCache: true,
       });
       setEvent(res.data);
-      setIsPast(new Date(res.data.eventDate).getTime() <= Date.now());
+      const eventTime = new Date(res.data.eventDate).getTime();
+      setIsPast(eventTime + 24 * 60 * 60 * 1000 <= Date.now());
       setImgSrc(getHighResImageUrl(res.data.thumbnail) || FALLBACK_IMAGE);
     } catch (err: any) {
       setError(err?.message || "Failed to load event details");
