@@ -871,7 +871,9 @@ export default function AdminPage() {
             <div className="rounded-[26px] glass p-4 sm:p-6 border border-foreground/10 space-y-2.5">
               {filteredActivity.length === 0 ? (
                 <p className="text-xs text-muted-foreground text-center py-6">
-                  No audit logs matching &ldquo;{auditFilter}&rdquo; filter.
+                  {auditFilter === "all"
+                    ? "No recent system or security audit logs."
+                    : `No audit logs matching "${auditFilter}" filter.`}
                 </p>
               ) : (
                 <div className="divide-y divide-foreground/5 max-h-80 overflow-y-auto no-scrollbar">
