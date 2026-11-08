@@ -101,7 +101,6 @@ export default function AdminPage() {
   const [auditFilter, setAuditFilter] = React.useState<"all" | "joined" | "created" | "deleted">("all");
 
   // Filters for newsletter subscribers list
-  const [subscribersSearch, setSubscribersSearch] = React.useState("");
   const [subscribersFilter, setSubscribersFilter] = React.useState<"all" | "subscribed" | "unsubscribed">("all");
 
   const isAuthorized =
@@ -314,10 +313,6 @@ export default function AdminPage() {
   });
 
   const filteredSubscribers = subscribers.filter((sub) => {
-    const matchesSearch =
-      sub.email.toLowerCase().includes(subscribersSearch.toLowerCase()) ||
-      sub.userName.toLowerCase().includes(subscribersSearch.toLowerCase());
-    if (!matchesSearch) return false;
     if (subscribersFilter === "subscribed") return sub.status !== "unsubscribed";
     if (subscribersFilter === "unsubscribed") return sub.status === "unsubscribed";
     return true;
@@ -364,8 +359,8 @@ export default function AdminPage() {
 
       {isLoading ? (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {[1, 2, 3, 4].map((i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+            {[1, 2, 3, 4, 5].map((i) => (
               <Skeleton key={i} className="h-32 rounded-[26px]" />
             ))}
           </div>
@@ -390,8 +385,8 @@ export default function AdminPage() {
             isRefreshing ? "opacity-60 animate-pulse pointer-events-none" : "opacity-100"
           }`}
         >
-          {/* Top Core Metrics Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {/* Top Core Metrics Grid - 5 Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
             {/* 1. Total Events Created */}
             <div className="glass p-6 rounded-[26px] space-y-3 relative overflow-hidden shadow-2xs border border-foreground/10 hover:border-foreground/20 transition-colors">
               <div className="flex items-center justify-between">
@@ -407,7 +402,7 @@ export default function AdminPage() {
                   {stats?.totalEventsCreated ?? 0}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  All-time registered community initiatives
+                  All-time registered initiatives
                 </p>
               </div>
             </div>
@@ -427,7 +422,7 @@ export default function AdminPage() {
                   {stats?.totalJoins ?? 0}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  All-time volunteer engagements ({stats?.liveJoins ?? 0} active joins)
+                  All-time joins ({stats?.liveJoins ?? 0} active)
                 </p>
               </div>
             </div>
@@ -447,7 +442,7 @@ export default function AdminPage() {
                   {stats?.totalEventsDeleted ?? 0}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Initiatives removed by organizers
+                  Removed by organizers
                 </p>
               </div>
             </div>
@@ -467,7 +462,27 @@ export default function AdminPage() {
                   {stats?.concludedEvents ?? 0}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Time elapsed ({stats?.upcomingEvents ?? 0} currently active)
+                  Past drives ({stats?.upcomingEvents ?? 0} active)
+                </p>
+              </div>
+            </div>
+
+            {/* 5. Total Newsletter Subscribers */}
+            <div className="glass p-6 rounded-[26px] space-y-3 relative overflow-hidden shadow-2xs border border-foreground/10 hover:border-foreground/20 transition-colors">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Subscribers
+                </span>
+                <div className="h-9 w-9 rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400 flex items-center justify-center">
+                  <Mail className="h-4 w-4" />
+                </div>
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-3xl font-bold tracking-tight text-foreground">
+                  {stats?.totalSubscribers ?? 0}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Active community subscribers
                 </p>
               </div>
             </div>
@@ -613,55 +628,30 @@ export default function AdminPage() {
           <div className="space-y-4 pt-2">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-semibold tracking-tight text-foreground">
-                    Newsletter Subscribers ({filteredSubscribers.length})
-                  </h2>
-                  <div className="flex items-center gap-1.5">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      {stats?.totalSubscribers ?? 0} active
-                    </span>
-                    {(stats?.totalUnsubscribed ?? 0) > 0 && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-foreground/10 text-muted-foreground">
-                        {stats?.totalUnsubscribed} unsubscribed
-                      </span>
-                    )}
-                  </div>
-                </div>
+                <h2 className="text-xl font-semibold tracking-tight text-foreground">
+                  Newsletter Subscribers ({filteredSubscribers.length})
+                </h2>
                 <p className="text-xs text-muted-foreground">
-                  Supporters and citizens registered to receive emergency relief alerts and community calls.
+                  Citizens registered to receive emergency relief alerts and community updates.
                 </p>
               </div>
 
-              {/* Search & Filter Controls for Subscribers */}
-              <div className="flex items-center gap-2">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                  <Input
-                    placeholder="Search subscriber email..."
-                    value={subscribersSearch}
-                    onChange={(e) => setSubscribersSearch(e.target.value)}
-                    className="pl-9 h-9 w-48 sm:w-56 rounded-full text-xs glass"
-                  />
-                </div>
-
-                <div className="flex items-center rounded-full glass p-0.5 border border-foreground/10 text-xs">
-                  {(["all", "subscribed", "unsubscribed"] as const).map((tab) => (
-                    <button
-                      key={tab}
-                      type="button"
-                      onClick={() => setSubscribersFilter(tab)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium capitalize transition-all duration-200 select-none ${
-                        subscribersFilter === tab
-                          ? "bg-foreground text-background shadow-xs"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {tab === "subscribed" ? "Active" : tab === "unsubscribed" ? "Unsubscribed" : "All"}
-                    </button>
-                  ))}
-                </div>
+              {/* Tabs for Subscribers: All, Active, Unsubscribed */}
+              <div className="flex items-center rounded-full glass p-0.5 border border-foreground/10 text-xs">
+                {(["all", "subscribed", "unsubscribed"] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setSubscribersFilter(tab)}
+                    className={`px-3 py-1 rounded-full text-xs font-medium capitalize transition-all duration-200 select-none ${
+                      subscribersFilter === tab
+                        ? "bg-foreground text-background shadow-xs"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {tab === "subscribed" ? "Active" : tab === "unsubscribed" ? "Unsubscribed" : "All"}
+                  </button>
+                ))}
               </div>
             </div>
 
