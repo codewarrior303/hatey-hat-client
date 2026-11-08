@@ -66,44 +66,47 @@ export default function HomePage() {
   const [persistedSubEmail, setPersistedSubEmail] = React.useState<string | null>(null);
 
   // Community in Action Carousel State
-  const [activeActionIndex, setActiveActionIndex] = React.useState(0);
+  const [isAtStart, setIsAtStart] = React.useState(true);
+  const [isAtEnd, setIsAtEnd] = React.useState(false);
   const actionsScrollRef = React.useRef<HTMLDivElement>(null);
 
-  const scrollToAction = (index: number) => {
+  const updateScrollState = React.useCallback(() => {
     const container = actionsScrollRef.current;
     if (!container) return;
-    const targetChild = container.children[index] as HTMLElement;
-    if (targetChild) {
-      targetChild.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-        inline: "start",
-      });
+    const { scrollLeft, scrollWidth, clientWidth } = container;
+    setIsAtStart(scrollLeft <= 8);
+    setIsAtEnd(scrollLeft + clientWidth >= scrollWidth - 12);
+  }, []);
+
+  React.useEffect(() => {
+    updateScrollState();
+    const container = actionsScrollRef.current;
+    if (container) {
+      container.addEventListener("scroll", updateScrollState, { passive: true });
     }
-    setActiveActionIndex(index);
-  };
+    window.addEventListener("resize", updateScrollState);
+    return () => {
+      if (container) container.removeEventListener("scroll", updateScrollState);
+      window.removeEventListener("resize", updateScrollState);
+    };
+  }, [updateScrollState]);
 
   const handlePrevAction = () => {
-    const nextIdx = Math.max(0, activeActionIndex - 1);
-    scrollToAction(nextIdx);
+    const container = actionsScrollRef.current;
+    if (!container) return;
+    const firstChild = container.firstElementChild as HTMLElement | null;
+    const step = firstChild ? firstChild.offsetWidth + 24 : 360;
+    container.scrollBy({ left: -step, behavior: "smooth" });
+    setTimeout(updateScrollState, 350);
   };
 
   const handleNextAction = () => {
-    const nextIdx = Math.min(communityActions.length - 1, activeActionIndex + 1);
-    scrollToAction(nextIdx);
-  };
-
-  const handleActionsScroll = () => {
     const container = actionsScrollRef.current;
-    if (!container || !container.children.length) return;
-    const scrollLeft = container.scrollLeft;
-    const firstChild = container.children[0] as HTMLElement;
-    const itemWidth = firstChild ? firstChild.offsetWidth + 24 : 350;
-    const currentIndex = Math.min(
-      communityActions.length - 1,
-      Math.max(0, Math.round(scrollLeft / itemWidth))
-    );
-    setActiveActionIndex(currentIndex);
+    if (!container) return;
+    const firstChild = container.firstElementChild as HTMLElement | null;
+    const step = firstChild ? firstChild.offsetWidth + 24 : 360;
+    container.scrollBy({ left: step, behavior: "smooth" });
+    setTimeout(updateScrollState, 350);
   };
 
   // Storage key helper for persisting subscription across reloads and tab closures
@@ -611,36 +614,32 @@ export default function HomePage() {
                 Community in Action
               </h2>
               <p className="text-[15px] text-muted-foreground">
-                Grassroots initiatives across Bangladesh. Click any category to view related drives.
+                Grassroots initiatives and emergency response drives across Bangladesh.
               </p>
             </div>
 
-            {/* Top Carousel Navigation: < [ 1 / 10 ] > */}
+            {/* Top Carousel Navigation: Only < > with start/end disabled */}
             <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 pt-1 sm:pt-0">
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
                 onClick={handlePrevAction}
-                disabled={activeActionIndex === 0}
-                className="h-10 w-10 rounded-full glass border-foreground/15 hover:bg-foreground/10 transition-colors shadow-2xs"
-                aria-label="Previous category"
+                disabled={isAtStart}
+                className="h-10 w-10 rounded-full glass border-foreground/15 hover:bg-foreground/10 transition-colors shadow-2xs disabled:opacity-30 disabled:pointer-events-none"
+                aria-label="Previous initiatives"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-
-              <div className="px-3.5 py-1.5 rounded-full glass border border-foreground/15 text-xs font-semibold tracking-wide text-foreground min-w-[76px] text-center select-none shadow-2xs">
-                [ {activeActionIndex + 1} / {communityActions.length} ]
-              </div>
 
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
                 onClick={handleNextAction}
-                disabled={activeActionIndex >= communityActions.length - 1}
-                className="h-10 w-10 rounded-full glass border-foreground/15 hover:bg-foreground/10 transition-colors shadow-2xs"
-                aria-label="Next category"
+                disabled={isAtEnd}
+                className="h-10 w-10 rounded-full glass border-foreground/15 hover:bg-foreground/10 transition-colors shadow-2xs disabled:opacity-30 disabled:pointer-events-none"
+                aria-label="Next initiatives"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -648,17 +647,15 @@ export default function HomePage() {
           </div>
         </ScrollReveal>
 
-        {/* Carousel Viewport with Snap Scrolling */}
+        {/* Carousel Viewport with Snap Scrolling and Exact Grid Widths (no right cutoff) */}
         <div
           ref={actionsScrollRef}
-          onScroll={handleActionsScroll}
-          className="flex gap-5 sm:gap-6 overflow-x-auto pb-4 pt-1 px-1 scroll-smooth snap-x snap-mandatory no-scrollbar"
+          className="flex gap-6 overflow-x-auto pb-4 pt-1 px-0.5 scroll-smooth snap-x snap-mandatory no-scrollbar"
         >
-          {communityActions.map((action, idx) => (
-            <Link
+          {communityActions.map((action) => (
+            <div
               key={action.eventType}
-              href={`/events?type=${encodeURIComponent(action.eventType)}`}
-              className="group relative flex flex-col justify-between overflow-hidden rounded-[24px] glass glass-card p-3 transition-all duration-300 hover:border-foreground/30 hover:shadow-lg cursor-pointer shrink-0 w-[84vw] sm:w-[340px] md:w-[360px] snap-start"
+              className="relative flex flex-col justify-between overflow-hidden rounded-[24px] glass glass-card p-3 transition-all duration-300 w-[86vw] sm:w-[calc((100%-24px)/2)] lg:w-[calc((100%-48px)/3)] shrink-0 snap-start select-none"
             >
               <div>
                 <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[18px] bg-neutral-100 dark:bg-neutral-900">
@@ -666,18 +663,18 @@ export default function HomePage() {
                   <img
                     src={action.image}
                     alt={action.title}
-                    className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                    className="h-full w-full object-cover transition-transform duration-700 ease-out hover:scale-105"
                     loading="lazy"
                   />
                   <div className="absolute top-2.5 left-2.5">
-                    <span className="px-2.5 py-1 rounded-full text-[11px] font-medium tracking-tight bg-background/85 backdrop-blur-md text-foreground border border-foreground/15 shadow-2xs">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium tracking-wide text-white bg-black/45 backdrop-blur-md border border-white/20 shadow-xs">
                       {action.eventType}
                     </span>
                   </div>
                 </div>
 
                 <div className="p-3 pt-3.5 space-y-1.5">
-                  <h3 className="text-[17px] font-semibold text-foreground leading-snug group-hover:text-primary transition-colors">
+                  <h3 className="text-[17px] font-semibold text-foreground leading-snug">
                     {action.title}
                   </h3>
                   <p className="text-[13px] text-muted-foreground line-clamp-2 leading-relaxed">
@@ -685,12 +682,7 @@ export default function HomePage() {
                   </p>
                 </div>
               </div>
-
-              <div className="p-3 pt-0 flex items-center gap-1.5 text-[12px] font-semibold text-foreground/80 group-hover:text-foreground">
-                <span>View Initiatives</span>
-                <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1" />
-              </div>
-            </Link>
+            </div>
           ))}
         </div>
       </section>
