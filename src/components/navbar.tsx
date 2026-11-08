@@ -62,9 +62,13 @@ export function Navbar() {
     return unique;
   }, [toasts]);
 
-  // Auto-close dropdown when changing route or returning
+  // Auto-close dropdown when changing route or returning, and ensure document body styles are never locked
   React.useEffect(() => {
     setDropdownOpen(false);
+    if (typeof document !== "undefined") {
+      document.body.style.pointerEvents = "";
+      document.body.style.overflow = "";
+    }
   }, [pathname]);
 
   React.useEffect(() => {
@@ -144,13 +148,14 @@ export function Navbar() {
           <div className="hidden md:flex items-center justify-end gap-2.5 min-w-[130px] shrink-0">
             <ThemeToggle />
 
-            {isPending ? (
+            {isPending && !user ? (
               <div className="h-8 w-20 rounded-full bg-foreground/5 animate-pulse shrink-0" />
             ) : user ? (
               <div className="flex items-center gap-2">
                 {/* Profile dropdown */}
                 <div className="relative group">
                   <DropdownMenu
+                    modal={false}
                     open={dropdownOpen}
                     onOpenChange={setDropdownOpen}
                   >
@@ -165,6 +170,7 @@ export function Navbar() {
                             <AvatarImage
                               src={user.image}
                               alt={user.name || "User"}
+                              referrerPolicy="no-referrer"
                             />
                           )}
                           <AvatarFallback className="text-xs font-semibold">
@@ -196,6 +202,7 @@ export function Navbar() {
                           <DropdownMenuItem
                             key={item.href}
                             asChild
+                            onSelect={() => setDropdownOpen(false)}
                             className="rounded-xl px-2.5 py-2 cursor-pointer focus:bg-foreground/10"
                           >
                             <Link

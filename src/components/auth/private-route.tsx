@@ -29,8 +29,8 @@ export function PrivateRoute({ children, fallback }: PrivateRouteProps) {
     }
   }, [isPending, session, fullPath, router]);
 
-  // Loading state: keep the user on the page with a clean skeleton
-  if (isPending) {
+  // Loading state: only show loading skeleton if session is pending and no user is in memory
+  if (isPending && !session?.user) {
     if (fallback) return <>{fallback}</>;
 
     return (
