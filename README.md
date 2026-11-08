@@ -10,7 +10,6 @@
 [![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=flat-square&logo=vercel&logoColor=white)](https://hatey-hat.vercel.app)
 
 **Live Production Web App:** [https://hatey-hat.vercel.app](https://hatey-hat.vercel.app)  
-**Live Production API:** [https://hatey-hat-api.vercel.app](https://hatey-hat-api.vercel.app)
 
 ---
 
@@ -68,49 +67,6 @@
 | **Notifications** | [react-hot-toast](https://react-hot-toast.com/) (Frosted Liquid Glass styled) |
 | **Icons** | [lucide-react](https://lucide.dev/) |
 | **Theming** | [next-themes](https://github.com/pacocoursey/next-themes) |
-
----
-
-## Project Structure
-
-```
-client/
-├── src/
-│   ├── app/
-│   │   ├── api/auth/[...all]/route.ts  # Better Auth API handler
-│   │   ├── events/
-│   │   │   ├── page.tsx                # Upcoming initiatives (search + pagination)
-│   │   │   ├── create/page.tsx         # Create initiative (protected)
-│   │   │   ├── joined/page.tsx         # Volunteer's joined activities (protected)
-│   │   │   ├── manage/page.tsx         # Organizer's events panel (protected)
-│   │   │   └── [id]/
-│   │   │       ├── page.tsx            # Event details + Join action
-│   │   │       └── edit/page.tsx       # Edit initiative (owner only)
-│   │   ├── login/page.tsx              # Email/password + Google auth
-│   │   ├── register/page.tsx           # Registration with password strength meter
-│   │   ├── profile/page.tsx            # Profile management (name + photo)
-│   │   ├── layout.tsx                  # Root layout with ambient backdrop & scrollbar
-│   │   ├── globals.css                 # Tailwind v4 theme tokens & glass effects
-│   │   └── page.tsx                    # Landing hero + Impact statistics + Featured events
-│   ├── components/
-│   │   ├── auth/                       # Protected route guard
-│   │   ├── events/                     # EventCard, EventForm, EventSkeleton
-│   │   ├── icons/                      # Brand Google and Social icons
-│   │   ├── ui/                         # shadcn/ui components (Button, Input, Sheet, Badge...)
-│   │   ├── navbar.tsx                  # Floating sticky navbar & dynamic toast container
-│   │   ├── footer.tsx                  # Footer with newsletter subscription & quick links
-│   │   ├── brand-logo.tsx              # Hatey Hat brand identity
-│   │   └── custom-scrollbar.tsx        # Framer-style minimal custom scrollbar
-│   └── lib/
-│       ├── api.ts                      # Centralized authenticated apiFetch client
-│       ├── auth.ts                     # Better Auth server configuration
-│       ├── auth-client.ts              # Better Auth React hooks client
-│       └── utils.ts                    # cn(), formatDate(), getHighResImageUrl()
-├── public/                             # Static assets, branding & metadata icons
-├── next.config.ts                      # Next.js configuration
-├── tsconfig.json                       # TypeScript compiler settings
-└── package.json
-```
 
 ---
 
