@@ -69,11 +69,9 @@ export function ScrollReveal({
   return (
     <div
       ref={elementRef}
-      style={{
-        transitionDelay: `${delay}ms`,
-      }}
+      style={delay ? { transitionDelay: `${delay}ms` } : undefined}
       className={cn(
-        "transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]",
+        "transition-[opacity,transform] duration-500 ease-out",
         isVisible ? "opacity-100 translate-x-0 translate-y-0" : getInitialStyle(),
         className
       )}

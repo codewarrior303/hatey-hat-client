@@ -1,0 +1,30 @@
+# Hatey Hat
+
+> Hatey Hat is a community-driven social event management and disaster relief coordination platform in Bangladesh. It empowers citizens and grassroots volunteers to organize, discover, and support emergency response initiatives, flood relief, winter clothing drives, food distribution, free medical camps, blood donation, cleanup campaigns, and tree plantations across Bangladesh.
+
+## Mission & Philosophy
+
+Hatey Hat ("হাত মিলিয়ে একসাথে পথ চলা") operates on the principle: "One community, One Bangladesh." It provides a transparent, hyper-local platform for humanitarian initiatives, connecting organizers and volunteers directly to community needs.
+
+## Primary Sections & URLs
+
+- [Home](https://hatey-hat.vercel.app/): Overview of community initiatives, upcoming events, and grassroots impact.
+- [Explore Events](https://hatey-hat.vercel.app/events): Discover and filter social initiatives, disaster relief camps, and volunteer opportunities across all 64 districts of Bangladesh.
+- [Organize an Event](https://hatey-hat.vercel.app/events/create): Create and launch a verified grassroots initiative or emergency relief effort.
+- [About Us](https://hatey-hat.vercel.app/about): Learn about our mission, vision, and volunteer community.
+- [Contact & Support](https://hatey-hat.vercel.app/contact): Get in touch with our team for emergency coordination and assistance.
+- [Terms of Service](https://hatey-hat.vercel.app/terms): Platform guidelines and community commitments.
+- [Privacy Policy](https://hatey-hat.vercel.app/privacy): User data safety, privacy rights, and security policies.
+
+## Event Categories Covered
+
+- Flood & Disaster Relief
+- Emergency Response
+- Winter Clothes Distribution
+- Food Distribution
+- Free Health Camps & Medical Checkups
+- Voluntary Blood Donation
+- Urban & Community Cleanups
+- Tree Plantation & Environmental Conservation
+- Free Education & Learning Supplies
+- Grassroots Community Donations

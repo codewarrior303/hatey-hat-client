@@ -57,7 +57,7 @@ export default function RootLayout({
         {/* Fixed Ambient Background (Subtle Grayscale Blobs for Liquid Glass Depth) */}
         <div
           aria-hidden="true"
-          className="fixed inset-0 pointer-events-none z-0 overflow-hidden transform-gpu will-change-transform"
+          className="fixed inset-0 pointer-events-none -z-10 overflow-hidden"
         >
           {/* Light Mode Grayscale Blobs (GPU-accelerated Radial Gradients without costly blur filters) */}
           <div

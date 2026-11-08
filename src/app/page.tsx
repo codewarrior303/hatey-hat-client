@@ -413,7 +413,7 @@ export default function HomePage() {
     <div className="flex flex-col space-y-24 md:space-y-32 pb-24">
       {/* 1. HERO / BANNER SECTION (APPLE AESTHETIC - INSTANTLY VISIBLE) */}
       <section className="relative pt-12 md:pt-20 px-4 sm:px-6">
-        <div className="container relative mx-auto text-center max-w-4xl space-y-8 animate-in fade-in-50 duration-500">
+        <div className="container relative mx-auto text-center max-w-4xl space-y-8">
           {/* Subtle Tagline Pill */}
           <div className="inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-xs sm:text-[13px] font-medium text-foreground/80 shadow-xs">
             <Sparkles className="h-3.5 w-3.5 opacity-60" />
