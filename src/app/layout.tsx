@@ -39,6 +39,9 @@ export const metadata: Metadata = {
     shortcut: "/favicon.svg",
     apple: [{ url: "/apple-icon", type: "image/png" }],
   },
+  verification: {
+    google: "cwxA_7eQGZh2sP-o-oefpqBvNhe90rd5ts3z-twR_KQ",
+  },
 };
 
 export default function RootLayout({
