@@ -33,6 +33,7 @@ import { useSession } from "@/lib/auth-client";
 import {
   apiFetch,
   getCachedData,
+  invalidateCache,
   type EventItem,
   ClientApiError,
 } from "@/lib/api";
@@ -40,6 +41,11 @@ import { formatDate, getHighResImageUrl, cn } from "@/lib/utils";
 
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80";
+
+const getJoinStorageKey = (id: string, email?: string | null) =>
+  email
+    ? `hatey_hat_joined_${email.toLowerCase().trim()}_${id}`
+    : `hatey_hat_joined_${id}`;
 
 export default function EventDetailsPage() {
   const params = useParams();
@@ -56,6 +62,19 @@ export default function EventDetailsPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [imgSrc, setImgSrc] = React.useState<string>("");
 
+  // 1. Immediately read persistent join state on mount so page reload/tab re-open is instantaneous
+  React.useEffect(() => {
+    if (typeof window !== "undefined" && eventId) {
+      const email = session?.user?.email;
+      const isSaved =
+        localStorage.getItem(`hatey_hat_joined_${eventId}`) === "true" ||
+        (email ? localStorage.getItem(getJoinStorageKey(eventId, email)) === "true" : false);
+      if (isSaved) {
+        setHasJoined(true);
+      }
+    }
+  }, [eventId, session?.user?.email]);
+
   const fetchEvent = React.useCallback(async () => {
     if (!eventId) return;
     try {
@@ -67,7 +86,10 @@ export default function EventDetailsPage() {
         setIsLoading(true);
       }
       setError(null);
-      const res = await apiFetch<EventItem>(`/api/events/${eventId}`);
+      // Fetch fresh participant count and event details directly from API
+      const res = await apiFetch<EventItem>(`/api/events/${eventId}`, {
+        skipCache: true,
+      });
       setEvent(res.data);
       setIsPast(new Date(res.data.eventDate).getTime() <= Date.now());
       setImgSrc(getHighResImageUrl(res.data.thumbnail) || FALLBACK_IMAGE);
@@ -78,17 +100,44 @@ export default function EventDetailsPage() {
     }
   }, [eventId]);
 
-  // Check if current user has already joined
+  // Check if current user has already joined in database
   const checkJoinStatus = React.useCallback(async () => {
     if (!session?.user || !eventId) return;
     try {
-      const res = await apiFetch<any[]>("/api/joins/my", { auth: true });
-      const alreadyJoined = res.data?.some(
-        (j: any) => j.eventId === eventId || j.eventId?._id === eventId,
-      );
-      if (alreadyJoined) setHasJoined(true);
+      const res = await apiFetch<any[]>("/api/joins/my", {
+        auth: true,
+        skipCache: true,
+      });
+      const alreadyJoined = res.data?.some((j: any) => {
+        const jId = String(j.eventId?._id || j.eventId?.$oid || j.eventId || "");
+        return jId === String(eventId);
+      });
+
+      if (alreadyJoined) {
+        setHasJoined(true);
+        if (typeof window !== "undefined") {
+          localStorage.setItem(`hatey_hat_joined_${eventId}`, "true");
+          if (session.user.email) {
+            localStorage.setItem(
+              getJoinStorageKey(eventId, session.user.email),
+              "true"
+            );
+          }
+        }
+      } else if (res.data && Array.isArray(res.data)) {
+        // If server successfully returned joins list and event is not in it, sync local state
+        setHasJoined(false);
+        if (typeof window !== "undefined") {
+          localStorage.removeItem(`hatey_hat_joined_${eventId}`);
+          if (session.user.email) {
+            localStorage.removeItem(
+              getJoinStorageKey(eventId, session.user.email)
+            );
+          }
+        }
+      }
     } catch {
-      // Ignore join check failure
+      // Ignore join check failure (keep local cached state)
     }
   }, [session, eventId]);
 
@@ -118,6 +167,18 @@ export default function EventDetailsPage() {
     setHasJoined(true);
     setShowBurst(true);
     setTimeout(() => setShowBurst(false), 1400);
+
+    // Save to persistent storage immediately
+    if (typeof window !== "undefined") {
+      localStorage.setItem(`hatey_hat_joined_${eventId}`, "true");
+      if (session.user.email) {
+        localStorage.setItem(
+          getJoinStorageKey(eventId, session.user.email),
+          "true"
+        );
+      }
+    }
+
     setEvent((prev) =>
       prev
         ? {
@@ -135,6 +196,12 @@ export default function EventDetailsPage() {
         auth: true,
       });
 
+      // Invalidate relevant event and joins caches
+      invalidateCache(`/api/events/${eventId}`);
+      invalidateCache("/api/events");
+      invalidateCache("/api/joins");
+      invalidateCache("/api/stats");
+
       toast.success(
         res.message ||
           "You have successfully joined this event! See you there.",
@@ -150,6 +217,14 @@ export default function EventDetailsPage() {
       } else {
         // Rollback optimistic state on genuine error
         setHasJoined(false);
+        if (typeof window !== "undefined") {
+          localStorage.removeItem(`hatey_hat_joined_${eventId}`);
+          if (session.user.email) {
+            localStorage.removeItem(
+              getJoinStorageKey(eventId, session.user.email)
+            );
+          }
+        }
         setEvent((prev) =>
           prev
             ? {

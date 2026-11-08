@@ -48,7 +48,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning className={jost.variable}>
-      <body className="min-h-screen flex flex-col bg-background text-foreground antialiased relative font-sans selection:bg-foreground selection:text-background">
+      <body
+        suppressHydrationWarning
+        className="min-h-screen flex flex-col bg-background text-foreground antialiased relative font-sans selection:bg-foreground selection:text-background"
+      >
         {/* Fixed Ambient Background (Subtle Grayscale Blobs for Liquid Glass Depth) */}
         <div
           aria-hidden="true"

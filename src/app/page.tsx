@@ -377,9 +377,8 @@ export default function HomePage() {
       eventType: "Donation",
       title: "Donation",
       description:
-        "Crowdfunded transparent financial assistance and emergency grants for medical treatments, shelter repairs, and livelihoods.",
-      image:
-        "https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?auto=format&fit=crop&w=800&q=80",
+        "Crowdfunded transparent financial assistance, donation jars, and emergency relief funds collected for families in crisis.",
+      image: "/community/donation.jpg",
     },
   ];
 
