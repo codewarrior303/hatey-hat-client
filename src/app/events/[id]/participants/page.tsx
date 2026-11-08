@@ -245,14 +245,14 @@ export default function EventParticipantsPage() {
                 <div className="flex items-center gap-2 text-foreground/80 mb-1">
                   <FileText className="h-4 w-4 text-foreground/70" />
                   <p className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">
-                    Official Roll Call
+                    Official Roster
                   </p>
                 </div>
                 <p className="text-[15px] font-semibold text-foreground">
-                  Ready for A4 Print
+                  Ready for A4 Export
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Includes on-ground signature boxes
+                  Official watermark & clean layout
                 </p>
               </div>
             </div>

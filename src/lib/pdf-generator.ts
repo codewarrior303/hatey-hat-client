@@ -45,7 +45,7 @@ export function generateEventParticipantsPDF(
   doc.setFontSize(8.5);
   doc.setTextColor(209, 213, 219);
   doc.text("Community-Driven Social Events & Disaster Relief Platform", margin, 18);
-  doc.text("Hatey Hat, ekshathe poth chola · One community, One Bangladesh.", margin, 23);
+  doc.text("Hatey Hat, ekshathe poth chola", margin, 23);
 
   // Right-aligned header badge
   doc.setFont("helvetica", "bold");
@@ -136,13 +136,12 @@ export function generateEventParticipantsPDF(
       p.userEmail,
       joinDate,
       "Confirmed",
-      "", // Blank signature box for field roll-call
     ];
   });
 
   autoTable(doc, {
     startY: cardTop + 43,
-    head: [["#", "Volunteer Name", "Email Address", "Registration Date", "Status", "Roll Call / Sig"]],
+    head: [["#", "Volunteer Name", "Email Address", "Registration Date", "Status"]],
     body: tableData,
     margin: { left: margin, right: margin, bottom: 20 },
     theme: "striped",
@@ -157,21 +156,31 @@ export function generateEventParticipantsPDF(
     bodyStyles: {
       fontSize: 8,
       textColor: [30, 41, 59],
-      cellPadding: 2.5,
+      cellPadding: 2.8,
     },
     columnStyles: {
-      0: { cellWidth: 10, halign: "center" },
-      1: { cellWidth: 46 },
-      2: { cellWidth: 52 },
-      3: { cellWidth: 36 },
+      0: { cellWidth: 12, halign: "center" },
+      1: { cellWidth: 54 },
+      2: { cellWidth: 62 },
+      3: { cellWidth: 34 },
       4: { cellWidth: 20, halign: "center", fontStyle: "bold", textColor: [16, 185, 129] },
-      5: { cellWidth: 18, halign: "center" },
     },
     alternateRowStyles: {
       fillColor: [248, 250, 252],
     },
     didDrawPage: (data) => {
-      // 4. FOOTER ON EVERY A4 PAGE
+      // 4. SUBTLE WATERMARK ON EVERY A4 PAGE
+      doc.saveGraphicsState();
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(55);
+      doc.setTextColor(240, 243, 248); // Very light slate watermark
+      doc.text("HATEY HAT", pageWidth / 2, pageHeight / 2 + 10, {
+        align: "center",
+        angle: 35,
+      });
+      doc.restoreGraphicsState();
+
+      // 5. FOOTER ON EVERY A4 PAGE
       const totalPages = (doc as any).internal.getNumberOfPages();
       const currentPage = (doc as any).internal.getCurrentPageInfo().pageNumber;
 
@@ -182,7 +191,7 @@ export function generateEventParticipantsPDF(
       doc.setFontSize(7.5);
       doc.setTextColor(148, 163, 184);
       doc.text(
-        "Hatey Hat Community Platform · One community, One Bangladesh. · Confidential organizer roster",
+        "One community, One Bangladesh.",
         margin,
         pageHeight - 7
       );
