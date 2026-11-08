@@ -310,27 +310,20 @@ export default function EventDetailsPage() {
         </Link>
       </div>
 
-      {/* Hero Banner Image in Glass Container - Adaptive Showcase (100% Uncropped & High-Res) */}
-      <div className="relative w-full min-h-[280px] sm:min-h-[380px] max-h-[640px] overflow-hidden rounded-[28px] glass p-2 shadow-sm flex items-center justify-center bg-black/40">
-        {/* Ambient blurred backdrop: fills letterbox space with natural colors, zero hard edges */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 bg-cover bg-center blur-2xl opacity-40 scale-110 pointer-events-none"
-          style={{ backgroundImage: `url(${imgSrc})` }}
-        />
-
-        <div className="w-full h-full max-h-[600px] overflow-hidden rounded-[22px] relative z-10 flex items-center justify-center py-2">
+      {/* Hero Banner Image in Glass Container - Seamless Full-Width Showcase */}
+      <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full overflow-hidden rounded-[28px] glass p-2 shadow-sm bg-neutral-950">
+        <div className="w-full h-full overflow-hidden rounded-[22px] relative">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imgSrc}
             alt={event.title}
-            className="w-auto h-auto max-h-[560px] max-w-full rounded-[18px] object-contain select-none shadow-md [image-rendering:-webkit-optimize-contrast]"
+            className="w-full h-full object-cover object-center rounded-[22px] select-none [image-rendering:-webkit-optimize-contrast]"
             loading="eager"
             decoding="async"
             fetchPriority="high"
             onError={() => setImgSrc(FALLBACK_IMAGE)}
           />
-          <div className="absolute top-4 left-4 flex gap-2 z-20">
+          <div className="absolute top-4 left-4 flex gap-2 z-10">
             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium tracking-wide text-white bg-black/60 backdrop-blur-md border border-white/20 shadow-xs">
               {event.eventType}
             </span>

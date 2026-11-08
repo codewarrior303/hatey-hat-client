@@ -47,25 +47,19 @@ export function EventCard({ event }: EventCardProps) {
       }}
       aria-label={`View details for ${event.title}`}
     >
-      {/* Thumbnail with rounded corners inside the card with ambient blur backing */}
-      <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[18px] bg-neutral-950 flex items-center justify-center">
-        {/* Ambient blurred backdrop so any image aspect ratio renders gracefully without harsh crop */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 bg-cover bg-center blur-md opacity-40 scale-125 pointer-events-none"
-          style={{ backgroundImage: `url(${imgSrc})` }}
-        />
+      {/* Thumbnail with rounded corners inside the card and uniform edge-to-edge framing */}
+      <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[18px] bg-neutral-100 dark:bg-neutral-900">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={imgSrc}
           alt={event.title}
           decoding="async"
-          className="relative z-10 h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105 [image-rendering:-webkit-optimize-contrast]"
+          className="h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105 [image-rendering:-webkit-optimize-contrast]"
           onError={() => setImgSrc(FALLBACK_IMAGE)}
           loading="lazy"
         />
         {/* Apple-style dark scrim glass badge (always ultra-readable on any photo) */}
-        <div className="absolute top-3 left-3 z-20">
+        <div className="absolute top-3 left-3 z-10">
           <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-medium tracking-wide text-white bg-black/55 backdrop-blur-md border border-white/20 shadow-xs">
             {event.eventType}
           </span>

@@ -61,7 +61,8 @@ export async function apiFetch<T>(
   const { auth = false, skipCache = false, headers = {}, ...rest } = options;
 
   const isGet = !rest.method || rest.method.toUpperCase() === "GET";
-  const shouldCache = isGet && !skipCache;
+  // NEVER serve or store authenticated endpoints (e.g. /my, personal events) in generic cache
+  const shouldCache = isGet && !skipCache && !auth;
 
   // 1. Instant cache return for GET requests (eliminates redundant database/network hits)
   if (shouldCache) {

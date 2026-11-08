@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSession, signOut } from "@/lib/auth-client";
+import { invalidateCache } from "@/lib/api";
 import { cn, getFallbackAvatar } from "@/lib/utils";
 
 export function Navbar() {
@@ -85,6 +86,10 @@ export function Navbar() {
   const handleLogout = async () => {
     try {
       await signOut();
+      invalidateCache();
+      if (typeof window !== "undefined") {
+        window.sessionStorage.clear();
+      }
       toast.success("Logged out successfully");
       router.push("/");
       router.refresh();

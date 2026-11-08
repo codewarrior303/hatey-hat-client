@@ -52,7 +52,10 @@ export default function ManageEventsPage() {
     try {
       setIsLoading(true);
       setError(null);
-      const res = await apiFetch<EventItem[]>("/api/events/my", { auth: true });
+      const res = await apiFetch<EventItem[]>("/api/events/my", {
+        auth: true,
+        skipCache: true,
+      });
       setEvents(res.data || []);
     } catch (err: any) {
       setError(err?.message || "Failed to load your organized events");
