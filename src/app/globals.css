@@ -465,6 +465,15 @@ h1, h2, h3, h4, .font-heading {
 }
 
 /* =========================================================================
+   High-Resolution 2K/4K Image Upscaling & Anti-Blur Sharpness
+   ========================================================================= */
+img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  -ms-interpolation-mode: bicubic;
+}
+
+/* =========================================================================
    YouTube Like-Style Join Burst Animation
    ========================================================================= */
 @keyframes yt-like-pop {

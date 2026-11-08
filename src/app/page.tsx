@@ -349,33 +349,29 @@ export default function HomePage() {
       eventType: "Blood Donation",
       title: "Blood Donation",
       description:
-        "Voluntary blood donor drives connecting verified local donors with hospital patients requiring critical transfusions.",
-      image:
-        "https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&w=800&q=80",
+        "Voluntary blood donor registration and screening drives connecting verified donors with patients requiring urgent blood.",
+      image: "/community/blood-donation.jpg",
     },
     {
       eventType: "Cleanup",
       title: "Cleanup",
       description:
-        "Youth-led civic environmental drives removing plastic waste from riverbanks, park trails, and neighbourhood quarters.",
-      image:
-        "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=800&q=80",
+        "Youth-led World Cleanup Day volunteers collecting plastic waste and cleaning urban and community quarters.",
+      image: "/community/cleanup.jpg",
     },
     {
       eventType: "Plantation",
       title: "Plantation",
       description:
-        "Planting native trees, fruit saplings, and urban forestry to restore greenery and build climate resilience across Bangladesh.",
-      image:
-        "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=800&q=80",
+        "Planting native trees, fruit saplings, and urban forestry with community elders and youth across Bangladesh.",
+      image: "/community/plantation.jpg",
     },
     {
       eventType: "Education",
       title: "Education",
       description:
-        "Free learning sessions, stationery kits, and peer mentorship for underprivileged school kids and street children.",
-      image:
-        "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=800&q=80",
+        "Free learning sessions, textbooks, schoolbags, and peer education for underprivileged students and children.",
+      image: "/community/education.jpg",
     },
     {
       eventType: "Donation",
