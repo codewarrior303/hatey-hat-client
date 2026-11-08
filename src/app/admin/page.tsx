@@ -19,6 +19,7 @@ import {
   Search,
   Filter,
   ExternalLink,
+  Mail,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -40,6 +41,8 @@ interface AdminStats {
   currentEventsCount: number;
   totalJoins: number;
   liveJoins: number;
+  totalSubscribers?: number;
+  totalUnsubscribed?: number;
 }
 
 interface EventItemAdmin {
@@ -55,6 +58,15 @@ interface EventItemAdmin {
   createdAt: string;
 }
 
+interface SubscriberAdmin {
+  _id: string;
+  email: string;
+  userName: string;
+  status: "subscribed" | "unsubscribed";
+  subscribedAt: string;
+  unsubscribedAt?: string | null;
+}
+
 interface ActivityEntry {
   action: string;
   timestamp: string;
@@ -66,6 +78,7 @@ interface ActivityEntry {
 interface AdminData {
   stats: AdminStats;
   events: EventItemAdmin[];
+  subscribers?: SubscriberAdmin[];
   recentActivity: ActivityEntry[];
 }
 
@@ -83,6 +96,13 @@ export default function AdminPage() {
   // Filters for events list
   const [searchQuery, setSearchQuery] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<"all" | "active" | "concluded">("all");
+
+  // Filters for recent security audit activity
+  const [auditFilter, setAuditFilter] = React.useState<"all" | "joined" | "created" | "deleted">("all");
+
+  // Filters for newsletter subscribers list
+  const [subscribersSearch, setSubscribersSearch] = React.useState("");
+  const [subscribersFilter, setSubscribersFilter] = React.useState<"all" | "subscribed" | "unsubscribed">("all");
 
   const isAuthorized =
     user?.email?.toLowerCase().trim() === AUTHORIZED_ADMIN_EMAIL.toLowerCase();
@@ -113,9 +133,12 @@ export default function AdminPage() {
     }
   };
 
-  const fetchAdminMetrics = React.useCallback(async (silent = false) => {
-    if (!silent) setIsLoading(true);
-    setIsRefreshing(true);
+  const fetchAdminMetrics = React.useCallback(async (isManualRefresh = false) => {
+    if (isManualRefresh) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
     setError(null);
     try {
       const res = await apiFetch<AdminData>("/api/admin/metrics", {
@@ -124,6 +147,11 @@ export default function AdminPage() {
       });
       if (res?.data) {
         setAdminData(res.data);
+      }
+      if (isManualRefresh) {
+        toast.success("Metrics refreshed with live database data!", {
+          id: "admin-refresh-success",
+        });
       }
     } catch (err: any) {
       setError(
@@ -205,10 +233,6 @@ export default function AdminPage() {
               )}
             </Button>
           </div>
-
-          <div className="pt-2 text-xs text-muted-foreground border-t border-foreground/10">
-            Only <strong>{AUTHORIZED_ADMIN_EMAIL}</strong> has admin rights.
-          </div>
         </div>
       </div>
     );
@@ -234,7 +258,7 @@ export default function AdminPage() {
               {user.email}
             </p>
             <p className="text-xs text-muted-foreground pt-1">
-              This account does not have administrator privileges. Only <strong>{AUTHORIZED_ADMIN_EMAIL}</strong> is authorized to access the Hatey Hat Admin Panel.
+              This account does not have administrator privileges. Only authorized administrators are allowed to access the Hatey Hat Admin Panel.
             </p>
           </div>
 
@@ -267,6 +291,7 @@ export default function AdminPage() {
   const stats = adminData?.stats;
   const events = adminData?.events || [];
   const activity = adminData?.recentActivity || [];
+  const subscribers = adminData?.subscribers || [];
 
   const filteredEvents = events.filter((ev) => {
     const matchesSearch =
@@ -281,18 +306,28 @@ export default function AdminPage() {
     return true;
   });
 
+  const filteredActivity = activity.filter((log) => {
+    if (auditFilter === "joined") return log.action === "event_joined";
+    if (auditFilter === "created") return log.action === "event_created";
+    if (auditFilter === "deleted") return log.action === "event_deleted";
+    return true;
+  });
+
+  const filteredSubscribers = subscribers.filter((sub) => {
+    const matchesSearch =
+      sub.email.toLowerCase().includes(subscribersSearch.toLowerCase()) ||
+      sub.userName.toLowerCase().includes(subscribersSearch.toLowerCase());
+    if (!matchesSearch) return false;
+    if (subscribersFilter === "subscribed") return sub.status !== "unsubscribed";
+    if (subscribersFilter === "unsubscribed") return sub.status === "unsubscribed";
+    return true;
+  });
+
   return (
     <div className="container mx-auto px-4 sm:px-6 py-8 md:py-12 max-w-6xl space-y-8 animate-in fade-in-50">
       {/* Admin Dashboard Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-foreground/10">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2">
-            <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 font-semibold px-2.5 py-0.5 rounded-full">
-              System Administrator
-            </Badge>
-            <span className="text-xs text-muted-foreground select-none">•</span>
-            <span className="text-xs text-muted-foreground">{AUTHORIZED_ADMIN_EMAIL}</span>
-          </div>
+        <div className="space-y-1">
           <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
             Platform Admin Panel
           </h1>
@@ -308,12 +343,14 @@ export default function AdminPage() {
             size="sm"
             onClick={() => fetchAdminMetrics(true)}
             disabled={isRefreshing}
-            className="rounded-full glass gap-2 h-10 px-4"
+            className="rounded-full glass gap-2 h-10 px-4 transition-all"
           >
             <RefreshCw
-              className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+              className={`h-4 w-4 transition-transform duration-700 ${
+                isRefreshing ? "animate-spin text-foreground" : ""
+              }`}
             />
-            <span>Refresh Metrics</span>
+            <span>{isRefreshing ? "Refreshing..." : "Refresh Metrics"}</span>
           </Button>
 
           <Button asChild variant="ghost" size="sm" className="rounded-full h-10">
@@ -326,10 +363,14 @@ export default function AdminPage() {
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-32 rounded-[24px]" />
-          ))}
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-32 rounded-[26px]" />
+            ))}
+          </div>
+          <Skeleton className="h-72 rounded-[26px]" />
+          <Skeleton className="h-64 rounded-[26px]" />
         </div>
       ) : error ? (
         <div className="p-6 rounded-[24px] glass border border-destructive/20 text-center space-y-3">
@@ -344,11 +385,15 @@ export default function AdminPage() {
           </Button>
         </div>
       ) : (
-        <>
-          {/* Top 4 Core Metrics Grid */}
+        <div
+          className={`space-y-8 transition-opacity duration-300 ${
+            isRefreshing ? "opacity-60 animate-pulse pointer-events-none" : "opacity-100"
+          }`}
+        >
+          {/* Top Core Metrics Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {/* 1. Total Events Created */}
-            <div className="glass p-6 rounded-[26px] space-y-3 relative overflow-hidden shadow-2xs border border-foreground/10">
+            <div className="glass p-6 rounded-[26px] space-y-3 relative overflow-hidden shadow-2xs border border-foreground/10 hover:border-foreground/20 transition-colors">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Events Created
@@ -368,7 +413,7 @@ export default function AdminPage() {
             </div>
 
             {/* 2. Total Volunteers Joined */}
-            <div className="glass p-6 rounded-[26px] space-y-3 relative overflow-hidden shadow-2xs border border-foreground/10">
+            <div className="glass p-6 rounded-[26px] space-y-3 relative overflow-hidden shadow-2xs border border-foreground/10 hover:border-foreground/20 transition-colors">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Volunteers Joined
@@ -388,7 +433,7 @@ export default function AdminPage() {
             </div>
 
             {/* 3. Total Events Deleted */}
-            <div className="glass p-6 rounded-[26px] space-y-3 relative overflow-hidden shadow-2xs border border-foreground/10">
+            <div className="glass p-6 rounded-[26px] space-y-3 relative overflow-hidden shadow-2xs border border-foreground/10 hover:border-foreground/20 transition-colors">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Events Deleted
@@ -407,8 +452,8 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* 4. Concluded / Expired Events */}
-            <div className="glass p-6 rounded-[26px] space-y-3 relative overflow-hidden shadow-2xs border border-foreground/10">
+            {/* 4. Concluded Events */}
+            <div className="glass p-6 rounded-[26px] space-y-3 relative overflow-hidden shadow-2xs border border-foreground/10 hover:border-foreground/20 transition-colors">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Concluded Events
@@ -453,39 +498,20 @@ export default function AdminPage() {
                 </div>
 
                 <div className="flex items-center rounded-full glass p-0.5 border border-foreground/10 text-xs">
-                  <button
-                    type="button"
-                    onClick={() => setStatusFilter("all")}
-                    className={`px-3 py-1 rounded-full font-medium transition-colors ${
-                      statusFilter === "all"
-                        ? "bg-foreground text-background font-semibold"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    All
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setStatusFilter("active")}
-                    className={`px-3 py-1 rounded-full font-medium transition-colors ${
-                      statusFilter === "active"
-                        ? "bg-foreground text-background font-semibold"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    Active
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setStatusFilter("concluded")}
-                    className={`px-3 py-1 rounded-full font-medium transition-colors ${
-                      statusFilter === "concluded"
-                        ? "bg-foreground text-background font-semibold"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    Concluded
-                  </button>
+                  {(["all", "active", "concluded"] as const).map((tab) => (
+                    <button
+                      key={tab}
+                      type="button"
+                      onClick={() => setStatusFilter(tab)}
+                      className={`px-3 py-1 rounded-full text-xs font-medium capitalize transition-all duration-200 select-none ${
+                        statusFilter === tab
+                          ? "bg-foreground text-background shadow-xs"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {tab}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
@@ -495,7 +521,7 @@ export default function AdminPage() {
                 No matching initiatives found.
               </div>
             ) : (
-              <div className="rounded-[26px] glass overflow-hidden border border-foreground/10">
+              <div className="rounded-[26px] glass overflow-hidden border border-foreground/10 transition-opacity duration-200">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead className="bg-foreground/5 text-muted-foreground font-semibold border-b border-foreground/10">
@@ -519,31 +545,43 @@ export default function AdminPage() {
                             {ev.title}
                           </td>
                           <td className="py-3 px-4">
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-foreground/10 text-foreground border border-foreground/10">
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-foreground/10 text-foreground">
                               {ev.eventType}
                             </span>
                           </td>
                           <td className="py-3 px-4 text-muted-foreground">
-                            <p className="font-medium text-foreground">{ev.creatorName}</p>
-                            <p className="text-[10px] text-muted-foreground">{ev.creatorEmail}</p>
+                            <div className="flex flex-col">
+                              <span className="font-medium text-foreground">
+                                {ev.creatorName}
+                              </span>
+                              <span className="text-[10px] opacity-75">
+                                {ev.creatorEmail}
+                              </span>
+                            </div>
                           </td>
                           <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">
                             {formatDate(ev.eventDate)}
                           </td>
                           <td className="py-3 px-4">
                             {ev.isConcluded ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                              <Badge
+                                variant="outline"
+                                className="border-amber-500/40 text-amber-600 dark:text-amber-400 font-medium text-[10px] rounded-full gap-1"
+                              >
                                 <Clock className="h-3 w-3" />
                                 <span>Concluded</span>
-                              </span>
+                              </Badge>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                              <Badge
+                                variant="outline"
+                                className="border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-medium text-[10px] rounded-full gap-1"
+                              >
                                 <CheckCircle2 className="h-3 w-3" />
                                 <span>Active</span>
-                              </span>
+                              </Badge>
                             )}
                           </td>
-                          <td className="py-3 px-4 text-center font-semibold text-foreground">
+                          <td className="py-3 px-4 text-center font-bold text-foreground">
                             {ev.participants}
                           </td>
                           <td className="py-3 px-4 text-right">
@@ -571,22 +609,167 @@ export default function AdminPage() {
             )}
           </div>
 
+          {/* Newsletter Community Subscribers Section */}
+          <div className="space-y-4 pt-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl font-semibold tracking-tight text-foreground">
+                    Newsletter Subscribers ({filteredSubscribers.length})
+                  </h2>
+                  <div className="flex items-center gap-1.5">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      {stats?.totalSubscribers ?? 0} active
+                    </span>
+                    {(stats?.totalUnsubscribed ?? 0) > 0 && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-foreground/10 text-muted-foreground">
+                        {stats?.totalUnsubscribed} unsubscribed
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Supporters and citizens registered to receive emergency relief alerts and community calls.
+                </p>
+              </div>
+
+              {/* Search & Filter Controls for Subscribers */}
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Search subscriber email..."
+                    value={subscribersSearch}
+                    onChange={(e) => setSubscribersSearch(e.target.value)}
+                    className="pl-9 h-9 w-48 sm:w-56 rounded-full text-xs glass"
+                  />
+                </div>
+
+                <div className="flex items-center rounded-full glass p-0.5 border border-foreground/10 text-xs">
+                  {(["all", "subscribed", "unsubscribed"] as const).map((tab) => (
+                    <button
+                      key={tab}
+                      type="button"
+                      onClick={() => setSubscribersFilter(tab)}
+                      className={`px-3 py-1 rounded-full text-xs font-medium capitalize transition-all duration-200 select-none ${
+                        subscribersFilter === tab
+                          ? "bg-foreground text-background shadow-xs"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {tab === "subscribed" ? "Active" : tab === "unsubscribed" ? "Unsubscribed" : "All"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {filteredSubscribers.length === 0 ? (
+              <div className="glass p-8 rounded-[24px] text-center text-sm text-muted-foreground">
+                No matching newsletter subscribers found.
+              </div>
+            ) : (
+              <div className="rounded-[26px] glass overflow-hidden border border-foreground/10 transition-opacity duration-200">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-foreground/5 text-muted-foreground font-semibold border-b border-foreground/10">
+                      <tr>
+                        <th className="py-3 px-4">Subscriber Email</th>
+                        <th className="py-3 px-4">Name / ID</th>
+                        <th className="py-3 px-4">Status</th>
+                        <th className="py-3 px-4">Subscribed Date</th>
+                        <th className="py-3 px-4">Unsubscribed Date</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-foreground/5">
+                      {filteredSubscribers.map((sub) => {
+                        const isUnsub = sub.status === "unsubscribed";
+                        return (
+                          <tr
+                            key={sub._id || sub.email}
+                            className="hover:bg-foreground/5 transition-colors"
+                          >
+                            <td className="py-3 px-4 font-semibold text-foreground">
+                              <div className="flex items-center gap-2">
+                                <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                <span>{sub.email}</span>
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 text-muted-foreground">
+                              {sub.userName || sub.email.split("@")[0]}
+                            </td>
+                            <td className="py-3 px-4">
+                              {isUnsub ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                  Unsubscribed
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                  Subscribed
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">
+                              {sub.subscribedAt ? formatDate(sub.subscribedAt) : "—"}
+                            </td>
+                            <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">
+                              {sub.unsubscribedAt ? formatDate(sub.unsubscribedAt) : isUnsub ? "Yes" : "—"}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Audit & Security Activity Stream */}
-          <div className="space-y-3 pt-4">
-            <h2 className="text-xl font-semibold tracking-tight text-foreground">
-              Recent System & Security Audit Logs
-            </h2>
+          <div className="space-y-4 pt-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-semibold tracking-tight text-foreground">
+                  Recent System & Security Audit Logs ({filteredActivity.length})
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  Real-time security trail of user join actions, event creations, and administrative updates.
+                </p>
+              </div>
+
+              {/* Tabs: All, Joined, Created, Deleted */}
+              <div className="flex items-center rounded-full glass p-0.5 border border-foreground/10 text-xs">
+                {(["all", "joined", "created", "deleted"] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setAuditFilter(tab)}
+                    className={`px-3 py-1 rounded-full text-xs font-medium capitalize transition-all duration-200 select-none ${
+                      auditFilter === tab
+                        ? "bg-foreground text-background shadow-xs"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="rounded-[26px] glass p-4 sm:p-6 border border-foreground/10 space-y-2.5">
-              {activity.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-4">
-                  No recent audit logs available.
+              {filteredActivity.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-6">
+                  No audit logs matching &ldquo;{auditFilter}&rdquo; filter.
                 </p>
               ) : (
-                <div className="divide-y divide-foreground/5 max-h-72 overflow-y-auto no-scrollbar">
-                  {activity.map((log, idx) => (
+                <div className="divide-y divide-foreground/5 max-h-80 overflow-y-auto no-scrollbar">
+                  {filteredActivity.map((log, idx) => (
                     <div
                       key={idx}
-                      className="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs"
+                      className="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs hover:bg-foreground/[0.02] px-2 rounded-xl transition-colors"
                     >
                       <div className="flex items-center gap-2">
                         <span
@@ -615,7 +798,7 @@ export default function AdminPage() {
               )}
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );
