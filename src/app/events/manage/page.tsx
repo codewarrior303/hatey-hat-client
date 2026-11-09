@@ -31,6 +31,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
 import { EventGridSkeleton } from "@/components/events/event-skeleton";
+import { Textarea } from "@/components/ui/textarea";
 import { apiFetch, invalidateCache, type EventItem } from "@/lib/api";
 import { formatDate, getHighResImageUrl } from "@/lib/utils";
 
@@ -46,7 +47,12 @@ export default function ManageEventsPage() {
   const [eventToDelete, setEventToDelete] = React.useState<EventItem | null>(
     null,
   );
+  const [cancellationReason, setCancellationReason] = React.useState("");
   const [isDeleting, setIsDeleting] = React.useState(false);
+
+  const isUnconcluded = eventToDelete
+    ? new Date(eventToDelete.eventDate).getTime() > Date.now()
+    : false;
 
   const fetchMyEvents = React.useCallback(async () => {
     try {
@@ -70,17 +76,50 @@ export default function ManageEventsPage() {
 
   const handleDeleteConfirm = async () => {
     if (!eventToDelete) return;
+    if (isUnconcluded && cancellationReason.trim().length < 5) {
+      toast.error("Please provide a cancellation reason with at least 5 characters.");
+      return;
+    }
+
     try {
       setIsDeleting(true);
-      await apiFetch(`/api/events/${eventToDelete._id}`, {
+      const res = await apiFetch<any>(`/api/events/${eventToDelete._id}`, {
         method: "DELETE",
         auth: true,
+        body: JSON.stringify({ reason: cancellationReason.trim() }),
       });
 
-      toast.success("Event and volunteer registrations deleted successfully");
+      const strike = res.data?.strikeStatus;
+      if (strike) {
+        if (strike.stage === "suspended") {
+          toast.error(
+            "Event cancelled. Your creation privileges are now suspended (3 early cancellations reached). Submit an appeal on the Organize page.",
+            { duration: 6000 }
+          );
+        } else if (strike.stage === "permanently_banned") {
+          toast.error(
+            "Event cancelled. Your account is permanently barred from creating events due to policy violation after reinstatement.",
+            { duration: 7000 }
+          );
+        } else if (strike.stage === "probation") {
+          toast(
+            `Event cancelled. Probation warning: ${strike.remainingStrikes} strike remaining before permanent ban.`,
+            { icon: "⚠️", duration: 6000 }
+          );
+        } else {
+          toast(
+            `Event cancelled. Early cancellations before conclusion: ${strike.earlyCancellations}/3.`,
+            { icon: "ℹ️", duration: 4000 }
+          );
+        }
+      } else {
+        toast.success("Event and volunteer registrations deleted successfully");
+      }
+
       invalidateCache();
       setEvents((prev) => prev.filter((e) => e._id !== eventToDelete._id));
       setEventToDelete(null);
+      setCancellationReason("");
     } catch (err: any) {
       toast.error(err?.message || "Could not delete this event");
     } finally {
@@ -230,7 +269,12 @@ export default function ManageEventsPage() {
         {/* Confirmation Modal: shadcn AlertDialog in Liquid Glass */}
         <AlertDialog
           open={Boolean(eventToDelete)}
-          onOpenChange={(open) => !open && setEventToDelete(null)}
+          onOpenChange={(open) => {
+            if (!open) {
+              setEventToDelete(null);
+              setCancellationReason("");
+            }
+          }}
         >
           <AlertDialogContent className="glass-strong border-border/50 rounded-[28px] p-6 sm:p-8 max-w-md shadow-2xl">
             <AlertDialogHeader className="space-y-2.5">
@@ -238,36 +282,68 @@ export default function ManageEventsPage() {
                 <AlertTriangle className="h-5 w-5" />
               </div>
               <AlertDialogTitle className="text-xl font-semibold">
-                Are you sure you want to delete this event?
+                {isUnconcluded
+                  ? "Cancel Unconcluded Event?"
+                  : "Delete Concluded Event?"}
               </AlertDialogTitle>
               <AlertDialogDescription className="text-sm text-muted-foreground leading-relaxed">
                 This will permanently remove{" "}
                 <strong className="text-foreground font-semibold">
                   &ldquo;{eventToDelete?.title}&rdquo;
                 </strong>{" "}
-                and all associated volunteer registrations. This action cannot
-                be undone.
+                and all associated volunteer registrations.
               </AlertDialogDescription>
             </AlertDialogHeader>
+
+            {isUnconcluded && (
+              <div className="space-y-2 py-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-foreground">
+                    Reason for Early Cancellation <span className="text-destructive">*</span>
+                  </label>
+                  <span className={`text-[11px] ${cancellationReason.trim().length < 5 ? "text-amber-500 font-medium" : "text-emerald-500 font-medium"}`}>
+                    {cancellationReason.trim().length} / 5 min chars
+                  </span>
+                </div>
+                <Textarea
+                  value={cancellationReason}
+                  onChange={(e) => setCancellationReason(e.target.value)}
+                  placeholder="Explain why this active initiative is being cancelled before its conclusion..."
+                  className="min-h-[85px] text-xs bg-background/50 border-foreground/15 rounded-xl resize-none"
+                  disabled={isDeleting}
+                />
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  <strong className="text-amber-500">Notice:</strong> Early cancellations before conclusion are monitored to protect volunteers. Cancelling 3 active drives suspends your event organizing privileges.
+                </p>
+              </div>
+            )}
+
             <AlertDialogFooter className="gap-2 sm:gap-3 pt-4 border-t border-foreground/10">
               <AlertDialogCancel
                 disabled={isDeleting}
+                onClick={() => {
+                  setEventToDelete(null);
+                  setCancellationReason("");
+                }}
                 className="rounded-full glass h-11 px-5 font-medium border-border/60"
               >
                 Keep Event
               </AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleDeleteConfirm}
-                disabled={isDeleting}
-                className="rounded-full bg-destructive text-destructive-foreground hover:opacity-90 h-11 px-6 font-medium shadow-xs"
+                disabled={
+                  isDeleting ||
+                  (isUnconcluded && cancellationReason.trim().length < 5)
+                }
+                className="rounded-full bg-destructive text-destructive-foreground hover:opacity-90 h-11 px-6 font-medium shadow-xs disabled:opacity-40 disabled:pointer-events-none"
               >
                 {isDeleting ? (
                   <span className="flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Deleting...
+                    Cancelling...
                   </span>
                 ) : (
-                  "Delete Event"
+                  "Confirm Delete"
                 )}
               </AlertDialogAction>
             </AlertDialogFooter>

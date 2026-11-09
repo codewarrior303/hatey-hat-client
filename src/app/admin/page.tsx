@@ -21,6 +21,11 @@ import {
   ExternalLink,
   Mail,
   Loader2,
+  ChevronDown,
+  ChevronUp,
+  AlertOctagon,
+  UserCheck,
+  UserX,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -74,6 +79,32 @@ interface ActivityEntry {
   userEmail?: string;
   ip: string;
   details?: Record<string, any>;
+}
+
+interface OrganizerStrikeAdmin {
+  _id: string;
+  userEmail: string;
+  userName?: string;
+  stage: "normal" | "suspended" | "probation" | "permanently_banned";
+  earlyCancellations: number;
+  probationStrikes: number;
+  appealRequest?: {
+    message: string;
+    requestedAt: string;
+    status: "pending" | "approved" | "rejected";
+    reviewedAt?: string;
+    reviewNote?: string;
+  } | null;
+  cancellationHistory?: Array<{
+    eventId: string;
+    eventTitle: string;
+    eventDate: string;
+    cancelledAt: string;
+    reason: string;
+  }>;
+  unlockedAt?: string;
+  bannedAt?: string;
+  updatedAt: string;
 }
 
 interface AdminData {
@@ -154,6 +185,53 @@ export default function AdminPage() {
   const [deletingId, setDeletingId] = React.useState<string | null>(null);
   const [isClearingConcluded, setIsClearingConcluded] = React.useState(false);
 
+  // Organizer appeals & strikes
+  const [appeals, setAppeals] = React.useState<OrganizerStrikeAdmin[]>([]);
+  const [processingAppealEmail, setProcessingAppealEmail] = React.useState<string | null>(null);
+  const [expandedEmailHistory, setExpandedEmailHistory] = React.useState<Record<string, boolean>>({});
+
+  const toggleHistory = (email: string) => {
+    setExpandedEmailHistory((prev) => ({ ...prev, [email]: !prev[email] }));
+  };
+
+  const handleApproveAppeal = async (email: string) => {
+    try {
+      setProcessingAppealEmail(email);
+      const res = await apiFetch<any>(
+        `/api/admin/appeals/${encodeURIComponent(email)}/approve`,
+        {
+          method: "POST",
+          auth: true,
+        }
+      );
+      toast.success(res.message || "Organizer reinstated on probation!");
+      fetchAdminMetrics(false, true);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to approve appeal");
+    } finally {
+      setProcessingAppealEmail(null);
+    }
+  };
+
+  const handleRejectAppeal = async (email: string) => {
+    try {
+      setProcessingAppealEmail(email);
+      const res = await apiFetch<any>(
+        `/api/admin/appeals/${encodeURIComponent(email)}/reject`,
+        {
+          method: "POST",
+          auth: true,
+        }
+      );
+      toast.success(res.message || "Appeal marked as rejected");
+      fetchAdminMetrics(false, true);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to reject appeal");
+    } finally {
+      setProcessingAppealEmail(null);
+    }
+  };
+
   const isFetchingRef = React.useRef(false);
 
   const fetchAdminMetrics = React.useCallback(
@@ -169,12 +247,21 @@ export default function AdminPage() {
         setError(null);
       }
       try {
-        const res = await apiFetch<AdminData>("/api/admin/metrics", {
-          auth: true,
-          skipCache: true,
-        });
+        const [res, appealsRes] = await Promise.all([
+          apiFetch<AdminData>("/api/admin/metrics", {
+            auth: true,
+            skipCache: true,
+          }),
+          apiFetch<OrganizerStrikeAdmin[]>("/api/admin/appeals", {
+            auth: true,
+            skipCache: true,
+          }).catch(() => ({ data: [] as OrganizerStrikeAdmin[] })),
+        ]);
         if (res?.data) {
           setAdminData(res.data);
+        }
+        if (appealsRes?.data) {
+          setAppeals(appealsRes.data);
         }
         if (isManualRefresh) {
           toast.success("Metrics refreshed with live database data!", {
@@ -873,6 +960,212 @@ export default function AdminPage() {
                     </tbody>
                   </table>
                 </div>
+              </div>
+            )}
+          </div>
+
+          {/* Organizer Appeals & Strike Management Section */}
+          <div className="space-y-4 pt-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl font-semibold tracking-tight text-foreground">
+                    Organizer Appeals & Strike Management ({formatCompactNumber(appeals.length)})
+                  </h2>
+                  {appeals.some((a) => a.appealRequest?.status === "pending") && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-black animate-pulse">
+                      Action Required
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Review early event cancellations, volunteer safety records, and reinstate suspended organizers.
+                </p>
+              </div>
+            </div>
+
+            {appeals.length === 0 ? (
+              <div className="glass p-8 rounded-[24px] text-center text-sm text-muted-foreground">
+                No organizers currently have active strike records or pending appeals.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {appeals.map((record) => {
+                  const isPendingAppeal = record.appealRequest?.status === "pending";
+                  const isExpanded = Boolean(expandedEmailHistory[record.userEmail]);
+                  const historyCount = record.cancellationHistory?.length || 0;
+                  const isProcessing = processingAppealEmail === record.userEmail;
+
+                  return (
+                    <div
+                      key={record.userEmail}
+                      className={`rounded-[26px] glass p-5 sm:p-6 border transition-all ${
+                        isPendingAppeal
+                          ? "border-amber-500/50 shadow-lg shadow-amber-500/5"
+                          : record.stage === "permanently_banned"
+                          ? "border-destructive/30"
+                          : "border-foreground/10"
+                      }`}
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-sm font-semibold text-foreground">
+                              {record.userName || record.userEmail.split("@")[0]}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              ({record.userEmail})
+                            </span>
+                            {/* Stage Badge */}
+                            {record.stage === "permanently_banned" ? (
+                              <Badge className="bg-destructive/15 text-destructive border-destructive/20 text-[10px] uppercase font-bold">
+                                Permanently Banned
+                              </Badge>
+                            ) : record.stage === "suspended" ? (
+                              <Badge className="bg-amber-500/15 text-amber-500 border-amber-500/20 text-[10px] uppercase font-bold">
+                                Suspended (3 Strikes)
+                              </Badge>
+                            ) : record.stage === "probation" ? (
+                              <Badge className="bg-blue-500/15 text-blue-500 border-blue-500/20 text-[10px] uppercase font-bold">
+                                Probation ({record.probationStrikes}/2 Strikes)
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-foreground/10 text-foreground text-[10px] uppercase font-medium">
+                                Active ({record.earlyCancellations}/3 Strikes)
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Early cancellations recorded: <strong className="text-foreground">{record.earlyCancellations}</strong>
+                            {record.stage === "probation" && (
+                              <> &bull; Probation strikes: <strong className="text-amber-500">{record.probationStrikes} / 2</strong></>
+                            )}
+                          </p>
+                        </div>
+
+                        {/* History Toggle Button */}
+                        <div className="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleHistory(record.userEmail)}
+                            className="rounded-full text-xs h-8 px-3 glass gap-1.5"
+                          >
+                            <span>Cancellation Reasons ({historyCount})</span>
+                            {isExpanded ? (
+                              <ChevronUp className="h-3.5 w-3.5" />
+                            ) : (
+                              <ChevronDown className="h-3.5 w-3.5" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Pending Appeal Banner & Action Buttons */}
+                      {isPendingAppeal && record.appealRequest && (
+                        <div className="mt-4 pt-4 border-t border-foreground/10 space-y-3">
+                          <div className="glass-strong rounded-2xl p-4 border border-amber-500/30 space-y-2 bg-amber-500/5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-semibold text-amber-500 flex items-center gap-1.5">
+                                <AlertOctagon className="h-3.5 w-3.5" />
+                                Reinstatement Appeal Request
+                              </span>
+                              <span className="text-[11px] text-muted-foreground">
+                                Submitted {formatDate(record.appealRequest.requestedAt)}
+                              </span>
+                            </div>
+                            <p className="text-xs text-foreground italic leading-relaxed">
+                              &ldquo;{record.appealRequest.message}&rdquo;
+                            </p>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-2 pt-1">
+                            <Button
+                              type="button"
+                              size="sm"
+                              disabled={isProcessing}
+                              onClick={() => handleApproveAppeal(record.userEmail)}
+                              className="rounded-full bg-emerald-600 text-white hover:bg-emerald-700 h-8 px-4 text-xs font-medium gap-1.5 shadow-xs"
+                            >
+                              {isProcessing ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <UserCheck className="h-3.5 w-3.5" />
+                              )}
+                              <span>Approve & Place on Probation</span>
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={isProcessing}
+                              onClick={() => handleRejectAppeal(record.userEmail)}
+                              className="rounded-full border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 h-8 px-4 text-xs font-medium gap-1.5"
+                            >
+                              {isProcessing ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <UserX className="h-3.5 w-3.5" />
+                              )}
+                              <span>Reject Appeal</span>
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Reviewed Appeal Status (if not pending) */}
+                      {!isPendingAppeal && record.appealRequest?.status && (
+                        <div className="mt-3 text-xs text-muted-foreground flex items-center gap-2">
+                          <span className="font-semibold text-foreground">Appeal Status:</span>
+                          <span
+                            className={
+                              record.appealRequest.status === "approved"
+                                ? "text-emerald-500 font-medium"
+                                : "text-rose-500 font-medium"
+                            }
+                          >
+                            {record.appealRequest.status.toUpperCase()} &mdash;{" "}
+                            {record.appealRequest.reviewNote || "Reviewed by administrator"}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Expanded Cancellation History with Reasons */}
+                      {isExpanded && (
+                        <div className="mt-4 pt-4 border-t border-foreground/10 space-y-2">
+                          <p className="text-xs font-semibold text-foreground">
+                            Early Cancellation History & Stated Reasons:
+                          </p>
+                          {historyCount === 0 ? (
+                            <p className="text-xs text-muted-foreground">No history items logged.</p>
+                          ) : (
+                            <div className="space-y-2 max-h-60 overflow-y-auto no-scrollbar">
+                              {record.cancellationHistory?.map((item, idx) => (
+                                <div
+                                  key={idx}
+                                  className="glass rounded-xl p-3 border border-foreground/5 space-y-1 text-xs"
+                                >
+                                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                                    <span className="font-semibold text-foreground">
+                                      {item.eventTitle}
+                                    </span>
+                                    <span className="text-[11px] text-muted-foreground">
+                                      Cancelled {formatDate(item.cancelledAt)} (Scheduled: {formatDate(item.eventDate)})
+                                    </span>
+                                  </div>
+                                  <div className="bg-background/40 p-2 rounded-lg text-muted-foreground">
+                                    <strong className="text-foreground">Reason provided:</strong> &ldquo;{item.reason}&rdquo;
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
