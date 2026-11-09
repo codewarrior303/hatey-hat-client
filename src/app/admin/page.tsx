@@ -107,6 +107,24 @@ export default function AdminPage() {
   const isAuthorized =
     user?.email?.toLowerCase().trim() === AUTHORIZED_ADMIN_EMAIL.toLowerCase();
 
+  // Track rejected unauthorized emails so we can inform the user even after session revocation
+  const [rejectedEmail, setRejectedEmail] = React.useState<string | null>(null);
+
+  // If a non-admin user lands on /admin (e.g. attempted login with unauthorized Google account),
+  // immediately revoke and destroy the session so they are NEVER left logged in as a user on the site.
+  React.useEffect(() => {
+    if (user && !isAuthorized) {
+      const email = user.email;
+      setRejectedEmail(email);
+      authClient.signOut().then(() => {
+        invalidateCache();
+        if (typeof window !== "undefined") {
+          window.sessionStorage.clear();
+        }
+      });
+    }
+  }, [user, isAuthorized]);
+
   // Reset loading state on browser back/forward or tab return
   React.useEffect(() => {
     const handleReset = () => setIsSigningInGoogle(false);
@@ -335,44 +353,50 @@ export default function AdminPage() {
     );
   }
 
-  // State 3: Logged in, but unauthorized email
-  if (!isAuthorized) {
+  // State 3: Rejected unauthorized email (session automatically revoked)
+  if (rejectedEmail || (user && !isAuthorized)) {
+    const displayEmail = rejectedEmail || user?.email;
     return (
       <div className="container mx-auto px-4 py-20 max-w-md text-center">
-        <div className="rounded-[32px] glass p-8 sm:p-10 space-y-6 shadow-sm border border-destructive/20">
+        <div className="rounded-[32px] glass p-8 sm:p-10 space-y-6 shadow-sm border border-destructive/20 animate-in fade-in-50">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10 text-destructive mx-auto">
             <ShieldAlert className="h-7 w-7" />
           </div>
 
           <div className="space-y-2">
             <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              Access Restricted
+              Admin Access Denied
             </h1>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              You are currently signed in as:
+              The Google account you selected is not authorized:
             </p>
             <p className="text-sm font-semibold text-foreground bg-foreground/5 py-1.5 px-3 rounded-full inline-block">
-              {user.email}
+              {displayEmail}
             </p>
-            <p className="text-xs text-muted-foreground pt-1">
-              This account does not have administrator privileges. Only authorized administrators are allowed to access the Hatey Hat Admin Panel.
+            <p className="text-xs text-rose-600 dark:text-rose-400 font-medium pt-1">
+              Session rejected and automatically terminated. You are not logged into the system.
             </p>
           </div>
 
           <div className="flex flex-col gap-2.5 pt-2">
             <Button
-              variant="outline"
-              onClick={async () => {
-                await authClient.signOut();
-                router.push("/admin");
+              type="button"
+              onClick={() => {
+                setRejectedEmail(null);
+                handleGoogleAdminLogin();
               }}
-              className="rounded-full gap-2 glass"
+              className="rounded-full gap-2 shadow-xs"
             >
-              <LogOut className="h-4 w-4" />
-              <span>Switch Google Account</span>
+              <ShieldCheck className="h-4 w-4" />
+              <span>Sign in with Authorized Admin Account</span>
             </Button>
 
-            <Button asChild variant="ghost" className="rounded-full gap-2">
+            <Button
+              asChild
+              variant="outline"
+              onClick={() => setRejectedEmail(null)}
+              className="rounded-full gap-2 glass"
+            >
               <Link href="/">
                 <Home className="h-4 w-4" />
                 <span>Return to Home</span>
