@@ -13,7 +13,10 @@ import { apiFetch, type EventItem } from "@/lib/api";
 
 export default function EditEventPage() {
   const params = useParams();
-  const eventId = params.id as string;
+  const rawId = params.id as string;
+  const category = params.category as string | undefined;
+  const title = params.title as string | undefined;
+  const eventId = category && title && rawId ? `${category}/${title}/${rawId}` : rawId;
 
   const [event, setEvent] = React.useState<EventItem | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -26,6 +29,11 @@ export default function EditEventPage() {
       setError(null);
       const res = await apiFetch<EventItem>(`/api/events/${eventId}`);
       setEvent(res.data);
+      if (res.data?.slug && typeof window !== "undefined") {
+        if (window.location.pathname.includes(res.data._id)) {
+          window.history.replaceState(null, "", `/events/${res.data.slug}/edit`);
+        }
+      }
     } catch (err: any) {
       setError(err?.message || "Failed to load event details");
     } finally {

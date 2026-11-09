@@ -6,41 +6,7 @@ import { cn } from "@/lib/utils";
 
 const TooltipProvider = TooltipPrimitive.Provider;
 
-function Tooltip({
-  children,
-  open,
-  ...props
-}: React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Root>) {
-  const [isTouchDevice, setIsTouchDevice] = React.useState(false);
-
-  React.useEffect(() => {
-    const checkTouch = () => {
-      const hasTouch =
-        window.matchMedia("(hover: none), (pointer: coarse)").matches ||
-        window.innerWidth < 1024;
-      setIsTouchDevice(hasTouch);
-    };
-
-    checkTouch();
-    window.addEventListener("resize", checkTouch);
-    return () => window.removeEventListener("resize", checkTouch);
-  }, []);
-
-  // Suppress tooltips completely on touch devices (phones & tablets)
-  if (isTouchDevice) {
-    return (
-      <TooltipPrimitive.Root open={false} {...props}>
-        {children}
-      </TooltipPrimitive.Root>
-    );
-  }
-
-  return (
-    <TooltipPrimitive.Root open={open} {...props}>
-      {children}
-    </TooltipPrimitive.Root>
-  );
-}
+const Tooltip = TooltipPrimitive.Root;
 
 const TooltipTrigger = TooltipPrimitive.Trigger;
 

@@ -48,7 +48,7 @@ export default function JoinedEventsPage() {
             My Joined Activities
           </h1>
           <p className="text-[15px] text-muted-foreground max-w-2xl">
-            All the social welfare drives and volunteer events you have
+            All the community events and volunteer initiatives you have
             registered to take part in, ordered by event date.
           </p>
         </div>
@@ -61,7 +61,7 @@ export default function JoinedEventsPage() {
           <EmptyState
             icon={CheckCircle2}
             title="No Events Joined Yet"
-            description="You haven't joined any volunteer events yet. Explore upcoming drives across Bangladesh and take part."
+            description="You haven't joined any volunteer events yet. Explore upcoming events across Bangladesh and take part."
             actionHref="/events"
             actionLabel="Discover Upcoming Events"
           />
@@ -69,9 +69,10 @@ export default function JoinedEventsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {joins.map((join) => {
               const eventId =
-                typeof join.eventId === "string"
+                join.eventSlug ||
+                (typeof join.eventId === "string"
                   ? join.eventId
-                  : (join.eventId as any)?._id;
+                  : (join.eventId as any)?._id);
               return (
                 <article
                   key={join._id}

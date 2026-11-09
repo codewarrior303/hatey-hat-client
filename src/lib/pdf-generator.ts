@@ -10,6 +10,7 @@ export interface ParticipantItem {
 
 export interface EventRosterMeta {
   _id: string;
+  slug?: string;
   title: string;
   eventType: string;
   eventDate: string | Date;
@@ -32,30 +33,46 @@ export function generateEventParticipantsPDF(
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 14;
 
-  // 1. BRAND HEADER
+  // 1. BRAND HEADER (Monochrome Liquid Glass Theme matching the website)
   doc.setFillColor(17, 24, 39); // #111827 deep charcoal
   doc.rect(0, 0, pageWidth, 28, "F");
+
+  // Subtle clean monochrome border at bottom of header
+  doc.setDrawColor(55, 65, 81); // #374151
+  doc.setLineWidth(0.4);
+  doc.line(0, 28, pageWidth, 28);
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
   doc.setTextColor(255, 255, 255);
-  doc.text("HATEY HAT", margin, 12);
+  doc.text("HATEY HAT", margin, 12.5);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
-  doc.setTextColor(209, 213, 219);
-  doc.text("Community-Driven Social Events & Disaster Relief Platform", margin, 18);
-  doc.text("Hatey Hat, ekshathe poth chola", margin, 23);
+  doc.setTextColor(226, 232, 240);
+  doc.text("Community-Driven Social Events Platform", margin, 18);
 
-  // Right-aligned header badge
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.setTextColor(156, 163, 175);
+  doc.text("Grassroots Relief & Volunteer Network  •  Official Attendance Record", margin, 23);
+
+  // Right-aligned header badge pill (Monochrome Glass Badge)
+  const badgeW = 60;
+  const badgeH = 5.5;
+  const badgeX = pageWidth - margin - badgeW;
+  doc.setFillColor(31, 41, 55);
+  doc.setDrawColor(75, 85, 99);
+  doc.roundedRect(badgeX, 7.5, badgeW, badgeH, 1.2, 1.2, "FD");
+
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
-  doc.setTextColor(255, 255, 255);
-  doc.text("OFFICIAL PARTICIPANT ROSTER", pageWidth - margin, 12, { align: "right" });
+  doc.setFontSize(7);
+  doc.setTextColor(243, 244, 246);
+  doc.text("OFFICIAL PARTICIPANT ROSTER", badgeX + badgeW / 2, 11.2, { align: "center" });
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
-  doc.setTextColor(209, 213, 219);
+  doc.setTextColor(203, 213, 225);
   const genDate = new Date().toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
@@ -63,8 +80,8 @@ export function generateEventParticipantsPDF(
     hour: "2-digit",
     minute: "2-digit",
   });
-  doc.text(`Generated: ${genDate}`, pageWidth - margin, 18, { align: "right" });
-  doc.text(`Event ID: ${String(event._id).slice(-8).toUpperCase()}`, pageWidth - margin, 23, {
+  doc.text(`Generated: ${genDate}`, pageWidth - margin, 17.5, { align: "right" });
+  doc.text(`Event ID: #${String(event._id).slice(-8).toUpperCase()}`, pageWidth - margin, 22.5, {
     align: "right",
   });
 
@@ -163,12 +180,12 @@ export function generateEventParticipantsPDF(
       1: { cellWidth: 54 },
       2: { cellWidth: 62 },
       3: { cellWidth: 34 },
-      4: { cellWidth: 20, halign: "center", fontStyle: "bold", textColor: [16, 185, 129] },
+      4: { cellWidth: 20, halign: "center", fontStyle: "bold", textColor: [30, 41, 59] },
     },
     alternateRowStyles: {
       fillColor: [248, 250, 252],
     },
-    didDrawPage: (data) => {
+    didDrawPage: () => {
       // 4. FOOTER ON EVERY A4 PAGE
       const totalPages = (doc as any).internal.getNumberOfPages();
       const currentPage = (doc as any).internal.getCurrentPageInfo().pageNumber;

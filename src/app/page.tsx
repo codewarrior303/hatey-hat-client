@@ -12,7 +12,6 @@ import {
   MapPin,
   Sparkles,
   AlertCircle,
-  Loader2,
   CheckCircle2,
   BellOff,
   ChevronLeft,
@@ -31,7 +30,6 @@ import {
   apiFetch,
   getCachedData,
   setCachedData,
-  invalidateCache,
   type EventItem,
   type EventType,
 } from "@/lib/api";
@@ -180,10 +178,23 @@ export default function HomePage() {
   }, [checkSubscriberStatus]);
 
   const fetchRecentEvents = React.useCallback(async () => {
+    const TARGET_SERVICES: EventType[] = [
+      "Flood & Disaster Relief",
+      "Emergency Response",
+      "Winter Relief",
+      "Food Distribution",
+      "Health Camp",
+      "Blood Donation",
+      "Cleanup",
+      "Plantation",
+      "Donation",
+      "Education",
+    ];
+
     try {
       const cached =
         typeof window !== "undefined"
-          ? getCachedData<EventItem[]>("/api/events?limit=6")
+          ? getCachedData<EventItem[]>("/api/events?limit=9_services")
           : null;
       if (cached && cached.length > 0) {
         setEvents(cached);
@@ -193,15 +204,40 @@ export default function HomePage() {
       }
       setError(null);
       const [eventsRes, statsRes] = await Promise.allSettled([
-        apiFetch<EventItem[]>("/api/events?limit=6"),
-        apiFetch<StatsSummary>("/api/events/stats/summary"),
+        apiFetch<EventItem[]>("/api/events?limit=40", { skipCache: true }),
+        apiFetch<StatsSummary>("/api/events/stats/summary", { skipCache: true }),
       ]);
 
       if (eventsRes.status === "fulfilled") {
-        const freshEvents = eventsRes.value.data || [];
-        setEvents(freshEvents);
+        const rawEvents = eventsRes.value.data || [];
+        const nonEducationEvents = rawEvents.filter((e) => e.eventType !== "Education");
+
+        // If 9 or more other events already exist, exclude Education from home page.
+        // If fewer than 9 other events exist, include Education events to help fill the 9 slots!
+        const availablePool =
+          nonEducationEvents.length >= 9 ? nonEducationEvents : rawEvents;
+
+        // Pick one event per target service from available pool
+        const selectedMap = new Map<string, EventItem>();
+        for (const service of TARGET_SERVICES) {
+          const match = availablePool.find((e) => e.eventType === service);
+          if (match) {
+            selectedMap.set(service, match);
+          }
+        }
+
+        // Fill remaining slots up to 9 with other upcoming initiatives from availablePool
+        const selectedEvents = Array.from(selectedMap.values());
+        for (const ev of availablePool) {
+          if (selectedEvents.length >= 9) break;
+          if (!selectedEvents.some((s) => s._id === ev._id)) {
+            selectedEvents.push(ev);
+          }
+        }
+
+        setEvents(selectedEvents);
         if (typeof window !== "undefined") {
-          setCachedData("/api/events?limit=6", freshEvents);
+          setCachedData("/api/events?limit=9_services", selectedEvents);
         }
       } else {
         setError(eventsRes.reason?.message || "Failed to load recent events");
@@ -349,7 +385,7 @@ export default function HomePage() {
       eventType: "Blood Donation",
       title: "Blood Donation",
       description:
-        "Voluntary blood donor registration and screening drives connecting verified donors with patients requiring urgent blood.",
+        "Voluntary blood donor registration and screening events connecting verified donors with patients requiring urgent blood.",
       image: "/community/blood-donation.jpg",
     },
     {
@@ -393,13 +429,13 @@ export default function HomePage() {
       icon: MapPin,
       title: "Hyper-Local Initiatives",
       description:
-        "Find relief camps, clothing drives, cleanups, blood donation, and health camps happening directly in your neighbourhood across Bangladesh.",
+        "Find relief camps, clothing distributions, cleanups, blood donation, and health camps happening directly in your neighbourhood across Bangladesh.",
     },
     {
       icon: PlusCircle,
       title: "Community Event Creation",
       description:
-        "Have a cause or emergency? Launch a flood relief campaign, neighbourhood cleanup, or food drive with transparent schedules.",
+        "Have a cause or emergency? Launch a flood relief campaign, neighbourhood cleanup, or food relief initiative with transparent schedules.",
     },
     {
       icon: ShieldCheck,
@@ -512,7 +548,7 @@ export default function HomePage() {
                 Upcoming Initiatives
               </h2>
               <p className="text-[15px] text-muted-foreground">
-                Social service drives happening across communities in Bangladesh.
+                Social service events happening across communities in Bangladesh.
               </p>
             </div>
 
@@ -530,13 +566,13 @@ export default function HomePage() {
         </ScrollReveal>
 
         {isLoading ? (
-          <EventGridSkeleton count={6} />
+          <EventGridSkeleton count={9} />
         ) : error ? (
           <ErrorState message={error} onRetry={fetchRecentEvents} />
         ) : events.length === 0 ? (
           <EmptyState
             title="No Upcoming Events Right Now"
-            description="Be the first neighbour to organize a local drive, cleanup, or aid distribution in your area."
+            description="Be the first neighbour to organize a local event, cleanup, or aid distribution in your area."
             actionHref="/events/create"
             actionLabel="Create an Event"
           />
@@ -604,7 +640,7 @@ export default function HomePage() {
                 Community in Action
               </h2>
               <p className="text-[15px] text-muted-foreground">
-                Grassroots initiatives and emergency response drives across Bangladesh.
+                Grassroots initiatives and emergency response events across Bangladesh.
               </p>
             </div>
 
@@ -693,7 +729,7 @@ export default function HomePage() {
                 Stay in the community loop.
               </h2>
               <p className="text-[15px] text-muted-foreground leading-relaxed">
-                Get weekly updates on upcoming relief drives, cleanups, and
+                Get weekly updates on upcoming relief events, cleanups, and
                 local volunteer initiatives across Bangladesh.
               </p>
             </div>

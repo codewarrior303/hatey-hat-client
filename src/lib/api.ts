@@ -40,25 +40,60 @@ export class ClientApiError extends Error {
   }
 }
 
+let cachedAuthToken: string | null = null;
+let tokenExpiresAt = 0;
+
+export function invalidateAuthTokenCache() {
+  cachedAuthToken = null;
+  tokenExpiresAt = 0;
+}
+
 export async function getAuthToken(): Promise<string | null> {
-  try {
-    const res = await authClient.token();
-    if (res?.data?.token) {
-      return res.data.token;
-    }
-  } catch (err) {
-    console.warn("Failed to retrieve token via authClient.token()", err);
+  // Return cached token if valid (keeps a 30s buffer before expiry)
+  if (cachedAuthToken && Date.now() < tokenExpiresAt - 30_000) {
+    return cachedAuthToken;
   }
 
-  // Fallback: direct cookie-authenticated fetch to the local Next.js route
+  // 1. Direct fetch to local Next.js route (works seamlessly in all browsers)
   try {
     const localRes = await fetch("/api/auth/token", {
       method: "GET",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      cache: "no-store",
     });
     if (localRes.ok) {
       const data = await localRes.json();
-      if (data?.token) return data.token;
+      if (data?.token && typeof data.token === "string") {
+        cachedAuthToken = data.token;
+        tokenExpiresAt = Date.now() + 5 * 60 * 1000; // cache for 5 minutes
+        return data.token;
+      }
+    }
+  } catch {
+    // Silent: expected when unauthenticated or during initial session resolution
+  }
+
+  // 2. Fallback via Better-Auth client
+  try {
+    const res = await authClient.token();
+    if (res?.data?.token) {
+      cachedAuthToken = res.data.token;
+      tokenExpiresAt = Date.now() + 5 * 60 * 1000;
+      return res.data.token;
+    }
+  } catch {
+    // Silent: expected when unauthenticated
+  }
+
+  // 3. Fallback: check session database token from active Better-Auth session
+  try {
+    const sessionRes = await authClient.getSession();
+    const sessionToken = (sessionRes?.data as any)?.session?.token;
+    if (sessionToken && typeof sessionToken === "string") {
+      cachedAuthToken = sessionToken;
+      tokenExpiresAt = Date.now() + 5 * 60 * 1000;
+      return sessionToken;
     }
   } catch {
     // Ignore fallback failure
@@ -100,9 +135,19 @@ export async function apiFetch<T>(
   };
 
   if (auth) {
-    const token = await getAuthToken();
+    let token = await getAuthToken();
+    if (!token) {
+      // Small pause to resolve hydration race condition after fresh OAuth sign-in
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      token = await getAuthToken();
+    }
     if (token) {
       reqHeaders.Authorization = `Bearer ${token}`;
+    } else {
+      throw new ClientApiError(
+        401,
+        "Authentication session could not be verified. Please sign in or refresh the page."
+      );
     }
   }
 
@@ -183,6 +228,7 @@ export type EventType = (typeof EVENT_TYPES)[number];
 
 export interface EventItem {
   _id: string;
+  slug?: string;
   title: string;
   description: string;
   eventType: EventType;
@@ -191,14 +237,21 @@ export interface EventItem {
   eventDate: string;
   creatorEmail: string;
   creatorName: string;
+  creatorPhone?: string;
+  organization?: string;
   createdAt: string;
   updatedAt: string;
   participants?: number;
+  hasJoined?: boolean;
+  organizerRating?: number;
+  organizerConcludedEvents?: number;
+  organizerRatingReason?: string;
 }
 
 export interface JoinItem {
   _id: string;
   eventId: string;
+  eventSlug?: string;
   eventTitle: string;
   eventDate: string;
   eventThumbnail: string;

@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   ShieldCheck,
   ShieldAlert,
@@ -10,14 +9,11 @@ import {
   Users,
   Trash2,
   Clock,
-  ArrowRight,
   RefreshCw,
-  LogOut,
   Home,
   CheckCircle2,
   AlertCircle,
   Search,
-  Filter,
   ExternalLink,
   Mail,
   Loader2,
@@ -33,9 +29,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useSession, authClient } from "@/lib/auth-client";
 import { apiFetch, invalidateCache } from "@/lib/api";
-import { formatDate, formatCompactNumber } from "@/lib/utils";
+import { formatDate, formatCompactNumber, cn } from "@/lib/utils";
 
 const AUTHORIZED_ADMIN_EMAIL = "abirahnafshahriar@gmail.com";
 
@@ -103,7 +109,10 @@ interface OrganizerStrikeAdmin {
     reason: string;
   }>;
   unlockedAt?: string;
+  unlockedBy?: string;
   bannedAt?: string;
+  hasTwoMonthBanHistory?: boolean;
+  probationBaseRating?: number;
   updatedAt: string;
 }
 
@@ -115,7 +124,6 @@ interface AdminData {
 }
 
 export default function AdminPage() {
-  const router = useRouter();
   const { data: session, isPending } = useSession();
   const user = session?.user;
 
@@ -137,24 +145,6 @@ export default function AdminPage() {
 
   const isAuthorized =
     user?.email?.toLowerCase().trim() === AUTHORIZED_ADMIN_EMAIL.toLowerCase();
-
-  // Track rejected unauthorized emails so we can inform the user even after session revocation
-  const [rejectedEmail, setRejectedEmail] = React.useState<string | null>(null);
-
-  // If a non-admin user lands on /admin (e.g. attempted login with unauthorized Google account),
-  // immediately revoke and destroy the session so they are NEVER left logged in as a user on the site.
-  React.useEffect(() => {
-    if (user && !isAuthorized) {
-      const email = user.email;
-      setRejectedEmail(email);
-      authClient.signOut().then(() => {
-        invalidateCache();
-        if (typeof window !== "undefined") {
-          window.sessionStorage.clear();
-        }
-      });
-    }
-  }, [user, isAuthorized]);
 
   // Reset loading state on browser back/forward or tab return
   React.useEffect(() => {
@@ -183,12 +173,128 @@ export default function AdminPage() {
   };
 
   const [deletingId, setDeletingId] = React.useState<string | null>(null);
+  const [eventToDelete, setEventToDelete] = React.useState<{ id: string; title: string } | null>(null);
   const [isClearingConcluded, setIsClearingConcluded] = React.useState(false);
+  const [isConfirmingClearConcluded, setIsConfirmingClearConcluded] = React.useState(false);
 
   // Organizer appeals & strikes
   const [appeals, setAppeals] = React.useState<OrganizerStrikeAdmin[]>([]);
-  const [processingAppealEmail, setProcessingAppealEmail] = React.useState<string | null>(null);
+  const [processingAppealAction, setProcessingAppealAction] = React.useState<{
+    email: string;
+    action: "approve" | "reject" | "unban";
+  } | null>(null);
   const [expandedEmailHistory, setExpandedEmailHistory] = React.useState<Record<string, boolean>>({});
+  // Section 1: Organizer Appeals & Strikes (7-Day Probation & Suspensions)
+  const [appealTab, setAppealTab] = React.useState<"all" | "appeals" | "approved" | "rejected">("all");
+  const [appealSearchQuery, setAppealSearchQuery] = React.useState("");
+
+  // Section 2: 2-Month Ban & Reinstatement Management
+  const [banTab, setBanTab] = React.useState<"all" | "banned" | "appeals" | "restored">("all");
+  const [banSearchQuery, setBanSearchQuery] = React.useState("");
+
+  // Helper to determine if an organizer belongs to Section 2 (2-month ban: active or past unbanned)
+  const isTwoMonthRecord = React.useCallback((a: OrganizerStrikeAdmin) => {
+    const note = (a.appealRequest?.reviewNote || "").toLowerCase();
+    return Boolean(
+      a.stage === "permanently_banned" ||
+      (a as any).hasTwoMonthBanHistory ||
+      Boolean(a.bannedAt) ||
+      a.unlockedBy === "automation_2_months" ||
+      a.unlockedBy === "platform_admin" ||
+      (a.probationBaseRating !== undefined && a.probationBaseRating <= 2.5) ||
+      note.includes("2.5") ||
+      note.includes("2-month") ||
+      note.includes("unbanned by platform administration") ||
+      (a.earlyCancellations !== undefined && a.earlyCancellations >= 4) ||
+      (a.probationStrikes !== undefined && a.probationStrikes >= 2)
+    );
+  }, []);
+
+  // Split into Section 1 (7-day cooling-off / suspensions / 1st-tier strikes) and Section 2 (2-month bans)
+  const strikeAppeals = React.useMemo(() => {
+    return appeals.filter((a) => !isTwoMonthRecord(a));
+  }, [appeals, isTwoMonthRecord]);
+
+  const twoMonthBans = React.useMemo(() => {
+    return appeals.filter((a) => isTwoMonthRecord(a));
+  }, [appeals, isTwoMonthRecord]);
+
+  const pendingStrikeAppealsCount = React.useMemo(
+    () => strikeAppeals.filter((a) => a.appealRequest?.status === "pending").length,
+    [strikeAppeals]
+  );
+
+  const pendingBanAppealsCount = React.useMemo(
+    () =>
+      twoMonthBans.filter(
+        (a) =>
+          a.stage === "permanently_banned" &&
+          a.appealRequest?.status === "pending" &&
+          (!a.bannedAt || new Date(a.appealRequest.requestedAt).getTime() >= new Date(a.bannedAt).getTime())
+      ).length,
+    [twoMonthBans]
+  );
+
+  const filteredStrikeAppeals = React.useMemo(() => {
+    let list = strikeAppeals;
+    if (appealTab === "appeals") {
+      list = list.filter((a) => a.appealRequest?.status === "pending");
+    } else if (appealTab === "approved") {
+      list = list.filter((a) => a.appealRequest?.status === "approved" || a.stage === "probation");
+    } else if (appealTab === "rejected") {
+      list = list.filter((a) => a.appealRequest?.status === "rejected");
+    }
+
+    if (appealSearchQuery.trim()) {
+      const q = appealSearchQuery.toLowerCase().trim();
+      list = list.filter(
+        (a) =>
+          a.userEmail.toLowerCase().includes(q) ||
+          (a.userName && a.userName.toLowerCase().includes(q)) ||
+          (a.appealRequest?.message && a.appealRequest.message.toLowerCase().includes(q)) ||
+          (a.cancellationHistory &&
+            a.cancellationHistory.some(
+              (c) =>
+                c.eventTitle.toLowerCase().includes(q) ||
+                c.reason.toLowerCase().includes(q)
+            ))
+      );
+    }
+    return list;
+  }, [strikeAppeals, appealTab, appealSearchQuery]);
+
+  const filteredTwoMonthBans = React.useMemo(() => {
+    let list = twoMonthBans;
+    if (banTab === "banned") {
+      list = list.filter((a) => a.stage === "permanently_banned");
+    } else if (banTab === "appeals") {
+      list = list.filter(
+        (a) =>
+          a.stage === "permanently_banned" &&
+          a.appealRequest?.status === "pending" &&
+          (!a.bannedAt || new Date(a.appealRequest.requestedAt).getTime() >= new Date(a.bannedAt).getTime())
+      );
+    } else if (banTab === "restored") {
+      list = list.filter((a) => a.stage !== "permanently_banned");
+    }
+
+    if (banSearchQuery.trim()) {
+      const q = banSearchQuery.toLowerCase().trim();
+      list = list.filter(
+        (a) =>
+          a.userEmail.toLowerCase().includes(q) ||
+          (a.userName && a.userName.toLowerCase().includes(q)) ||
+          (a.appealRequest?.message && a.appealRequest.message.toLowerCase().includes(q)) ||
+          (a.cancellationHistory &&
+            a.cancellationHistory.some(
+              (c) =>
+                c.eventTitle.toLowerCase().includes(q) ||
+                c.reason.toLowerCase().includes(q)
+            ))
+      );
+    }
+    return list;
+  }, [twoMonthBans, banTab, banSearchQuery]);
 
   const toggleHistory = (email: string) => {
     setExpandedEmailHistory((prev) => ({ ...prev, [email]: !prev[email] }));
@@ -196,7 +302,7 @@ export default function AdminPage() {
 
   const handleApproveAppeal = async (email: string) => {
     try {
-      setProcessingAppealEmail(email);
+      setProcessingAppealAction({ email, action: "approve" });
       const res = await apiFetch<any>(
         `/api/admin/appeals/${encodeURIComponent(email)}/approve`,
         {
@@ -209,13 +315,13 @@ export default function AdminPage() {
     } catch (err: any) {
       toast.error(err?.message || "Failed to approve appeal");
     } finally {
-      setProcessingAppealEmail(null);
+      setProcessingAppealAction(null);
     }
   };
 
   const handleRejectAppeal = async (email: string) => {
     try {
-      setProcessingAppealEmail(email);
+      setProcessingAppealAction({ email, action: "reject" });
       const res = await apiFetch<any>(
         `/api/admin/appeals/${encodeURIComponent(email)}/reject`,
         {
@@ -228,7 +334,26 @@ export default function AdminPage() {
     } catch (err: any) {
       toast.error(err?.message || "Failed to reject appeal");
     } finally {
-      setProcessingAppealEmail(null);
+      setProcessingAppealAction(null);
+    }
+  };
+
+  const handleUnbanOrganizer = async (email: string) => {
+    try {
+      setProcessingAppealAction({ email, action: "unban" });
+      const res = await apiFetch<any>(
+        `/api/admin/appeals/${encodeURIComponent(email)}/unban`,
+        {
+          method: "POST",
+          auth: true,
+        }
+      );
+      toast.success(res.message || "Organizer unbanned and restored on probation!");
+      fetchAdminMetrics(false, true);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to unban organizer");
+    } finally {
+      setProcessingAppealAction(null);
     }
   };
 
@@ -289,14 +414,14 @@ export default function AdminPage() {
     }
   }, [isAuthorized, fetchAdminMetrics]);
 
-  // Adaptive background polling (10s interval, pauses when document is hidden)
+  // Adaptive background polling (15s interval, pauses when document is hidden)
   React.useEffect(() => {
     if (!isAuthorized) return;
     const interval = setInterval(() => {
       if (typeof document !== "undefined" && document.visibilityState === "visible") {
         fetchAdminMetrics(false, true);
       }
-    }, 10000);
+    }, 15000);
 
     const onVisibilityChange = () => {
       if (document.visibilityState === "visible") {
@@ -311,10 +436,9 @@ export default function AdminPage() {
     };
   }, [isAuthorized, fetchAdminMetrics]);
 
-  const handleDeleteEvent = async (id: string, title: string) => {
-    if (!confirm(`Are you sure you want to permanently delete "${title}" from the database? All volunteer join records for this event will also be removed.`)) {
-      return;
-    }
+  const confirmDeleteEvent = async () => {
+    if (!eventToDelete) return;
+    const { id } = eventToDelete;
 
     setDeletingId(id);
     // Optimistic removal
@@ -346,14 +470,11 @@ export default function AdminPage() {
       fetchAdminMetrics(false, true);
     } finally {
       setDeletingId(null);
+      setEventToDelete(null);
     }
   };
 
-  const handleClearConcluded = async () => {
-    if (!confirm("Are you sure you want to remove ALL concluded events from the database?")) {
-      return;
-    }
-
+  const confirmClearConcluded = async () => {
     setIsClearingConcluded(true);
     try {
       const res = await apiFetch<any>("/api/admin/events/concluded/all", {
@@ -368,6 +489,7 @@ export default function AdminPage() {
       toast.error(err?.message || "Failed to clear concluded events");
     } finally {
       setIsClearingConcluded(false);
+      setIsConfirmingClearConcluded(false);
     }
   };
 
@@ -440,53 +562,49 @@ export default function AdminPage() {
     );
   }
 
-  // State 3: Rejected unauthorized email (session automatically revoked)
-  if (rejectedEmail || (user && !isAuthorized)) {
-    const displayEmail = rejectedEmail || user?.email;
+  // State 3: User logged in, but not the authorized administrator
+  if (user && !isAuthorized) {
     return (
       <div className="container mx-auto px-4 py-20 max-w-md text-center">
-        <div className="rounded-[32px] glass p-8 sm:p-10 space-y-6 shadow-sm border border-destructive/20 animate-in fade-in-50">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10 text-destructive mx-auto">
+        <div className="rounded-[32px] glass p-8 sm:p-10 space-y-6 shadow-sm border border-amber-500/20 animate-in fade-in-50">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 mx-auto">
             <ShieldAlert className="h-7 w-7" />
           </div>
 
           <div className="space-y-2">
             <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              Admin Access Denied
+              Admin Access Restricted
             </h1>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              The Google account you selected is not authorized:
+              You are signed in as:
             </p>
-            <p className="text-sm font-semibold text-foreground bg-foreground/5 py-1.5 px-3 rounded-full inline-block">
-              {displayEmail}
+            <p className="text-sm font-semibold text-foreground bg-foreground/5 py-1.5 px-3 rounded-full inline-block truncate max-w-full">
+              {user.email}
             </p>
-            <p className="text-xs text-rose-600 dark:text-rose-400 font-medium pt-1">
-              Session rejected and automatically terminated. You are not logged into the system.
+            <p className="text-xs text-muted-foreground pt-1 leading-relaxed">
+              This account does not have platform administrative privileges. Your regular user session is safe and active. To access this panel, sign in with the authorized Google administrator account.
             </p>
           </div>
 
           <div className="flex flex-col gap-2.5 pt-2">
             <Button
               type="button"
-              onClick={() => {
-                setRejectedEmail(null);
-                handleGoogleAdminLogin();
-              }}
+              onClick={handleGoogleAdminLogin}
+              disabled={isSigningInGoogle}
               className="rounded-full gap-2 shadow-xs"
             >
               <ShieldCheck className="h-4 w-4" />
-              <span>Sign in with Authorized Admin Account</span>
+              <span>{isSigningInGoogle ? "Connecting to Google..." : "Sign in with Admin Google Account"}</span>
             </Button>
 
             <Button
               asChild
               variant="outline"
-              onClick={() => setRejectedEmail(null)}
               className="rounded-full gap-2 glass"
             >
               <Link href="/">
                 <Home className="h-4 w-4" />
-                <span>Return to Home</span>
+                <span>Return to Main Site</span>
               </Link>
             </Button>
           </div>
@@ -528,7 +646,7 @@ export default function AdminPage() {
   });
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 py-8 md:py-12 max-w-6xl space-y-8 animate-in fade-in-50">
+    <div className="container mx-auto px-4 sm:px-6 pt-28 sm:pt-36 pb-12 max-w-6xl space-y-8 animate-in fade-in-50">
       {/* Admin Dashboard Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-foreground/10">
         <div className="space-y-1">
@@ -536,7 +654,7 @@ export default function AdminPage() {
             Platform Admin Panel
           </h1>
           <p className="text-sm text-muted-foreground">
-            Live overview of volunteer participation, events created, deletions, and concluded drives across Bangladesh.
+            Live overview of volunteer participation, events created, deletions, and concluded events across Bangladesh.
           </p>
         </div>
 
@@ -671,7 +789,7 @@ export default function AdminPage() {
                   {formatCompactNumber(stats?.concludedEvents ?? 0)}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Past drives ({formatCompactNumber(stats?.upcomingEvents ?? 0)} active)
+                  Past events ({formatCompactNumber(stats?.upcomingEvents ?? 0)} active)
                 </p>
               </div>
             </div>
@@ -727,7 +845,7 @@ export default function AdminPage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={handleClearConcluded}
+                    onClick={() => setIsConfirmingClearConcluded(true)}
                     disabled={isClearingConcluded}
                     className="h-8 rounded-full border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 text-xs gap-1.5 px-3 transition-colors"
                   >
@@ -740,15 +858,15 @@ export default function AdminPage() {
                   </Button>
                 )}
 
-                <div className="flex items-center rounded-full glass p-0.5 border border-foreground/10 text-xs">
+                <div className="flex items-center rounded-full glass p-0.5 border border-foreground/10 text-xs w-full sm:w-auto">
                   {(["all", "active", "concluded"] as const).map((tab) => (
                     <button
                       key={tab}
                       type="button"
                       onClick={() => setStatusFilter(tab)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium capitalize transition-all duration-200 select-none ${
+                      className={`flex-1 sm:flex-initial text-center justify-center px-3 py-1 rounded-full text-xs font-medium capitalize transition-all duration-200 select-none ${
                         statusFilter === tab
-                          ? "bg-foreground text-background shadow-xs"
+                          ? "bg-foreground text-background shadow-xs font-semibold"
                           : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
@@ -836,7 +954,7 @@ export default function AdminPage() {
                                 className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground"
                               >
                                 <Link
-                                  href={`/events/${ev._id}`}
+                                  href={`/events/${(ev as any).slug || ev._id}`}
                                   target="_blank"
                                   aria-label="Open public event"
                                 >
@@ -848,9 +966,9 @@ export default function AdminPage() {
                                 type="button"
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => handleDeleteEvent(ev._id, ev.title)}
+                                onClick={() => setEventToDelete({ id: ev._id, title: ev.title })}
                                 disabled={deletingId === ev._id}
-                                title="Permanently delete from database"
+                                aria-label="Permanently delete from database"
                                 className="h-7 w-7 rounded-full text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 transition-colors"
                               >
                                 {deletingId === ev._id ? (
@@ -883,15 +1001,15 @@ export default function AdminPage() {
               </div>
 
               {/* Tabs for Subscribers: All, Active, Unsubscribed */}
-              <div className="flex items-center rounded-full glass p-0.5 border border-foreground/10 text-xs">
+              <div className="flex items-center rounded-full glass p-0.5 border border-foreground/10 text-xs w-full sm:w-auto">
                 {(["all", "subscribed", "unsubscribed"] as const).map((tab) => (
                   <button
                     key={tab}
                     type="button"
                     onClick={() => setSubscribersFilter(tab)}
-                    className={`px-3 py-1 rounded-full text-xs font-medium capitalize transition-all duration-200 select-none ${
+                    className={`flex-1 sm:flex-initial text-center justify-center px-3 py-1 rounded-full text-xs font-medium capitalize transition-all duration-200 select-none ${
                       subscribersFilter === tab
-                        ? "bg-foreground text-background shadow-xs"
+                        ? "bg-foreground text-background shadow-xs font-semibold"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
@@ -964,37 +1082,111 @@ export default function AdminPage() {
             )}
           </div>
 
-          {/* Organizer Appeals & Strike Management Section */}
+          {/* Section 1: Organizer Appeals & Strike Management (7-Day Probation & Suspensions) */}
           <div className="space-y-4 pt-2">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="text-xl font-semibold tracking-tight text-foreground">
-                    Organizer Appeals & Strike Management ({formatCompactNumber(appeals.length)})
+                    Organizer Appeals &amp; Strike Management ({formatCompactNumber(strikeAppeals.length)})
                   </h2>
-                  {appeals.some((a) => a.appealRequest?.status === "pending") && (
+                  {pendingStrikeAppealsCount > 0 && (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-black animate-pulse">
-                      Action Required
+                      Action Required ({pendingStrikeAppealsCount})
                     </span>
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Review early event cancellations, volunteer safety records, and reinstate suspended organizers.
+                  Review early event cancellations, organizer strike records, and 7-day probation cooling-off appeals.
                 </p>
+              </div>
+
+              {/* Search Organizer & Top Right Filter Tabs for Section 1 */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
+                <div className="relative w-full sm:w-60">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Search name, email, appeal..."
+                    value={appealSearchQuery}
+                    onChange={(e) => setAppealSearchQuery(e.target.value)}
+                    className="pl-8 h-8 text-xs rounded-full glass border-foreground/10 focus-visible:ring-foreground/20"
+                  />
+                </div>
+
+                <div className="flex items-center gap-1 p-1 rounded-full glass border border-foreground/10 w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={() => setAppealTab("all")}
+                    className={cn(
+                      "flex-1 sm:flex-initial text-center justify-center px-2 sm:px-3 py-1 text-[11px] sm:text-xs font-semibold rounded-full transition-all cursor-pointer",
+                      appealTab === "all"
+                        ? "bg-foreground text-background shadow-xs font-bold"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    All
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAppealTab("appeals")}
+                    className={cn(
+                      "flex-1 sm:flex-initial text-center justify-center px-2 sm:px-3 py-1 text-[11px] sm:text-xs font-semibold rounded-full transition-all cursor-pointer flex items-center justify-center gap-1",
+                      appealTab === "appeals"
+                        ? "bg-amber-500 text-black shadow-xs font-bold"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    Appeals (Msg)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAppealTab("approved")}
+                    className={cn(
+                      "flex-1 sm:flex-initial text-center justify-center px-2 sm:px-3 py-1 text-[11px] sm:text-xs font-semibold rounded-full transition-all cursor-pointer",
+                      appealTab === "approved"
+                        ? "bg-emerald-600 text-white shadow-xs font-bold"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    Approved
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAppealTab("rejected")}
+                    className={cn(
+                      "flex-1 sm:flex-initial text-center justify-center px-2 sm:px-3 py-1 text-[11px] sm:text-xs font-semibold rounded-full transition-all cursor-pointer",
+                      appealTab === "rejected"
+                        ? "bg-rose-600 text-white shadow-xs font-bold"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    Rejected
+                  </button>
+                </div>
               </div>
             </div>
 
-            {appeals.length === 0 ? (
+            {strikeAppeals.length === 0 ? (
               <div className="glass p-8 rounded-[24px] text-center text-sm text-muted-foreground">
                 No organizers currently have active strike records or pending appeals.
               </div>
+            ) : filteredStrikeAppeals.length === 0 ? (
+              <div className="glass p-8 rounded-[24px] text-center text-sm text-muted-foreground">
+                No records found under the &quot;{appealTab}&quot; filter.
+              </div>
             ) : (
-              <div className="space-y-3">
-                {appeals.map((record) => {
+              <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1.5 focus:outline-hidden">
+                {filteredStrikeAppeals.map((record) => {
                   const isPendingAppeal = record.appealRequest?.status === "pending";
                   const isExpanded = Boolean(expandedEmailHistory[record.userEmail]);
                   const historyCount = record.cancellationHistory?.length || 0;
-                  const isProcessing = processingAppealEmail === record.userEmail;
+                  const isApproving =
+                    processingAppealAction?.email === record.userEmail &&
+                    processingAppealAction?.action === "approve";
+                  const isRejecting =
+                    processingAppealAction?.email === record.userEmail &&
+                    processingAppealAction?.action === "reject";
 
                   return (
                     <div
@@ -1002,8 +1194,6 @@ export default function AdminPage() {
                       className={`rounded-[26px] glass p-5 sm:p-6 border transition-all ${
                         isPendingAppeal
                           ? "border-amber-500/50 shadow-lg shadow-amber-500/5"
-                          : record.stage === "permanently_banned"
-                          ? "border-destructive/30"
                           : "border-foreground/10"
                       }`}
                     >
@@ -1016,29 +1206,21 @@ export default function AdminPage() {
                             <span className="text-xs text-muted-foreground">
                               ({record.userEmail})
                             </span>
-                            {/* Stage Badge */}
-                            {record.stage === "permanently_banned" ? (
-                              <Badge className="bg-destructive/15 text-destructive border-destructive/20 text-[10px] uppercase font-bold">
-                                Permanently Banned
-                              </Badge>
-                            ) : record.stage === "suspended" ? (
+                            {record.stage === "suspended" && (
                               <Badge className="bg-amber-500/15 text-amber-500 border-amber-500/20 text-[10px] uppercase font-bold">
-                                Suspended (3 Strikes)
+                                Suspended
                               </Badge>
-                            ) : record.stage === "probation" ? (
-                              <Badge className="bg-blue-500/15 text-blue-500 border-blue-500/20 text-[10px] uppercase font-bold">
-                                Probation ({record.probationStrikes}/2 Strikes)
-                              </Badge>
-                            ) : (
-                              <Badge className="bg-foreground/10 text-foreground text-[10px] uppercase font-medium">
-                                Active ({record.earlyCancellations}/3 Strikes)
+                            )}
+                            {record.stage === "probation" && (
+                              <Badge className="bg-sky-500/15 text-sky-400 border-sky-500/20 text-[10px] uppercase font-bold">
+                                Probation
                               </Badge>
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground">
                             Early cancellations recorded: <strong className="text-foreground">{record.earlyCancellations}</strong>
                             {record.stage === "probation" && (
-                              <> &bull; Probation strikes: <strong className="text-amber-500">{record.probationStrikes} / 2</strong></>
+                              <> &middot; Probation strikes: <strong className="text-amber-400">{record.probationStrikes || 0} / 2</strong></>
                             )}
                           </p>
                         </div>
@@ -1062,14 +1244,16 @@ export default function AdminPage() {
                         </div>
                       </div>
 
-                      {/* Pending Appeal Banner & Action Buttons */}
+                      {/* Suspension or 7-Day Probation Appeal Request */}
                       {isPendingAppeal && record.appealRequest && (
                         <div className="mt-4 pt-4 border-t border-foreground/10 space-y-3">
                           <div className="glass-strong rounded-2xl p-4 border border-amber-500/30 space-y-2 bg-amber-500/5">
                             <div className="flex items-center justify-between">
                               <span className="text-xs font-semibold text-amber-500 flex items-center gap-1.5">
                                 <AlertOctagon className="h-3.5 w-3.5" />
-                                Reinstatement Appeal Request
+                                {record.stage === "probation"
+                                  ? "7-Day Probation Early Approval Request"
+                                  : "Suspension Reinstatement Appeal Request"}
                               </span>
                               <span className="text-[11px] text-muted-foreground">
                                 Submitted {formatDate(record.appealRequest.requestedAt)}
@@ -1084,26 +1268,30 @@ export default function AdminPage() {
                             <Button
                               type="button"
                               size="sm"
-                              disabled={isProcessing}
+                              disabled={Boolean(processingAppealAction?.email === record.userEmail)}
                               onClick={() => handleApproveAppeal(record.userEmail)}
-                              className="rounded-full bg-emerald-600 text-white hover:bg-emerald-700 h-8 px-4 text-xs font-medium gap-1.5 shadow-xs"
+                              className="rounded-full bg-emerald-600 text-white hover:bg-emerald-700 h-8 px-4 text-xs font-medium gap-1.5 shadow-xs cursor-pointer"
                             >
-                              {isProcessing ? (
+                              {isApproving ? (
                                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                               ) : (
                                 <UserCheck className="h-3.5 w-3.5" />
                               )}
-                              <span>Approve & Place on Probation</span>
+                              <span>
+                                {record.stage === "probation"
+                                  ? "Grant Early Approval"
+                                  : "Approve & Place on Probation"}
+                              </span>
                             </Button>
                             <Button
                               type="button"
                               variant="outline"
                               size="sm"
-                              disabled={isProcessing}
+                              disabled={Boolean(processingAppealAction?.email === record.userEmail)}
                               onClick={() => handleRejectAppeal(record.userEmail)}
-                              className="rounded-full border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 h-8 px-4 text-xs font-medium gap-1.5"
+                              className="rounded-full border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 h-8 px-4 text-xs font-medium gap-1.5 cursor-pointer"
                             >
-                              {isProcessing ? (
+                              {isRejecting ? (
                                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                               ) : (
                                 <UserX className="h-3.5 w-3.5" />
@@ -1114,7 +1302,7 @@ export default function AdminPage() {
                         </div>
                       )}
 
-                      {/* Reviewed Appeal Status (if not pending) */}
+                      {/* Reviewed Appeal Status if not pending */}
                       {!isPendingAppeal && record.appealRequest?.status && (
                         <div className="mt-3 text-xs text-muted-foreground flex items-center gap-2">
                           <span className="font-semibold text-foreground">Appeal Status:</span>
@@ -1131,11 +1319,11 @@ export default function AdminPage() {
                         </div>
                       )}
 
-                      {/* Expanded Cancellation History with Reasons */}
+                      {/* Expanded Cancellation History */}
                       {isExpanded && (
                         <div className="mt-4 pt-4 border-t border-foreground/10 space-y-2">
                           <p className="text-xs font-semibold text-foreground">
-                            Early Cancellation History & Stated Reasons:
+                            Early Cancellation History &amp; Stated Reasons:
                           </p>
                           {historyCount === 0 ? (
                             <p className="text-xs text-muted-foreground">No history items logged.</p>
@@ -1170,6 +1358,319 @@ export default function AdminPage() {
             )}
           </div>
 
+          {/* Section 2: 2-Month Ban & Reinstatement Management */}
+          <div className="space-y-4 pt-4 border-t border-foreground/10">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl font-semibold tracking-tight text-foreground">
+                    2-Month Ban &amp; Reinstatement Management ({formatCompactNumber(twoMonthBans.length)})
+                  </h2>
+                  {pendingBanAppealsCount > 0 && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-600 text-white animate-pulse">
+                      Action Required ({pendingBanAppealsCount})
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Manage organizers serving 2-month suspension bans (2 probation strikes). Review 1-month early appeal notes or manually unban organizers to probation.
+                </p>
+              </div>
+
+              {/* Search Organizer & Top Right Filter Tabs for Section 2 */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
+                <div className="relative w-full sm:w-60">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Search banned name, email, appeal..."
+                    value={banSearchQuery}
+                    onChange={(e) => setBanSearchQuery(e.target.value)}
+                    className="pl-8 h-8 text-xs rounded-full glass border-foreground/10 focus-visible:ring-foreground/20"
+                  />
+                </div>
+
+                <div className="flex items-center gap-1 p-1 rounded-full glass border border-foreground/10 w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={() => setBanTab("all")}
+                    className={cn(
+                      "flex-1 sm:flex-initial text-center justify-center px-2 sm:px-3 py-1 text-[11px] sm:text-xs font-semibold rounded-full transition-all cursor-pointer",
+                      banTab === "all"
+                        ? "bg-foreground text-background shadow-xs font-bold"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    All
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBanTab("banned")}
+                    className={cn(
+                      "flex-1 sm:flex-initial text-center justify-center px-2 sm:px-3 py-1 text-[11px] sm:text-xs font-semibold rounded-full transition-all cursor-pointer",
+                      banTab === "banned"
+                        ? "bg-rose-600 text-white shadow-xs font-bold"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    Active Bans
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBanTab("appeals")}
+                    className={cn(
+                      "flex-1 sm:flex-initial text-center justify-center px-2 sm:px-3 py-1 text-[11px] sm:text-xs font-semibold rounded-full transition-all cursor-pointer flex items-center justify-center gap-1",
+                      banTab === "appeals"
+                        ? "bg-amber-500 text-black shadow-xs font-bold"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    1-Month Appeals (Msg)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBanTab("restored")}
+                    className={cn(
+                      "flex-1 sm:flex-initial text-center justify-center px-2 sm:px-3 py-1 text-[11px] sm:text-xs font-semibold rounded-full transition-all cursor-pointer",
+                      banTab === "restored"
+                        ? "bg-emerald-600 text-white shadow-xs font-bold"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    Unbanned
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {twoMonthBans.length === 0 ? (
+              <div className="glass p-8 rounded-[24px] text-center text-sm text-muted-foreground">
+                No organizers are currently serving a 2-month ban or have past ban records.
+              </div>
+            ) : filteredTwoMonthBans.length === 0 ? (
+              <div className="glass p-8 rounded-[24px] text-center text-sm text-muted-foreground">
+                No records found under the &quot;{banTab}&quot; filter.
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1.5 focus:outline-hidden">
+                {filteredTwoMonthBans.map((record) => {
+                  const isExpanded = Boolean(expandedEmailHistory[record.userEmail]);
+                  const historyCount = record.cancellationHistory?.length || 0;
+                  const isUnbanning =
+                    processingAppealAction?.email === record.userEmail &&
+                    processingAppealAction?.action === "unban";
+                  const isRejecting =
+                    processingAppealAction?.email === record.userEmail &&
+                    processingAppealAction?.action === "reject";
+                  const isProcessing = processingAppealAction?.email === record.userEmail;
+
+                  return (
+                    <div
+                      key={record.userEmail}
+                      className={`rounded-[26px] glass p-5 sm:p-6 border transition-all ${
+                        record.stage === "permanently_banned"
+                          ? "border-destructive/30 shadow-lg shadow-destructive/5"
+                          : "border-foreground/10"
+                      }`}
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-sm font-semibold text-foreground">
+                              {record.userName || record.userEmail.split("@")[0]}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              ({record.userEmail})
+                            </span>
+                            {record.stage === "permanently_banned" ? (
+                              <Badge className="bg-destructive/15 text-destructive border-destructive/20 text-[10px] uppercase font-bold">
+                                2-Month Ban Active
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/20 text-[10px] uppercase font-bold">
+                                Unbanned
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Probation cancellations: <strong className="text-rose-400">{record.probationStrikes || 2} / 2 (Triggered 2-month ban)</strong>
+                            {record.bannedAt && (
+                              <> &middot; Banned on: <span className="text-foreground">{formatDate(record.bannedAt)}</span></>
+                            )}
+                          </p>
+                        </div>
+
+                        {/* History Toggle Button */}
+                        <div className="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleHistory(record.userEmail)}
+                            className="rounded-full text-xs h-8 px-3 glass gap-1.5"
+                          >
+                            <span>Cancellation Reasons ({historyCount})</span>
+                            {isExpanded ? (
+                              <ChevronUp className="h-3.5 w-3.5" />
+                            ) : (
+                              <ChevronDown className="h-3.5 w-3.5" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* 1-Month Early Appeal Note Section (only if submitted AFTER the 2-month ban began) */}
+                      {(() => {
+                        const banAppeal =
+                          record.stage === "permanently_banned" &&
+                          record.appealRequest?.message &&
+                          (!record.bannedAt ||
+                            new Date(record.appealRequest.requestedAt).getTime() >=
+                              new Date(record.bannedAt).getTime())
+                            ? record.appealRequest
+                            : null;
+
+                        if (!banAppeal) return null;
+
+                        return (
+                          <div className="mt-4 pt-4 border-t border-destructive/20 space-y-3">
+                            <div className="glass-strong rounded-2xl p-4 border border-amber-500/40 bg-amber-500/10 space-y-2.5">
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                                <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5 uppercase tracking-wide">
+                                  <Clock className="h-3.5 w-3.5" />
+                                  1-Month Early Appeal Note from Banned Organizer
+                                </span>
+                                <span className="text-[11px] text-muted-foreground">
+                                  Submitted {formatDate(banAppeal.requestedAt)}
+                                </span>
+                              </div>
+                              <div className="bg-background/60 p-3 rounded-xl border border-amber-500/20 text-xs text-foreground italic leading-relaxed">
+                                &ldquo;{banAppeal.message}&rdquo;
+                              </div>
+                              {banAppeal.status === "pending" ? (
+                                <div className="flex flex-wrap items-center gap-2 pt-1">
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    disabled={isProcessing}
+                                    onClick={() => handleUnbanOrganizer(record.userEmail)}
+                                    className="rounded-full bg-emerald-600 text-white hover:bg-emerald-700 h-8 px-4 text-xs font-semibold gap-1.5 shadow-xs cursor-pointer"
+                                  >
+                                    {isUnbanning ? (
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    ) : (
+                                      <UserCheck className="h-3.5 w-3.5" />
+                                    )}
+                                    <span>Approve Note &amp; Unban to Probation (2.5 ★)</span>
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={isProcessing}
+                                    onClick={() => handleRejectAppeal(record.userEmail)}
+                                    className="rounded-full border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 h-8 px-4 text-xs font-medium gap-1.5 cursor-pointer"
+                                  >
+                                    {isRejecting ? (
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    ) : (
+                                      <UserX className="h-3.5 w-3.5" />
+                                    )}
+                                    <span>Reject Note</span>
+                                  </Button>
+                                </div>
+                              ) : (
+                                <div className="text-xs text-muted-foreground flex items-center gap-2 pt-1">
+                                  <span className="font-semibold text-foreground">Note Review Status:</span>
+                                  <span
+                                    className={
+                                      banAppeal.status === "approved"
+                                        ? "text-emerald-400 font-medium"
+                                        : "text-rose-400 font-medium"
+                                    }
+                                  >
+                                    {banAppeal.status.toUpperCase()} &mdash;{" "}
+                                    {banAppeal.reviewNote || "Reviewed by administrator"}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
+
+                      {/* Expanded Cancellation History */}
+                      {isExpanded && (
+                        <div className="mt-4 pt-4 border-t border-foreground/10 space-y-2">
+                          <p className="text-xs font-semibold text-foreground">
+                            Cancellation History That Led to 2-Month Ban:
+                          </p>
+                          {historyCount === 0 ? (
+                            <p className="text-xs text-muted-foreground">No history items logged.</p>
+                          ) : (
+                            <div className="space-y-2 max-h-60 overflow-y-auto no-scrollbar">
+                              {record.cancellationHistory?.map((item, idx) => (
+                                <div
+                                  key={idx}
+                                  className="glass rounded-xl p-3 border border-foreground/5 space-y-1 text-xs"
+                                >
+                                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                                    <span className="font-semibold text-foreground">
+                                      {item.eventTitle}
+                                    </span>
+                                    <span className="text-[11px] text-muted-foreground">
+                                      Cancelled {formatDate(item.cancelledAt)} (Scheduled: {formatDate(item.eventDate)})
+                                    </span>
+                                  </div>
+                                  <div className="bg-background/40 p-2 rounded-lg text-muted-foreground">
+                                    <strong className="text-foreground">Reason provided:</strong> &ldquo;{item.reason}&rdquo;
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Active Ban Info Banner when no appeal note */}
+                      {record.stage === "permanently_banned" &&
+                        (!record.appealRequest?.message ||
+                          (record.bannedAt &&
+                            new Date(record.appealRequest.requestedAt).getTime() <
+                              new Date(record.bannedAt).getTime())) && (
+                        <div className="mt-4 pt-4 border-t border-destructive/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-destructive/5 rounded-2xl p-4 border border-destructive/20">
+                          <div className="space-y-0.5">
+                            <p className="text-xs text-destructive font-semibold flex items-center gap-1.5">
+                              <AlertOctagon className="h-3.5 w-3.5" />
+                              Organizer is currently serving a 2-month ban.
+                            </p>
+                            <p className="text-[11px] text-muted-foreground">
+                              Administrator privilege allows overriding the ban and reinstating the organizer to probation immediately (starting at 2.5 ★ base).
+                            </p>
+                          </div>
+                          <Button
+                            type="button"
+                            size="sm"
+                            disabled={isProcessing}
+                            onClick={() => handleUnbanOrganizer(record.userEmail)}
+                            className="rounded-full bg-emerald-600 text-white hover:bg-emerald-700 h-8 px-4 text-xs font-medium gap-1.5 shadow-xs shrink-0 cursor-pointer self-start sm:self-auto"
+                          >
+                            {isUnbanning ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <UserCheck className="h-3.5 w-3.5" />
+                            )}
+                            <span>Unban to Probation</span>
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           {/* Audit & Security Activity Stream */}
           <div className="space-y-4 pt-2">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1183,15 +1684,15 @@ export default function AdminPage() {
               </div>
 
               {/* Tabs: All, Joined, Created, Deleted */}
-              <div className="flex items-center rounded-full glass p-0.5 border border-foreground/10 text-xs">
+              <div className="flex items-center rounded-full glass p-0.5 border border-foreground/10 text-xs w-full sm:w-auto">
                 {(["all", "joined", "created", "deleted"] as const).map((tab) => (
                   <button
                     key={tab}
                     type="button"
                     onClick={() => setAuditFilter(tab)}
-                    className={`px-3 py-1 rounded-full text-xs font-medium capitalize transition-all duration-200 select-none ${
+                    className={`flex-1 sm:flex-initial text-center justify-center px-3 py-1 rounded-full text-xs font-medium capitalize transition-all duration-200 select-none ${
                       auditFilter === tab
-                        ? "bg-foreground text-background shadow-xs"
+                        ? "bg-foreground text-background shadow-xs font-semibold"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
@@ -1244,6 +1745,96 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+
+      {/* Custom Liquid Glass Modal for Single Event Permanent Deletion */}
+      <AlertDialog
+        open={Boolean(eventToDelete)}
+        onOpenChange={(open) => {
+          if (!open) setEventToDelete(null);
+        }}
+      >
+        <AlertDialogContent className="glass-strong border border-rose-500/30 rounded-[28px] p-6 sm:p-8 max-w-md shadow-2xl">
+          <AlertDialogHeader className="space-y-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500 mx-auto sm:mx-0">
+              <Trash2 className="h-6 w-6" />
+            </div>
+            <AlertDialogTitle className="text-xl font-semibold text-foreground">
+              Permanently Delete Event?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-muted-foreground leading-relaxed">
+              Are you sure you want to permanently delete{" "}
+              <strong className="text-foreground font-semibold">
+                &ldquo;{eventToDelete?.title}&rdquo;
+              </strong>{" "}
+              from the database? All volunteer join records for this event will also be removed. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter className="gap-2 sm:gap-3 pt-4 border-t border-foreground/10">
+            <AlertDialogCancel
+              disabled={Boolean(deletingId)}
+              onClick={() => setEventToDelete(null)}
+              className="rounded-full glass border-foreground/15 hover:bg-foreground/10 font-medium h-10 px-5 cursor-pointer"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={Boolean(deletingId)}
+              onClick={confirmDeleteEvent}
+              className="rounded-full bg-rose-600 hover:bg-rose-700 text-white font-semibold h-10 px-5 shadow-md gap-2 cursor-pointer"
+            >
+              {deletingId ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              <span>Permanently Delete</span>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Custom Liquid Glass Modal for Clearing All Concluded Events */}
+      <AlertDialog
+        open={isConfirmingClearConcluded}
+        onOpenChange={(open) => setIsConfirmingClearConcluded(open)}
+      >
+        <AlertDialogContent className="glass-strong border border-rose-500/30 rounded-[28px] p-6 sm:p-8 max-w-md shadow-2xl">
+          <AlertDialogHeader className="space-y-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500 mx-auto sm:mx-0">
+              <Trash2 className="h-6 w-6" />
+            </div>
+            <AlertDialogTitle className="text-xl font-semibold text-foreground">
+              Remove All Concluded Events?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-muted-foreground leading-relaxed">
+              Are you sure you want to remove <strong className="text-foreground font-semibold">ALL concluded events</strong> from the database? This action will permanently delete past completed initiatives and cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter className="gap-2 sm:gap-3 pt-4 border-t border-foreground/10">
+            <AlertDialogCancel
+              disabled={isClearingConcluded}
+              onClick={() => setIsConfirmingClearConcluded(false)}
+              className="rounded-full glass border-foreground/15 hover:bg-foreground/10 font-medium h-10 px-5 cursor-pointer"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isClearingConcluded}
+              onClick={confirmClearConcluded}
+              className="rounded-full bg-rose-600 hover:bg-rose-700 text-white font-semibold h-10 px-5 shadow-md gap-2 cursor-pointer"
+            >
+              {isClearingConcluded ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              <span>Delete All Concluded</span>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

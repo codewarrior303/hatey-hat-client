@@ -9,20 +9,18 @@ import {
   MapPin,
   ArrowLeft,
   Download,
-  Copy,
   Check,
   Search,
   Mail,
   ShieldCheck,
-  Share2,
   Clock,
-  Sparkles,
   AlertCircle,
   FileText,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { PrivateRoute } from "@/components/auth/private-route";
+import { useSession } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -46,13 +44,18 @@ interface ParticipantsApiResponse {
 export default function EventParticipantsPage() {
   const params = useParams();
   const router = useRouter();
-  const eventId = params.id as string;
+  const rawId = params.id as string;
+  const category = params.category as string | undefined;
+  const title = params.title as string | undefined;
+  const eventId = category && title && rawId ? `${category}/${title}/${rawId}` : rawId;
+
+  const { data: session } = useSession();
+  const currentUserEmail = session?.user?.email?.toLowerCase().trim();
 
   const [data, setData] = React.useState<ParticipantsApiResponse | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [copiedLink, setCopiedLink] = React.useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = React.useState(false);
 
   const fetchParticipants = React.useCallback(async () => {
@@ -64,25 +67,67 @@ export default function EventParticipantsPage() {
         `/api/events/${eventId}/participants`,
         { auth: true, skipCache: true }
       );
+
+      const creatorEmail = res.data?.event?.creatorEmail?.toLowerCase().trim();
+      const isAdmin = currentUserEmail === "abirahnafshahriar@gmail.com";
+      if (currentUserEmail && creatorEmail && currentUserEmail !== creatorEmail && !isAdmin) {
+        toast.error("Access denied: Only the event organizer can view the volunteer roster.", {
+          id: "roster-forbidden",
+        });
+        router.replace(`/events/${res.data?.event?.slug || eventId}`);
+        return;
+      }
+
       setData(res.data);
+      if (res.data?.event?.slug && typeof window !== "undefined") {
+        if (window.location.pathname.includes(res.data.event._id)) {
+          window.history.replaceState(null, "", `/events/${res.data.event.slug}/participants`);
+        }
+      }
     } catch (err: any) {
-      setError(err?.message || "Failed to load event participants");
+      const msg = err?.message || "Failed to load event participants";
+      if (
+        err?.status === 403 ||
+        msg.toLowerCase().includes("organizer") ||
+        msg.toLowerCase().includes("permission")
+      ) {
+        toast.error("Only the event organizer can view the volunteer roster.", {
+          id: "forbidden-roster",
+        });
+        router.replace(`/events/${eventId}`);
+        return;
+      }
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
-  }, [eventId]);
+  }, [eventId, currentUserEmail, router]);
 
   React.useEffect(() => {
     fetchParticipants();
   }, [fetchParticipants]);
 
-  const handleCopyLink = () => {
-    if (typeof window !== "undefined") {
-      navigator.clipboard.writeText(window.location.href);
-      setCopiedLink(true);
-      toast.success("Organizer roster link copied to clipboard!");
-      setTimeout(() => setCopiedLink(false), 2000);
+  const handleEmailClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    email: string
+  ) => {
+    // Detect mobile browsers / devices
+    const isMobile =
+      /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
+    if (!isMobile) {
+      // Desktop: Open Google Workspace / Gmail compose in browser
+      e.preventDefault();
+      window.open(
+        `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+          email
+        )}`,
+        "_blank",
+        "noopener,noreferrer"
+      );
     }
+    // Mobile: Let native mailto: proceed to open user's default Gmail or mail app
   };
 
   const handleDownloadPDF = () => {
@@ -90,7 +135,7 @@ export default function EventParticipantsPage() {
     try {
       setIsGeneratingPdf(true);
       generateEventParticipantsPDF(data.event, data.participants);
-      toast.success("A4 Volunteer Roster PDF downloaded successfully!");
+      toast.success("Volunteer Roster PDF downloaded successfully!");
     } catch (err: any) {
       toast.error(err?.message || "Failed to generate PDF");
     } finally {
@@ -98,16 +143,17 @@ export default function EventParticipantsPage() {
     }
   };
 
+  const participants = data?.participants;
   const filteredParticipants = React.useMemo(() => {
-    if (!data?.participants) return [];
-    if (!searchQuery.trim()) return data.participants;
+    if (!participants) return [];
+    if (!searchQuery.trim()) return participants;
     const q = searchQuery.toLowerCase().trim();
-    return data.participants.filter(
+    return participants.filter(
       (p) =>
         p.userName.toLowerCase().includes(q) ||
         p.userEmail.toLowerCase().includes(q)
     );
-  }, [data?.participants, searchQuery]);
+  }, [participants, searchQuery]);
 
   return (
     <PrivateRoute>
@@ -120,7 +166,7 @@ export default function EventParticipantsPage() {
             size="sm"
             className="gap-2 rounded-full -ml-2 text-muted-foreground hover:text-foreground"
           >
-            <Link href={`/events/${eventId}`}>
+            <Link href={`/events/${data?.event?.slug || eventId}`}>
               <ArrowLeft className="h-4 w-4" />
               <span>Back to Event Details</span>
             </Link>
@@ -155,33 +201,15 @@ export default function EventParticipantsPage() {
               )}
             </div>
 
-            {/* Actions: Download PDF & Copy Link */}
+            {/* Actions: Download PDF */}
             <div className="flex flex-wrap items-center gap-3 shrink-0">
-              <Button
-                onClick={handleCopyLink}
-                variant="outline"
-                className="gap-2 rounded-full h-11 px-5 glass"
-              >
-                {copiedLink ? (
-                  <>
-                    <Check className="h-4 w-4 text-emerald-500" />
-                    <span>Copied</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-4 w-4" />
-                    <span>Copy Roster Link</span>
-                  </>
-                )}
-              </Button>
-
               <Button
                 onClick={handleDownloadPDF}
                 disabled={isLoading || !data || data.participants.length === 0 || isGeneratingPdf}
                 className="gap-2 rounded-full h-11 px-6 font-medium shadow-sm bg-foreground text-background hover:opacity-90 transition-opacity"
               >
                 <Download className="h-4 w-4" />
-                <span>Download A4 PDF</span>
+                <span>Download PDF</span>
               </Button>
             </div>
           </div>
@@ -249,7 +277,7 @@ export default function EventParticipantsPage() {
                   </p>
                 </div>
                 <p className="text-[15px] font-semibold text-foreground">
-                  Ready for A4 Export
+                  Ready for Export
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Clean official report format
@@ -359,7 +387,9 @@ export default function EventParticipantsPage() {
                             <td className="py-3.5 px-4 text-muted-foreground">
                               <a
                                 href={`mailto:${participant.userEmail}`}
-                                className="inline-flex items-center gap-1.5 hover:text-foreground hover:underline transition-colors"
+                                onClick={(e) => handleEmailClick(e, participant.userEmail)}
+                                className="inline-flex items-center gap-1.5 hover:text-foreground hover:underline transition-colors cursor-pointer"
+                                title="Compose email in Gmail / Mail app"
                               >
                                 <Mail className="h-3.5 w-3.5 opacity-60" />
                                 <span>{participant.userEmail}</span>

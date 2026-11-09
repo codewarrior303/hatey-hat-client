@@ -87,7 +87,7 @@ export default function UpcomingEventsPage() {
 
   // Load full events catalog once for real-time autocomplete indexing
   React.useEffect(() => {
-    apiFetch<EventItem[]>("/api/events")
+    apiFetch<EventItem[]>("/api/events", { skipCache: true })
       .then((res) => {
         if (res.data) setAllEvents(res.data);
       })
@@ -185,7 +185,7 @@ export default function UpcomingEventsPage() {
       }
       setError(null);
 
-      const res = await apiFetch<EventItem[]>(endpoint);
+      const res = await apiFetch<EventItem[]>(endpoint, { skipCache: true });
       setEvents(res.data || []);
     } catch (err: any) {
       setError(err?.message || "Failed to load upcoming events");
@@ -270,7 +270,7 @@ export default function UpcomingEventsPage() {
             Upcoming Initiatives
           </h1>
           <p className="text-[15px] text-muted-foreground max-w-2xl">
-            Browse and join upcoming social welfare drives across communities in Bangladesh.
+            Browse and join upcoming community events and relief initiatives across Bangladesh.
           </p>
         </div>
 

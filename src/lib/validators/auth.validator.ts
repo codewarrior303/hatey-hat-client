@@ -31,10 +31,12 @@ export const registerSchema = z.object({
   photoURL: z
     .string()
     .trim()
-    .url("Photo URL must be a valid web link (e.g., https://...)")
     .refine(
-      (val) => /^https?:\/\//i.test(val) && !/^(javascript|data|vbscript):/i.test(val),
-      "Photo URL must start with http:// or https://"
+      (val) =>
+        !val ||
+        /^https?:\/\//i.test(val) ||
+        /^\/api\/upload\/image\/[a-f0-9]{24}$/i.test(val),
+      "Photo URL must be a valid image link or uploaded file"
     )
     .or(z.literal(""))
     .optional(),

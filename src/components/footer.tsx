@@ -29,7 +29,7 @@ export function Footer() {
             <p className="text-[14px] text-muted-foreground leading-relaxed max-w-sm pt-1">
               Hatey Hat connects communities across Bangladesh to organize,
               discover, and participate in grassroots relief, environment, and
-              educational drives.
+              educational initiatives.
             </p>
 
             {/* Social Links with Custom Tooltips and Non-Inverting Hover */}
@@ -143,11 +143,29 @@ export function Footer() {
             <h4 className="text-[14px] font-semibold text-foreground uppercase tracking-wider">
               Community
             </h4>
-            <div className="space-y-2.5 text-[14px] text-muted-foreground">
-              <div className="flex items-start gap-2.5">
-                <MapPin className="h-4 w-4 text-foreground/70 shrink-0 mt-0.5" />
-                <span>Nationwide Grassroots Initiatives, Bangladesh</span>
+            <div className="space-y-2 text-[14px] text-muted-foreground">
+              <div className="flex items-start gap-2 pb-1 text-foreground/80">
+                <MapPin className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                <span className="text-xs">Nationwide Initiatives, Bangladesh</span>
               </div>
+              <ul className="space-y-1.5 text-xs text-muted-foreground pt-1 border-t border-foreground/5">
+                <li>
+                  <Link
+                    href="/terms"
+                    className="hover:text-foreground transition-colors flex items-center gap-1.5"
+                  >
+                    <span>Terms of Service</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/privacy"
+                    className="hover:text-foreground transition-colors flex items-center gap-1.5"
+                  >
+                    <span>Privacy Policy</span>
+                  </Link>
+                </li>
+              </ul>
             </div>
           </div>
         </div>

@@ -12,6 +12,7 @@ export function proxy(request: NextRequest) {
 
   const isProtected =
     PROTECTED_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(prefix + "/")) ||
+    (/^\/events\/[^/]+$/.test(pathname) && pathname !== "/events") ||
     /^\/events\/[^/]+\/edit$/.test(pathname);
 
   if (isProtected) {
@@ -39,6 +40,7 @@ export const config = {
     "/events/create",
     "/events/manage",
     "/events/joined",
+    "/events/:id",
     "/events/:id/edit",
     "/profile",
   ],

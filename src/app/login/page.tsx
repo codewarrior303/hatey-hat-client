@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
-import { ArrowRight, Lock, Mail, Loader2, Eye, EyeOff } from "lucide-react";
+import { ArrowRight, Lock, Mail, Loader2, Eye, EyeOff, Check } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
+  const [agreedToTerms, setAgreedToTerms] = React.useState(false);
 
   const {
     register,
@@ -86,6 +87,10 @@ export default function LoginPage() {
   }, []);
 
   const onSubmit = async (data: LoginInput) => {
+    if (!agreedToTerms) {
+      toast.error("Please agree to the Terms of Service and Privacy Policy to continue.");
+      return;
+    }
     try {
       setIsLoading(true);
       const res = await signIn.email({
@@ -234,10 +239,55 @@ export default function LoginPage() {
                 )}
               </div>
 
+              {/* Terms & Privacy Checkbox */}
+              <div
+                role="checkbox"
+                aria-checked={agreedToTerms}
+                tabIndex={0}
+                onClick={() => setAgreedToTerms((prev) => !prev)}
+                onKeyDown={(e) => {
+                  if (e.key === " " || e.key === "Enter") {
+                    e.preventDefault();
+                    setAgreedToTerms((prev) => !prev);
+                  }
+                }}
+                className="flex items-start gap-2.5 pt-1 group cursor-pointer select-none"
+              >
+                <div
+                  className={`h-4 w-4 mt-0.5 rounded-[5px] flex items-center justify-center transition-all duration-150 shrink-0 ${
+                    agreedToTerms
+                      ? "bg-foreground text-background border border-foreground shadow-xs"
+                      : "glass bg-foreground/5 border border-foreground/20 group-hover:border-foreground/50 group-hover:bg-foreground/10"
+                  }`}
+                >
+                  {agreedToTerms && <Check className="h-3 w-3 stroke-[3]" />}
+                </div>
+                <label className="text-xs text-muted-foreground leading-snug cursor-pointer select-none">
+                  I agree to Hatey Hat&apos;s{" "}
+                  <Link
+                    href="/terms"
+                    target="_blank"
+                    className="font-medium text-foreground underline underline-offset-2 hover:opacity-80"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    href="/privacy"
+                    target="_blank"
+                    className="font-medium text-foreground underline underline-offset-2 hover:opacity-80"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Privacy Policy
+                  </Link>
+                </label>
+              </div>
+
               <Button
                 type="submit"
-                disabled={isLoading}
-                className="w-full gap-2 rounded-full font-medium h-11 mt-2 shadow-xs"
+                disabled={isLoading || !agreedToTerms}
+                className="w-full gap-2 rounded-full font-medium h-11 mt-2 shadow-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <>

@@ -21,9 +21,24 @@ export function formatDate(date: string | Date | number): string {
 
 export function getFallbackAvatar(name: string): string {
   if (!name) return "HH";
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase();
-  return (parts[0]![0]! + parts[parts.length - 1]![0]!).toUpperCase();
+  const trimmed = name.trim();
+  const clean = trimmed.includes("@") ? trimmed.split("@")[0]! : trimmed;
+  const parts = clean.trim().split(/[\s._-]+/).filter(Boolean);
+  if (parts.length === 0) return "HH";
+  if (parts.length === 1) {
+    // Single word e.g. "shihab" -> "S"
+    return parts[0]![0]!.toUpperCase();
+  }
+  // Multiple words e.g. "ahnaf abir" -> "AA", "ahnaf shahriar abir" -> "AS" (initials of first two words)
+  return (parts[0]![0]! + parts[1]![0]!).toUpperCase();
+}
+
+/** Capitalizes the first letter of a string while preserving the rest */
+export function capitalizeFirst(value: string | null | undefined): string {
+  if (!value || typeof value !== "string") return "";
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
 }
 
 /**
@@ -62,6 +77,14 @@ export function getHighResImageUrl(url: string | null | undefined): string {
   const clean = url.trim();
 
   try {
+    // 0. Handle device-uploaded images: normalize localhost/remote host to same-origin /api/upload/image/:id
+    if (clean.includes("/api/upload/image/")) {
+      const match = clean.match(/\/api\/upload\/image\/([a-fA-F0-9]{24})/);
+      if (match && match[1]) {
+        return `/api/upload/image/${match[1]}`;
+      }
+    }
+
     // 1. Unsplash images: upgrade to 4K UHD (w=3840, q=100) and remove forced crop
     if (clean.includes("images.unsplash.com")) {
       const parsed = new URL(clean);
@@ -122,4 +145,98 @@ export function getHighResImageUrl(url: string | null | undefined): string {
   }
 
   return clean;
+}
+
+/**
+ * Client-side canvas image compression to keep upload payloads lightweight & fast
+ */
+export function compressImage(
+  file: File,
+  maxWidth = 1920,
+  maxHeight = 1080,
+  quality = 0.85
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new window.Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          return resolve(event.target?.result as string);
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        const format = file.type === "image/png" ? "image/png" : "image/jpeg";
+        resolve(canvas.toDataURL(format, quality));
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+}
+
+/**
+ * Formats a Bangladesh phone number as the user types:
+ * e.g. +880 1 603 - 759 643
+ */
+export function formatPhoneNumberInput(raw: string): string {
+  if (!raw) return "+880 ";
+  let digits = raw.replace(/\D/g, "");
+  if (digits.startsWith("880")) {
+    digits = digits.slice(3);
+  }
+  if (digits.startsWith("0")) {
+    digits = digits.slice(1);
+  }
+  if (digits.length > 10) {
+    digits = digits.slice(0, 10);
+  }
+
+  if (digits.length === 0) {
+    return "+880 ";
+  }
+  if (digits.length === 1) {
+    return `+880 ${digits}`;
+  }
+  if (digits.length <= 4) {
+    return `+880 ${digits[0]} ${digits.slice(1)}`;
+  }
+  if (digits.length <= 7) {
+    return `+880 ${digits[0]} ${digits.slice(1, 4)} - ${digits.slice(4)}`;
+  }
+  return `+880 ${digits[0]} ${digits.slice(1, 4)} - ${digits.slice(4, 7)} ${digits.slice(7)}`;
+}
+
+/**
+ * Formats a phone number for display on event card / event details:
+ * e.g. (+8801603-759643)
+ */
+export function formatPhoneNumberDisplay(phone?: string | null): string {
+  if (!phone) return "";
+  let digits = phone.replace(/\D/g, "");
+  if (digits.startsWith("880")) {
+    digits = digits.slice(3);
+  }
+  if (digits.startsWith("0")) {
+    digits = digits.slice(1);
+  }
+  if (digits.length === 10) {
+    return `+880${digits.slice(0, 4)}-${digits.slice(4)}`;
+  }
+  return phone.trim();
 }

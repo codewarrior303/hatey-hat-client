@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Jost } from "next/font/google";
 
 import { ThemeProvider } from "@/components/theme-provider";
+import { NotificationProvider } from "@/context/notification-context";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { CustomScrollbar } from "@/components/custom-scrollbar";
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
     template: "%s | Hatey Hat",
   },
   description:
-    "Hatey Hat, ekshathe poth chola. The unified platform to organize, join, and support community social events and disaster relief across Bangladesh — from flood relief and emergency response to cleanups, tree plantations, blood donation, and winter drives.",
+    "Hatey Hat, ekshathe poth chola. The unified platform to organize, join, and support community social events and disaster relief across Bangladesh — from flood relief and emergency response to cleanups, tree plantations, blood donation, and winter relief events.",
   keywords: [
     "social service Bangladesh",
     "disaster relief platform",
@@ -30,7 +31,7 @@ export const metadata: Metadata = {
     "winter clothes distribution",
     "tree plantation",
     "blood donation",
-    "cleanup drives",
+    "cleanup events",
     "grassroots initiatives",
   ],
   icons: {
@@ -107,13 +108,15 @@ export default function RootLayout({
           enableSystem={true}
           disableTransitionOnChange
         >
-          <CustomScrollbar />
-          <InteractionProtection />
-          <div className="relative z-10 flex min-h-screen flex-col">
-            <Navbar />
-            <main className="flex-1 flex flex-col">{children}</main>
-            <Footer />
-          </div>
+          <NotificationProvider>
+            <CustomScrollbar />
+            <InteractionProtection />
+            <div className="relative z-10 flex min-h-screen flex-col">
+              <Navbar />
+              <main className="flex-1 flex flex-col">{children}</main>
+              <Footer />
+            </div>
+          </NotificationProvider>
         </ThemeProvider>
       </body>
     </html>

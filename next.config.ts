@@ -17,12 +17,20 @@ const connectSources = [
   !isProd ? "http://localhost:5000 http://127.0.0.1:5000" : "",
 ].filter(Boolean).join(" ");
 
+const imageSources = [
+  "'self'",
+  "https:",
+  "blob:",
+  "data:",
+  !isProd ? "http://localhost:5000 http://127.0.0.1:5000" : "",
+].filter(Boolean).join(" ");
+
 const cspHeader = `
   default-src 'self';
   script-src ${scriptSources};
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src 'self' https://fonts.gstatic.com data:;
-  img-src 'self' https: blob: data:;
+  img-src ${imageSources};
   connect-src ${connectSources};
   frame-src 'self' https://accounts.google.com;
   frame-ancestors 'none';
