@@ -487,7 +487,7 @@ export function Navbar() {
             ) : user ? (
               <div className="flex items-center gap-2">
                 {/* Profile dropdown */}
-                <div className="relative group">
+                <div className="relative group flex items-center justify-center shrink-0">
                     <DropdownMenu
                       modal={false}
                       open={dropdownOpen}
@@ -504,10 +504,10 @@ export function Navbar() {
                       <DropdownMenuTrigger asChild>
                         <button
                           type="button"
-                          className="relative rounded-full focus:outline-none focus-visible:outline-none transition-transform hover:scale-105"
+                          className="relative flex items-center justify-center h-9 w-9 rounded-full p-0 m-0 leading-none focus:outline-none focus-visible:outline-none transition-transform hover:scale-105 shrink-0 select-none"
                           aria-label={`User menu for ${user.name || user.email}`}
                         >
-                          <Avatar className="h-9 w-9 border border-foreground/15">
+                          <Avatar className="h-9 w-9 border border-foreground/15 shrink-0">
                             {user.image && (
                               <AvatarImage
                                 src={getHighResImageUrl(user.image)}
