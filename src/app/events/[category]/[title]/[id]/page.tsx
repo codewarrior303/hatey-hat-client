@@ -224,12 +224,15 @@ export default function EventDetailsPage() {
   const handleJoinEvent = async () => {
     // If not logged in, redirect to login with return path
     if (!session?.user) {
-      toast("Please sign in to join this community event", {
-        icon: "👋",
+      toast.error("Please sign in first to join this community event.", {
+        id: "join-login-required",
+        icon: "🔒",
       });
-      router.push(
-        `/login?redirect=${encodeURIComponent(`/events/${eventId}`)}`,
-      );
+      const returnUrl =
+        typeof window !== "undefined"
+          ? window.location.pathname
+          : `/events/${eventId}`;
+      router.push(`/login?redirect=${encodeURIComponent(returnUrl)}`);
       return;
     }
 

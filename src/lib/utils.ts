@@ -98,13 +98,20 @@ export function getHighResImageUrl(url: string | null | undefined): string {
       return parsed.toString();
     }
 
-    // 2. Google User Content / Blogspot / Photos (upgrade to 4K =s3840 / =w3840)
+    // 2. Google User Content / Blogspot / Photos (upgrade to 4K Ultra HD =s2560-p with smart face-detection crop)
     if (
       clean.includes("googleusercontent.com") ||
       clean.includes("ggpht.com") ||
       clean.includes("bp.blogspot.com")
     ) {
-      return clean.replace(/=s\d+(-c)?/i, "=s3840").replace(/=w\d+(-h\d+)?/i, "=w3840");
+      if (/=s\d+/i.test(clean)) {
+        return clean.replace(/=s\d+[^?#]*/i, "=s2560-p");
+      }
+      if (/=w\d+/i.test(clean)) {
+        return clean.replace(/=w\d+[^?#]*/i, "=w2560-p");
+      }
+      const [base, query] = clean.split("?");
+      return query ? `${base}=s2560-p?${query}` : `${clean}=s2560-p`;
     }
 
     // 3. Pexels images: upgrade to 4K UHD (w=3840, dpr=2)
@@ -152,9 +159,9 @@ export function getHighResImageUrl(url: string | null | undefined): string {
  */
 export function compressImage(
   file: File,
-  maxWidth = 1920,
-  maxHeight = 1080,
-  quality = 0.85
+  maxWidth = 2560,
+  maxHeight = 2560,
+  quality = 0.96
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();

@@ -25,6 +25,7 @@ interface OrganizerStatus {
   probationStrikes: number;
   remainingStrikes: number;
   canCreate: boolean;
+  isSuspended?: boolean;
   canAppeal?: boolean;
   isProbationWaiting?: boolean;
   probationWaitEndsAt?: string;
@@ -360,6 +361,32 @@ export default function CreateEventPage() {
           <div className="flex flex-col items-center justify-center py-16 space-y-3 glass rounded-3xl">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             <p className="text-xs text-muted-foreground">Verifying organizer authorization...</p>
+          </div>
+        ) : status?.isSuspended ? (
+          /* Account Suspended by Administrator */
+          <div className="glass-strong border border-destructive/30 rounded-3xl p-8 sm:p-12 space-y-5 shadow-2xl text-center">
+            <div className="h-16 w-16 rounded-2xl bg-destructive/15 text-destructive flex items-center justify-center mx-auto">
+              <XCircle className="h-8 w-8" />
+            </div>
+            <div className="space-y-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-destructive">
+                Account Suspended
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
+                Your account is suspend
+              </h2>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
+                Your account has been suspended by the platform administrator. You are restricted from organizing or creating any initiatives.
+              </p>
+            </div>
+            <div className="pt-3">
+              <Button asChild variant="outline" className="rounded-full glass">
+                <Link href="/events">
+                  <ArrowLeft className="h-4 w-4 mr-1.5" />
+                  Browse Community Events
+                </Link>
+              </Button>
+            </div>
           </div>
         ) : status?.stage === "permanently_banned" ? (
           /* Permanently Banned Screen with 2-Month Countdown & 1-Month Early Appeal */

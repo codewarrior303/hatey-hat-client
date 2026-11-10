@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   PlusCircle,
   HeartHandshake,
@@ -44,7 +43,6 @@ interface StatsSummary {
 }
 
 export default function HomePage() {
-  const router = useRouter();
   const { data: session } = useSession();
   const user = session?.user;
 
@@ -260,12 +258,12 @@ export default function HomePage() {
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // User must be logged in to subscribe
-    if (!user) {
-      toast.error("Please sign in to subscribe to community updates.", {
-        id: "newsletter-login-required",
-      });
-      router.push("/login");
+    const targetEmail = (user?.email || newsletterEmail).trim().toLowerCase();
+
+    if (!targetEmail || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(targetEmail)) {
+      const msg = "Please enter a valid email address with a domain (e.g. name@example.com).";
+      setNewsletterError(msg);
+      toast.error(msg, { id: "newsletter-invalid-email" });
       return;
     }
 
@@ -277,8 +275,8 @@ export default function HomePage() {
         "/api/subscribers",
         {
           method: "POST",
-          auth: true,
-          body: JSON.stringify({ email: user.email }),
+          auth: Boolean(user),
+          body: JSON.stringify({ email: targetEmail }),
           headers: { "Content-Type": "application/json" },
         },
       );
@@ -287,11 +285,11 @@ export default function HomePage() {
         { id: "newsletter-subscribed" }
       );
       setIsSubscribed(true);
-      setPersistedSubEmail(user.email);
-      const storageKey = getSubKey(user.email);
+      setPersistedSubEmail(targetEmail);
+      const storageKey = getSubKey(targetEmail);
       if (typeof window !== "undefined") {
         if (storageKey) localStorage.setItem(storageKey, "true");
-        localStorage.setItem("hatey_hat_sub_email", user.email.toLowerCase());
+        localStorage.setItem("hatey_hat_sub_email", targetEmail);
       }
       setNewsletterEmail("");
     } catch (err: any) {
@@ -810,34 +808,51 @@ export default function HomePage() {
                 </Button>
               </form>
             ) : (
-              /* State 3: Visitor Not Logged In -> Login Required */
-              <div className="relative flex flex-col sm:flex-row items-center gap-3 max-w-md mx-auto pt-2 animate-in fade-in-50">
+              /* State 3: Visitor Not Logged In -> Can Subscribe with Email directly! */
+              <form
+                noValidate
+                onSubmit={handleNewsletterSubmit}
+                className="relative flex flex-col sm:flex-row items-center gap-3 max-w-md mx-auto pt-2 animate-in fade-in-50"
+              >
                 <div className="relative w-full sm:w-auto flex-1">
                   <Input
                     type="email"
                     maxLength={100}
                     placeholder="Enter your email address"
                     value={newsletterEmail}
-                    onChange={(e) => setNewsletterEmail(e.target.value)}
+                    onChange={(e) => {
+                      setNewsletterEmail(e.target.value);
+                      if (newsletterError) setNewsletterError(null);
+                    }}
+                    disabled={isSubscribing}
                     className="h-12 rounded-full px-5 glass bg-transparent border-foreground/15 text-foreground placeholder:text-muted-foreground text-sm w-full"
+                    aria-label="Your email address"
                   />
+                  {newsletterError && (
+                    <div
+                      role="alert"
+                      className="absolute left-4 -bottom-10 z-30 flex items-center gap-1.5 rounded-lg bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 px-3 py-1.5 text-xs font-medium shadow-xl border border-white/10 dark:border-black/10 animate-in fade-in-0 slide-in-from-top-1 duration-200"
+                    >
+                      <div className="absolute -top-1 left-4 h-2 w-2 rotate-45 bg-neutral-900 dark:bg-neutral-100" />
+                      <AlertCircle className="h-3.5 w-3.5 text-amber-400 dark:text-amber-600 shrink-0 relative z-10" />
+                      <span className="relative z-10">{newsletterError}</span>
+                    </div>
+                  )}
                 </div>
 
                 <Button
-                  type="button"
-                  onClick={() => {
-                    toast.error("Please sign in to subscribe to community updates.", {
-                      id: "newsletter-login-required",
-                    });
-                    router.push("/login");
-                  }}
+                  type="submit"
                   size="lg"
-                  className="w-full sm:w-auto h-12 px-7 rounded-full font-medium shrink-0 shadow-xs cursor-pointer active:scale-95"
+                  disabled={isSubscribing}
+                  className={cn(
+                    "w-full sm:w-auto h-12 px-7 rounded-full font-medium shrink-0 shadow-xs cursor-pointer active:scale-95 transition-all gap-2",
+                    isSubscribing && "opacity-80 pointer-events-none"
+                  )}
                 >
-                  <span>Subscribe</span>
+                  <span>{isSubscribing ? "Subscribing..." : "Subscribe"}</span>
                   <ArrowRight className="h-4 w-4" />
                 </Button>
-              </div>
+              </form>
             )}
 
             <p className="text-xs text-muted-foreground pt-1">

@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSession, updateUser } from "@/lib/auth-client";
-import { getFallbackAvatar, compressImage } from "@/lib/utils";
+import { getFallbackAvatar, compressImage, getHighResImageUrl } from "@/lib/utils";
 
 const profileSchema = z.object({
   name: z
@@ -57,7 +57,7 @@ export default function ProfilePage() {
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: user?.name || "",
-      photoURL: user?.image || "",
+      photoURL: getHighResImageUrl(user?.image) || "",
     },
   });
 
@@ -66,7 +66,7 @@ export default function ProfilePage() {
     if (user) {
       reset({
         name: user.name || "",
-        photoURL: user.image || "",
+        photoURL: getHighResImageUrl(user.image) || "",
       });
     }
   }, [user, reset]);
@@ -87,7 +87,7 @@ export default function ProfilePage() {
       setIsUploadingImage(true);
       const loadingToast = toast.loading("Compressing and uploading photo...");
 
-      const compressedBase64 = await compressImage(file, 800, 800, 0.85);
+      const compressedBase64 = await compressImage(file, 2560, 2560, 0.96);
 
       const res = await fetch("/api/upload/image", {
         method: "POST",
@@ -130,9 +130,10 @@ export default function ProfilePage() {
   const onSubmit = async (data: ProfileFormData) => {
     try {
       setIsUpdating(true);
+      const finalImage = data.photoURL?.trim() ? getHighResImageUrl(data.photoURL.trim()) : null;
       const res = await updateUser({
         name: data.name.trim(),
-        image: data.photoURL?.trim() || null,
+        image: finalImage,
       });
 
       if ((res as any)?.error) {
@@ -174,8 +175,10 @@ export default function ProfilePage() {
             <div className="flex flex-col sm:flex-row items-center sm:items-center gap-4 text-center sm:text-left">
               <Avatar className="h-20 w-20 border-2 border-foreground/20 shadow-xs shrink-0">
                 <AvatarImage
-                  src={previewPhoto || undefined}
+                  src={getHighResImageUrl(previewPhoto) || undefined}
                   alt={previewName || user?.name || "User"}
+                  referrerPolicy="no-referrer"
+                  className="h-full w-full object-cover"
                 />
                 <AvatarFallback className="text-xl font-bold bg-foreground/10 text-foreground">
                   {getFallbackAvatar(

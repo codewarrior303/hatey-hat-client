@@ -10,11 +10,21 @@ export const passwordSchema = z
     message: "Password must contain at least one lowercase letter (a-z)",
   });
 
+export const emailSchema = z
+  .string({ error: "Email address is required" })
+  .trim()
+  .min(5, "Email address is too short")
+  .max(100, "Email address cannot exceed 100 characters")
+  .email("Please provide a valid email address (e.g. name@gmail.com)")
+  .refine(
+    (val) => /^[a-zA-Z0-9._%+-]+@gmail\.com$/i.test(val.trim()),
+    { message: "Please enter a valid @gmail.com address." }
+  );
+
+export const registerEmailSchema = emailSchema;
+
 export const loginSchema = z.object({
-  email: z
-    .string({ error: "Email is required" })
-    .trim()
-    .email("Please provide a valid email address"),
+  email: emailSchema,
   password: z.string({ error: "Password is required" }).min(1, "Password is required"),
 });
 
@@ -24,10 +34,7 @@ export const registerSchema = z.object({
     .trim()
     .min(2, "Name must be at least 2 characters long")
     .max(80, "Name cannot exceed 80 characters"),
-  email: z
-    .string({ error: "Email is required" })
-    .trim()
-    .email("Please provide a valid email address"),
+  email: registerEmailSchema,
   photoURL: z
     .string()
     .trim()
@@ -45,3 +52,22 @@ export const registerSchema = z.object({
 
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
+
+export const forgotPasswordEmailSchema = z.object({
+  email: emailSchema,
+});
+
+export const resetPasswordSchema = z
+  .object({
+    newPassword: passwordSchema,
+    confirmPassword: z
+      .string({ error: "Please confirm your password" })
+      .min(1, "Please confirm your password"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+export type ForgotPasswordEmailInput = z.infer<typeof forgotPasswordEmailSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;

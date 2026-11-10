@@ -49,7 +49,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSession, signOut } from "@/lib/auth-client";
 import { invalidateCache } from "@/lib/api";
-import { cn, getFallbackAvatar } from "@/lib/utils";
+import { cn, getFallbackAvatar, getHighResImageUrl } from "@/lib/utils";
 
 function getRelativeTime(dateInput?: string | Date): string {
   if (!dateInput) return "";
@@ -510,7 +510,7 @@ export function Navbar() {
                           <Avatar className="h-9 w-9 border border-foreground/15">
                             {user.image && (
                               <AvatarImage
-                                src={user.image}
+                                src={getHighResImageUrl(user.image)}
                                 alt={user.name || "User"}
                                 referrerPolicy="no-referrer"
                               />
@@ -728,8 +728,9 @@ export function Navbar() {
                         <Avatar className="h-10 w-10 border border-foreground/20">
                           {user.image && (
                             <AvatarImage
-                              src={user.image}
+                              src={getHighResImageUrl(user.image)}
                               alt={user.name || "User"}
+                              referrerPolicy="no-referrer"
                             />
                           )}
                           <AvatarFallback>

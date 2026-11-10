@@ -46,16 +46,31 @@ export default function LoginPage() {
     }
   }, [session, sessionPending, redirectUrl, router]);
 
+  const errorShownRef = React.useRef<string | null>(null);
+
   // Surface authentication errors (e.g. from OAuth callbacks or state failures)
   React.useEffect(() => {
     const authError = searchParams.get("error");
-    if (authError) {
+    if (authError && errorShownRef.current !== authError) {
+      errorShownRef.current = authError;
       if (authError === "state_not_found" || authError === "state_mismatch") {
-        toast.error("Sign-in session expired or was interrupted. Please try again.");
+        toast.error("Sign-in session expired or was interrupted. Please try again.", {
+          id: "auth-oauth-error",
+        });
       } else if (authError === "oauth_failed" || authError === "access_denied") {
-        toast.error("Google sign-in was cancelled or could not be completed.");
+        toast.error("Google sign-in was cancelled or could not be completed.", {
+          id: "auth-oauth-error",
+        });
       } else {
-        toast.error("Authentication could not be completed. Please try again.");
+        toast.error("Authentication could not be completed. Please try again.", {
+          id: "auth-oauth-error",
+        });
+      }
+      // Clean up error query param from address bar so it never triggers duplicate toast
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("error");
+        window.history.replaceState({}, "", url.toString());
       }
     }
   }, [searchParams]);
@@ -99,8 +114,7 @@ export default function LoginPage() {
       });
 
       if (res.error) {
-        // Enforce uniform authentication error message to prevent user enumeration
-        toast.error("Invalid email or password");
+        toast.error(res.error.message || "Invalid email or password");
         return;
       }
 
@@ -190,7 +204,7 @@ export default function LoginPage() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="volunteer@example.com"
+                    placeholder="volunteer@gmail.com"
                     className="pl-10 h-11 rounded-xl glass bg-transparent border-foreground/15 text-sm"
                     autoComplete="email"
                     {...register("email")}
@@ -207,6 +221,12 @@ export default function LoginPage() {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
+                  <Link
+                    href="/forgot-password"
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors underline-offset-2 hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground" />

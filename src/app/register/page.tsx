@@ -277,7 +277,7 @@ export default function RegisterPage() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="volunteer@example.com"
+                    placeholder="volunteer@gmail.com"
                     className="pl-10 h-11 rounded-xl glass bg-transparent border-foreground/15 text-sm"
                     autoComplete="email"
                     {...register("email")}

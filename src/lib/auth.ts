@@ -79,11 +79,25 @@ export const auth = betterAuth({
   },
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
-      // Per-email throttling to prevent brute-force credential stuffing across multiple IPs
+      // Per-email throttling and verification: user must exist to sign in and must be @gmail.com
       if (ctx.path === "/sign-in/email") {
         const email = (ctx.body as any)?.email;
         if (email && typeof email === "string") {
           const normalizedEmail = email.toLowerCase().trim();
+          if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/i.test(normalizedEmail)) {
+            throw new Error("Please enter a valid @gmail.com address.");
+          }
+
+          // Ensure manually signing in without an existing account fails immediately
+          const existingUser = await db.collection("user").findOne({ email: normalizedEmail });
+          if (!existingUser) {
+            throw new Error("No account found with this email address. Please register first.");
+          }
+
+          if (existingUser.isBanned || existingUser.banned || existingUser.status === "suspended") {
+            throw new Error("Your account is suspend");
+          }
+
           const attemptsKey = `email_login:${normalizedEmail}`;
           const now = Date.now();
           const windowMs = 60 * 1000;
@@ -110,8 +124,24 @@ export const auth = betterAuth({
         }
       }
 
-      // Server-side password validation: >= 6 chars, uppercase, lowercase
+      // Server-side registration validation: valid Gmail (@gmail.com) email, prevent duplicate registration, password requirements
       if (ctx.path === "/sign-up/email") {
+        const email = (ctx.body as any)?.email;
+        if (typeof email !== "string") {
+          throw new Error("Please enter a valid email address.");
+        }
+
+        const normalizedEmail = email.toLowerCase().trim();
+        if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/i.test(normalizedEmail)) {
+          throw new Error("Please use a valid @gmail.com address.");
+        }
+
+        // Prevent duplicate registration: check if email is already in use
+        const existingUser = await db.collection("user").findOne({ email: normalizedEmail });
+        if (existingUser) {
+          throw new Error("An account with this email address already exists.");
+        }
+
         const password = (ctx.body as any)?.password;
         if (typeof password !== "string" || password.length < 6 || !/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
           throw new Error("Password must be at least 6 characters long and include at least one uppercase and one lowercase letter");
@@ -134,6 +164,18 @@ export const auth = betterAuth({
         }
       }
     }),
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user) => {
+          if (user.image && typeof user.image === "string" && user.image.includes("googleusercontent.com")) {
+            user.image = user.image.replace(/=s\d+[^?#]*/i, "=s2560-p");
+          }
+          return { data: user };
+        },
+      },
+    },
   },
   plugins: [
     jwt({

@@ -22,8 +22,10 @@ import {
   AlertOctagon,
   UserCheck,
   UserX,
+  Ban,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { GoogleIcon } from "@/components/icons/google-icon";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,7 +43,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useSession, authClient } from "@/lib/auth-client";
 import { apiFetch, invalidateCache } from "@/lib/api";
-import { formatDate, formatCompactNumber, cn } from "@/lib/utils";
+import { formatDate, formatCompactNumber, cn, getHighResImageUrl, getFallbackAvatar } from "@/lib/utils";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const AUTHORIZED_ADMIN_EMAIL = "abirahnafshahriar@gmail.com";
 
@@ -55,6 +58,11 @@ interface AdminStats {
   liveJoins: number;
   totalSubscribers?: number;
   totalUnsubscribed?: number;
+  totalUsers?: number;
+  activeUsers?: number;
+  inactiveUsers?: number;
+  googleUsers?: number;
+  emailUsers?: number;
 }
 
 interface EventItemAdmin {
@@ -116,10 +124,23 @@ interface OrganizerStrikeAdmin {
   updatedAt: string;
 }
 
+interface UserAccountAdmin {
+  _id: string;
+  name: string;
+  email: string;
+  image?: string | null;
+  provider: "google" | "email";
+  status: "active" | "inactive" | "suspended";
+  isBanned: boolean;
+  bannedAt?: string | null;
+  createdAt: string;
+}
+
 interface AdminData {
   stats: AdminStats;
   events: EventItemAdmin[];
   subscribers?: SubscriberAdmin[];
+  users?: UserAccountAdmin[];
   recentActivity: ActivityEntry[];
 }
 
@@ -138,10 +159,17 @@ export default function AdminPage() {
   const [statusFilter, setStatusFilter] = React.useState<"all" | "active" | "concluded">("all");
 
   // Filters for recent security audit activity
-  const [auditFilter, setAuditFilter] = React.useState<"all" | "joined" | "created" | "deleted">("all");
+  const [auditFilter, setAuditFilter] = React.useState<"all" | "joined" | "created" | "deleted" | "subscribers">("all");
 
   // Filters for newsletter subscribers list
   const [subscribersFilter, setSubscribersFilter] = React.useState<"all" | "subscribed" | "unsubscribed">("all");
+
+  // Filters for registered users list
+  const [userSearchQuery, setUserSearchQuery] = React.useState("");
+  const [userProviderFilter, setUserProviderFilter] = React.useState<"all" | "google" | "email">("all");
+  const [banningUserId, setBanningUserId] = React.useState<string | null>(null);
+  const [userToDelete, setUserToDelete] = React.useState<UserAccountAdmin | null>(null);
+  const [isDeletingUser, setIsDeletingUser] = React.useState(false);
 
   const isAuthorized =
     user?.email?.toLowerCase().trim() === AUTHORIZED_ADMIN_EMAIL.toLowerCase();
@@ -636,6 +664,12 @@ export default function AdminPage() {
     if (auditFilter === "joined") return log.action === "event_joined";
     if (auditFilter === "created") return log.action === "event_created";
     if (auditFilter === "deleted") return log.action === "event_deleted";
+    if (auditFilter === "subscribers") {
+      return (
+        log.action === "subscriber_added" ||
+        log.action === "subscriber_unsubscribed"
+      );
+    }
     return true;
   });
 
@@ -644,6 +678,85 @@ export default function AdminPage() {
     if (subscribersFilter === "unsubscribed") return sub.status === "unsubscribed";
     return true;
   });
+
+  const users = adminData?.users || [];
+  const filteredUsers = users.filter((u) => {
+    const matchesSearch =
+      u.name.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+      u.email.toLowerCase().includes(userSearchQuery.toLowerCase());
+    if (!matchesSearch) return false;
+
+    if (userProviderFilter === "google") return u.provider === "google";
+    if (userProviderFilter === "email") return u.provider === "email";
+    return true;
+  });
+
+  const handleToggleBanUser = async (targetUser: UserAccountAdmin) => {
+    try {
+      setBanningUserId(targetUser._id);
+      const res = await apiFetch<{
+        success: boolean;
+        message: string;
+        isBanned: boolean;
+      }>(
+        `/api/admin/users/${encodeURIComponent(targetUser._id)}/toggle-ban`,
+        {
+          method: "POST",
+          auth: true,
+        }
+      );
+
+      toast.success(res.message || "User status updated successfully.");
+
+      const isNowBanned = (res as any)?.isBanned ?? res.data?.isBanned ?? !targetUser.isBanned;
+
+      setAdminData((prev) => {
+        if (!prev) return prev;
+        const updatedUsers = (prev.users || []).map((u) =>
+          u._id === targetUser._id ? { ...u, isBanned: isNowBanned } : u
+        );
+        return { ...prev, users: updatedUsers };
+      });
+
+      invalidateCache("/api/admin/metrics");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to update user status.");
+    } finally {
+      setBanningUserId(null);
+    }
+  };
+
+  const handleConfirmDeleteUser = async () => {
+    if (!userToDelete) return;
+    try {
+      setIsDeletingUser(true);
+      const res = await apiFetch<{ success: boolean; message: string }>(
+        `/api/admin/users/${encodeURIComponent(userToDelete._id)}`,
+        {
+          method: "DELETE",
+          auth: true,
+        }
+      );
+      toast.success(res.message || "User account removed from database.");
+      setAdminData((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          users: (prev.users || []).filter((u) => u._id !== userToDelete._id),
+          stats: {
+            ...prev.stats,
+            totalUsers: Math.max(0, (prev.stats.totalUsers || 1) - 1),
+          },
+        };
+      });
+      invalidateCache("/api/admin/metrics");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to delete user account.");
+    } finally {
+      setIsDeletingUser(false);
+      setUserToDelete(null);
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 sm:px-6 pt-28 sm:pt-36 pb-12 max-w-6xl space-y-8 animate-in fade-in-50">
@@ -686,8 +799,8 @@ export default function AdminPage() {
 
       {isLoading ? (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
-            {[1, 2, 3, 4, 5].map((i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
               <Skeleton key={i} className="h-32 rounded-[26px]" />
             ))}
           </div>
@@ -712,8 +825,8 @@ export default function AdminPage() {
             isRefreshing ? "opacity-60 animate-pulse pointer-events-none" : "opacity-100"
           }`}
         >
-          {/* Top Core Metrics Grid - 5 Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+          {/* Top Core Metrics Grid - 6 Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5">
             {/* 1. Total Events Created */}
             <div className="glass p-6 rounded-[26px] space-y-3 relative overflow-hidden shadow-2xs border border-foreground/10 hover:border-foreground/20 transition-colors">
               <div className="flex items-center justify-between">
@@ -749,7 +862,7 @@ export default function AdminPage() {
                   {formatCompactNumber(stats?.totalJoins ?? 0)}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  All-time joins ({formatCompactNumber(stats?.liveJoins ?? 0)} active)
+                  All-time joins
                 </p>
               </div>
             </div>
@@ -789,7 +902,7 @@ export default function AdminPage() {
                   {formatCompactNumber(stats?.concludedEvents ?? 0)}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Past events ({formatCompactNumber(stats?.upcomingEvents ?? 0)} active)
+                  Past events
                 </p>
               </div>
             </div>
@@ -809,7 +922,27 @@ export default function AdminPage() {
                   {formatCompactNumber(stats?.totalSubscribers ?? 0)}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Active community subscribers
+                  Total community subscribers
+                </p>
+              </div>
+            </div>
+
+            {/* 6. Registered Platform Users */}
+            <div className="glass p-6 rounded-[26px] space-y-3 relative overflow-hidden shadow-2xs border border-foreground/10 hover:border-foreground/20 transition-colors">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Accounts
+                </span>
+                <div className="h-9 w-9 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
+                  <UserCheck className="h-4 w-4" />
+                </div>
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-3xl font-bold tracking-tight text-foreground">
+                  {formatCompactNumber(stats?.totalUsers ?? users.length)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {stats?.activeUsers ? `${stats.activeUsers} active now` : "Registered accounts"}
                 </p>
               </div>
             </div>
@@ -1071,6 +1204,208 @@ export default function AdminPage() {
                             </td>
                             <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">
                               {sub.unsubscribedAt ? formatDate(sub.unsubscribedAt) : isUnsub ? "Yes" : "—"}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Registered Users & Account Control (Ban / Unban) */}
+          <div className="space-y-4 pt-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-semibold tracking-tight text-foreground">
+                  User Accounts Management ({formatCompactNumber(filteredUsers.length)})
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  Monitor registered users across Google and Email sign-in with instant suspension and unban control.
+                </p>
+              </div>
+
+              {/* Controls: Search & Top Right Filters (All, Google, Email) */}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Search name or email..."
+                    value={userSearchQuery}
+                    onChange={(e) => setUserSearchQuery(e.target.value)}
+                    className="pl-9 h-9 w-44 sm:w-56 rounded-full text-xs glass"
+                  />
+                </div>
+
+                <div className="flex items-center rounded-full glass p-0.5 border border-foreground/10 text-xs">
+                  {(["all", "google", "email"] as const).map((tab) => (
+                    <button
+                      key={tab}
+                      type="button"
+                      onClick={() => setUserProviderFilter(tab)}
+                      className={`px-3 py-1 rounded-full text-xs font-medium capitalize transition-all duration-150 select-none ${
+                        userProviderFilter === tab
+                          ? "bg-foreground text-background shadow-xs font-semibold"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {tab}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {filteredUsers.length === 0 ? (
+              <div className="glass p-8 rounded-[24px] text-center text-sm text-muted-foreground">
+                {userSearchQuery || userProviderFilter !== "all"
+                  ? "No user accounts match your search or provider filter."
+                  : "No registered accounts found in the database."}
+              </div>
+            ) : (
+              <div className="rounded-[26px] glass overflow-hidden border border-foreground/10 transition-opacity duration-200">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-foreground/5 text-muted-foreground font-semibold border-b border-foreground/10">
+                      <tr>
+                        <th className="py-3 px-4">User</th>
+                        <th className="py-3 px-4">Email</th>
+                        <th className="py-3 px-4">Login Method</th>
+                        <th className="py-3 px-4">Status</th>
+                        <th className="py-3 px-4">Registered Date</th>
+                        <th className="py-3 px-4 text-right">Account Control</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-foreground/5">
+                      {filteredUsers.map((acc) => {
+                        const isBanned = acc.isBanned;
+                        const isProcessing = banningUserId === acc._id;
+
+                        return (
+                          <tr
+                            key={acc._id}
+                            className="hover:bg-foreground/5 transition-colors"
+                          >
+                            <td className="py-3 px-4 font-semibold text-foreground">
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-10 w-10 rounded-full border border-foreground/15 shrink-0 shadow-xs ring-1 ring-foreground/10 overflow-hidden">
+                                  {acc.image ? (
+                                    <AvatarImage
+                                      src={getHighResImageUrl(acc.image)}
+                                      alt={acc.name || "User"}
+                                      referrerPolicy="no-referrer"
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : null}
+                                  <AvatarFallback className="text-xs font-semibold bg-foreground/10 text-foreground">
+                                    {getFallbackAvatar(acc.name || acc.email)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="truncate max-w-[140px] sm:max-w-xs">{acc.name}</span>
+                              </div>
+                            </td>
+
+                            <td className="py-3 px-4 text-muted-foreground whitespace-nowrap text-xs">
+                              {acc.email}
+                            </td>
+
+                            <td className="py-3 px-4">
+                              <span
+                                className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
+                                  acc.provider === "google"
+                                    ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
+                                    : "bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20"
+                                }`}
+                              >
+                                {acc.provider === "google" ? (
+                                  <>
+                                    <GoogleIcon className="h-3 w-3" />
+                                    Google
+                                  </>
+                                ) : (
+                                  <>
+                                    <Mail className="h-3 w-3" />
+                                    Email
+                                  </>
+                                )}
+                              </span>
+                            </td>
+
+                            <td className="py-3 px-4">
+                              <span
+                                className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
+                                  isBanned || acc.status === "suspended"
+                                    ? "bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30"
+                                    : acc.status === "active"
+                                    ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                                    : "bg-zinc-500/15 text-zinc-600 dark:text-zinc-400 border-zinc-500/20"
+                                }`}
+                              >
+                                <span
+                                  className={`h-1.5 w-1.5 rounded-full ${
+                                    isBanned || acc.status === "suspended"
+                                      ? "bg-rose-500 animate-pulse"
+                                      : acc.status === "active"
+                                      ? "bg-emerald-500 animate-pulse"
+                                      : "bg-zinc-400"
+                                  }`}
+                                />
+                                {isBanned || acc.status === "suspended"
+                                  ? "Suspended"
+                                  : acc.status === "active"
+                                  ? "Active"
+                                  : "Inactive"}
+                              </span>
+                            </td>
+
+                            <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">
+                              {acc.createdAt ? formatDate(acc.createdAt) : "—"}
+                            </td>
+
+                            <td className="py-3 px-4 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant={isBanned ? "outline" : "destructive"}
+                                  disabled={isProcessing}
+                                  onClick={() => handleToggleBanUser(acc)}
+                                  className={`rounded-full h-8 px-3.5 text-xs font-semibold gap-1.5 shadow-xs transition-all cursor-pointer ${
+                                    isBanned
+                                      ? "border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50"
+                                      : "bg-rose-600 hover:bg-rose-700 text-white"
+                                  }`}
+                                >
+                                  {isProcessing ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  ) : isBanned ? (
+                                    <>
+                                      <CheckCircle2 className="h-3.5 w-3.5" />
+                                      <span>Unban User</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Ban className="h-3.5 w-3.5" />
+                                      <span>Ban User</span>
+                                    </>
+                                  )}
+                                </Button>
+
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  disabled={isProcessing || acc.email === AUTHORIZED_ADMIN_EMAIL}
+                                  onClick={() => setUserToDelete(acc)}
+                                  className="rounded-full h-8 w-8 p-0 text-muted-foreground hover:text-rose-600 hover:bg-rose-500/10 cursor-pointer transition-colors"
+                                  title="Permanently Delete Account"
+                                  aria-label={`Delete account for ${acc.name}`}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
                             </td>
                           </tr>
                         );
@@ -1831,6 +2166,50 @@ export default function AdminPage() {
                 <Trash2 className="h-4 w-4" />
               )}
               <span>Delete All Concluded</span>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirmation Modal for Permanent User Account Deletion */}
+      <AlertDialog
+        open={Boolean(userToDelete)}
+        onOpenChange={(open) => {
+          if (!open) setUserToDelete(null);
+        }}
+      >
+        <AlertDialogContent className="glass-strong border border-rose-500/30 rounded-[28px] p-6 sm:p-8 max-w-md shadow-2xl">
+          <AlertDialogHeader className="space-y-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500 mx-auto sm:mx-0">
+              <Trash2 className="h-6 w-6" />
+            </div>
+            <AlertDialogTitle className="text-xl font-semibold text-foreground">
+              Permanently Delete User Account?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-muted-foreground leading-relaxed">
+              Are you sure you want to permanently remove <strong className="text-foreground font-semibold">{userToDelete?.name}</strong> ({userToDelete?.email}) from the database? This will revoke active sessions and delete all account credentials permanently.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter className="gap-2 sm:gap-3 pt-4 border-t border-foreground/10">
+            <AlertDialogCancel
+              disabled={isDeletingUser}
+              onClick={() => setUserToDelete(null)}
+              className="rounded-full glass border-foreground/15 hover:bg-foreground/10 font-medium h-10 px-5 cursor-pointer"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeletingUser}
+              onClick={handleConfirmDeleteUser}
+              className="rounded-full bg-rose-600 hover:bg-rose-700 text-white font-semibold h-10 px-5 shadow-md gap-2 cursor-pointer"
+            >
+              {isDeletingUser ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              <span>Delete User</span>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
