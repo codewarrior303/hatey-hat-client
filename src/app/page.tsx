@@ -456,12 +456,12 @@ export default function HomePage() {
 
           {/* Hero Headline (56-76px on desktop, weight 600, tight tracking) */}
           <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-[76px] font-semibold tracking-[-0.035em] text-foreground leading-[1.08] max-w-4xl mx-auto">
-            Unite with your community to build a kinder Bangladesh.
+            Unite with your community to build a kinder Bangladesh
           </h1>
 
           <p className="text-[17px] sm:text-[19px] text-muted-foreground leading-relaxed max-w-2xl mx-auto">
             The community platform to organize and join disaster relief, emergency
-            response, and grassroots social initiatives across Bangladesh.
+            response, and grassroots social initiatives across Bangladesh
           </p>
 
           {/* Pill Action Buttons */}
