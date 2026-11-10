@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import toast from "react-hot-toast";
-import { User, Mail, Image as ImageIcon, Loader2, Save, Trash2, X, Upload } from "lucide-react";
+import { User, Mail, Loader2, Save, Trash2, Upload } from "lucide-react";
 
 import { PrivateRoute } from "@/components/auth/private-route";
 import { Button } from "@/components/ui/button";
@@ -290,56 +290,8 @@ export default function ProfilePage() {
               </p>
             </div>
 
-            {/* Photo URL */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="photoURL">Avatar Image URL (Optional)</Label>
-                <span className="text-xs text-muted-foreground font-normal">Optional</span>
-              </div>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isUploadingImage}
-                  className="absolute left-3 top-3 text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded-md hover:bg-foreground/10 cursor-pointer"
-                  aria-label="Upload photo from device"
-                >
-                  {isUploadingImage ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-foreground" />
-                  ) : (
-                    <ImageIcon className="h-4 w-4" />
-                  )}
-                </button>
-                <Input
-                  id="photoURL"
-                  type="url"
-                  placeholder="https://... or click icon to upload from device"
-                  className="pl-10 pr-10 h-11 rounded-xl glass bg-transparent border-foreground/15 text-sm"
-                  {...register("photoURL")}
-                  aria-invalid={Boolean(errors.photoURL)}
-                />
-                {previewPhoto && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setValue("photoURL", "", { shouldDirty: true, shouldValidate: true });
-                    }}
-                    className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded-full hover:bg-foreground/10 cursor-pointer"
-                    aria-label="Clear image URL"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-              <p className="text-[11px] text-muted-foreground">
-                Paste an image URL or click the photo icon on the left to upload from your device.
-              </p>
-              {errors.photoURL && (
-                <p className="text-xs font-medium text-destructive">
-                  {errors.photoURL.message}
-                </p>
-              )}
-            </div>
+            {/* Hidden Photo URL input kept for React Hook Form state sync */}
+            <input type="hidden" {...register("photoURL")} />
 
             <div className="pt-4 flex justify-end">
               <Button

@@ -8,7 +8,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 import {
   ArrowRight,
-  Image as ImageIcon,
   Lock,
   Mail,
   User,
@@ -18,7 +17,6 @@ import {
   XCircle,
   Eye,
   EyeOff,
-  X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -28,7 +26,6 @@ import { GoogleIcon } from "@/components/icons/google-icon";
 import { BrandLogo } from "@/components/brand-logo";
 import { signUp, signIn, useSession } from "@/lib/auth-client";
 import { registerSchema, type RegisterInput } from "@/lib/validators/auth.validator";
-import { compressImage } from "@/lib/utils";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -39,16 +36,12 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
-  const [isUploadingImage, setIsUploadingImage] = React.useState(false);
   const [agreedToTerms, setAgreedToTerms] = React.useState(false);
-  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
   const {
     register,
     handleSubmit,
     watch,
-    setValue,
-    clearErrors,
     formState: { errors },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
@@ -128,56 +121,6 @@ export default function RegisterPage() {
     }
   };
 
-  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please select a valid image file (PNG, JPG, WebP).");
-      return;
-    }
-
-    try {
-      setIsUploadingImage(true);
-      const loadingToast = toast.loading("Compressing and uploading avatar...");
-
-      const compressedBase64 = await compressImage(file, 800, 800, 0.85);
-
-      const res = await fetch("/api/upload/image", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          image: compressedBase64,
-          contentType: file.type || "image/jpeg",
-          name: file.name,
-        }),
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to upload image to server.");
-      }
-
-      const json = await res.json();
-      const uploadedUrl = json.data?.url;
-      if (!uploadedUrl) {
-        throw new Error("Could not retrieve image URL from server.");
-      }
-
-      const origin = typeof window !== "undefined" ? window.location.origin : "";
-      const finalUrl = uploadedUrl.startsWith("http") ? uploadedUrl : `${origin}${uploadedUrl}`;
-
-      setValue("photoURL", finalUrl, { shouldValidate: true, shouldDirty: true });
-      clearErrors("photoURL");
-      toast.success("Avatar image uploaded from device successfully!", { id: loadingToast });
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to upload image from device.");
-    } finally {
-      setIsUploadingImage(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    }
-  };
 
   const handleGoogleLogin = async () => {
     try {
@@ -291,64 +234,6 @@ export default function RegisterPage() {
                 )}
               </div>
 
-              {/* Photo URL / Upload */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="photoURL">Avatar Image</Label>
-                  <span className="text-xs text-muted-foreground font-normal">Optional</span>
-                </div>
-                <div className="relative">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageSelect}
-                    className="hidden"
-                    aria-hidden="true"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploadingImage}
-                    className="absolute left-3 top-3 text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded-md hover:bg-foreground/10 cursor-pointer"
-                    aria-label="Upload photo from device"
-                  >
-                    {isUploadingImage ? (
-                      <Loader2 className="h-4 w-4 animate-spin text-foreground" />
-                    ) : (
-                      <ImageIcon className="h-4 w-4" />
-                    )}
-                  </button>
-                  <Input
-                    id="photoURL"
-                    type="url"
-                    placeholder="https://... or click icon to upload from device"
-                    className="pl-10 pr-10 h-11 rounded-xl glass bg-transparent border-foreground/15 text-sm"
-                    {...register("photoURL")}
-                    aria-invalid={Boolean(errors.photoURL)}
-                  />
-                  {watch("photoURL") && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setValue("photoURL", "", { shouldDirty: true, shouldValidate: true });
-                      }}
-                      className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded-full hover:bg-foreground/10 cursor-pointer"
-                      aria-label="Clear photo"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-                <p className="text-[11px] text-muted-foreground">
-                  Paste an image link or click the image icon to upload directly from your device.
-                </p>
-                {errors.photoURL && (
-                  <p className="text-xs font-medium text-destructive">
-                    {errors.photoURL.message}
-                  </p>
-                )}
-              </div>
 
               {/* Password */}
               <div className="space-y-1.5">

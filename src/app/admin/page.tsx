@@ -162,6 +162,7 @@ export default function AdminPage() {
   const [auditFilter, setAuditFilter] = React.useState<"all" | "joined" | "created" | "deleted" | "subscribers">("all");
 
   // Filters for newsletter subscribers list
+  const [subscriberSearchQuery, setSubscriberSearchQuery] = React.useState("");
   const [subscribersFilter, setSubscribersFilter] = React.useState<"all" | "subscribed" | "unsubscribed">("all");
 
   // Filters for registered users list
@@ -674,6 +675,14 @@ export default function AdminPage() {
   });
 
   const filteredSubscribers = subscribers.filter((sub) => {
+    const q = subscriberSearchQuery.toLowerCase().trim();
+    if (q) {
+      const matches =
+        sub.email.toLowerCase().includes(q) ||
+        (sub.userName && sub.userName.toLowerCase().includes(q)) ||
+        (sub._id && sub._id.toLowerCase().includes(q));
+      if (!matches) return false;
+    }
     if (subscribersFilter === "subscribed") return sub.status !== "unsubscribed";
     if (subscribersFilter === "unsubscribed") return sub.status === "unsubscribed";
     return true;
@@ -1133,22 +1142,34 @@ export default function AdminPage() {
                 </p>
               </div>
 
-              {/* Tabs for Subscribers: All, Active, Unsubscribed */}
-              <div className="flex items-center rounded-full glass p-0.5 border border-foreground/10 text-xs w-full sm:w-auto">
-                {(["all", "subscribed", "unsubscribed"] as const).map((tab) => (
-                  <button
-                    key={tab}
-                    type="button"
-                    onClick={() => setSubscribersFilter(tab)}
-                    className={`flex-1 sm:flex-initial text-center justify-center px-3 py-1 rounded-full text-xs font-medium capitalize transition-all duration-200 select-none ${
-                      subscribersFilter === tab
-                        ? "bg-foreground text-background shadow-xs font-semibold"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {tab === "subscribed" ? "Active" : tab === "unsubscribed" ? "Unsubscribed" : "All"}
-                  </button>
-                ))}
+              {/* Controls: Search & Tabs for Subscribers: All, Active, Unsubscribed */}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Search name or email..."
+                    value={subscriberSearchQuery}
+                    onChange={(e) => setSubscriberSearchQuery(e.target.value)}
+                    className="pl-9 h-9 w-44 sm:w-56 rounded-full text-xs glass"
+                  />
+                </div>
+
+                <div className="flex items-center rounded-full glass p-0.5 border border-foreground/10 text-xs">
+                  {(["all", "subscribed", "unsubscribed"] as const).map((tab) => (
+                    <button
+                      key={tab}
+                      type="button"
+                      onClick={() => setSubscribersFilter(tab)}
+                      className={`px-3 py-1 rounded-full text-xs font-medium capitalize transition-all duration-200 select-none ${
+                        subscribersFilter === tab
+                          ? "bg-foreground text-background shadow-xs font-semibold"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {tab === "subscribed" ? "Active" : tab === "unsubscribed" ? "Unsubscribed" : "All"}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
